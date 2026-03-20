@@ -48,7 +48,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("net.minestom:minestom:2025.12.20c-1.21.11")
-    testImplementation("net.minestom:minestom:2025.12.20c-1.21.11")
+    compileOnly("net.minestom:minestom:2026.03.03-1.21.11")
     compileOnly("it.unimi.dsi:fastutil:8.5.12")
+    testImplementation("net.minestom:minestom:2026.03.03-1.21.11")
 }
