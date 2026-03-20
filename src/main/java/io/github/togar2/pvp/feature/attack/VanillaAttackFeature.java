@@ -98,7 +98,7 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 		EventDispatcher.call(prepareAttackEvent);
 		if (prepareAttackEvent.isCancelled()) return false;
 		AttackValues.Final attack = this.prepareAttack(attacker, target);
-		if (attack == null) return false; // Event cancelled
+		if (attack == null) return false; // Event canceled
 
 		float originalHealth = 0;
 		boolean damageSucceeded = false;

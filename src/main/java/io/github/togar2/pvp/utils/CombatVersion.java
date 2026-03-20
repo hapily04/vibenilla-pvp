@@ -3,8 +3,8 @@ package io.github.togar2.pvp.utils;
 import io.github.togar2.pvp.feature.CombatFeature;
 
 public final class CombatVersion implements CombatFeature {
-	public static CombatVersion MODERN = new CombatVersion(false);
-	public static CombatVersion LEGACY = new CombatVersion(true);
+	public static final CombatVersion MODERN = new CombatVersion(false);
+	public static final CombatVersion LEGACY = new CombatVersion(true);
 
 	private final boolean legacy;
 

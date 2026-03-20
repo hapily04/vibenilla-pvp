@@ -204,7 +204,7 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 			@Override
 			public void apply(@NotNull Instance instance) {
 				List<Point> blocks = this.prepare(instance);
-				if (blocks == null) return; // Event was cancelled
+				if (blocks == null) return; // Event was canceled
 				byte[] records = new byte[3 * blocks.size()];
 				for (int i = 0; i < blocks.size(); i++) {
 					final var pos = blocks.get(i);

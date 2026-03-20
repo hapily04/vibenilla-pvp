@@ -259,7 +259,7 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 
 		damage.setAmount(amount);
 
-		// lastDamage field is set when event is not cancelled but should also when cancelled
+		// lastDamage field is set when event is not canceled but should also when canceled
 		if (register) EntityUtil.setLastDamage(entity, damage);
 
 		// The Minestom damage method should return false if there was no hurt animation,

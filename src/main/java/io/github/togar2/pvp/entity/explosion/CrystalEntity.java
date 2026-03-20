@@ -39,7 +39,7 @@ public class CrystalEntity extends LivingEntity {
 			return false;
 		}
 
-		// Set the last damage type since the event is not cancelled
+		// Set the last damage type since the event is not canceled
 		this.lastDamage = damage;
 
 		// Save this.instance locally

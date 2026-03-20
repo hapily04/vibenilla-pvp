@@ -153,11 +153,6 @@ public class CustomEntityProjectile extends Entity {
 	}
 
 	@Override
-	public void remove() {
-		super.remove();
-	}
-
-	@Override
 	public void tick(long time) {
 		super.tick(time);
 		if (this.isRemoved()) return;

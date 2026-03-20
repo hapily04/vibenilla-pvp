@@ -5,7 +5,6 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.instance.AddEntityToInstanceEvent;
-import net.minestom.server.event.player.AsyncPlayerConfigurationEvent;
 import net.minestom.server.event.player.PlayerRespawnEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
 
