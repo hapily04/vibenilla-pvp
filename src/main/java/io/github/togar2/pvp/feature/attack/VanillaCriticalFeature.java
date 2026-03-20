@@ -30,17 +30,17 @@ public class VanillaCriticalFeature implements CriticalFeature {
 
 	@Override
 	public void initDependencies() {
-		this.playerStateFeature = configuration.get(FeatureType.PLAYER_STATE);
-		this.version = configuration.get(FeatureType.VERSION);
+		this.playerStateFeature = this.configuration.get(FeatureType.PLAYER_STATE);
+		this.version = this.configuration.get(FeatureType.VERSION);
 	}
 
 	@Override
 	public boolean shouldCrit(LivingEntity attacker, AttackValues.PreCritical values) {
-		boolean critical = values.strong() && !playerStateFeature.isClimbing(attacker)
+		boolean critical = values.strong() && !this.playerStateFeature.isClimbing(attacker)
 				&& attacker.getVelocity().y() < 0 && !attacker.isOnGround()
 				&& !attacker.hasEffect(PotionEffect.BLINDNESS)
 				&& attacker.getVehicle() == null;
-		if (version.legacy()) return critical;
+		if (this.version.legacy()) return critical;
 
 		// Not sprinting required for critical in 1.9+
 		return critical && !attacker.isSprinting();
@@ -48,7 +48,7 @@ public class VanillaCriticalFeature implements CriticalFeature {
 
 	@Override
 	public float applyToDamage(float damage) {
-		if (version.legacy()) {
+		if (this.version.legacy()) {
 			return damage + ThreadLocalRandom.current().nextInt((int) (damage / 2 + 2));
 		} else {
 			return damage * 1.5f;

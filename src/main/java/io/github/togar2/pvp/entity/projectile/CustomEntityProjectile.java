@@ -45,21 +45,21 @@ public class CustomEntityProjectile extends Entity {
 	public CustomEntityProjectile(@Nullable Entity shooter, @NotNull EntityType entityType) {
 		super(entityType);
 		this.shooter = shooter;
-		setup();
+        this.setup();
 	}
 
 	private void setup() {
-		collidesWithEntities = false;
-		preventBlockPlacement = false;
-		setAerodynamics(new Aerodynamics(getAerodynamics().gravity(), 0.99, 0.99));
-		if (getEntityMeta() instanceof ProjectileMeta) {
-			((ProjectileMeta) getEntityMeta()).setShooter(shooter);
+        this.collidesWithEntities = false;
+        this.preventBlockPlacement = false;
+        this.setAerodynamics(new Aerodynamics(this.getAerodynamics().gravity(), 0.99, 0.99));
+		if (this.getEntityMeta() instanceof ProjectileMeta) {
+			((ProjectileMeta) this.getEntityMeta()).setShooter(this.shooter);
 		}
-		setSynchronizationTicks(getUpdateInterval());
+        this.setSynchronizationTicks(this.getUpdateInterval());
 	}
 
 	public @Nullable Entity getShooter() {
-		return shooter;
+		return this.shooter;
 	}
 
 	/**
@@ -88,14 +88,14 @@ public class CustomEntityProjectile extends Entity {
 	}
 
 	public void shootFrom(Pos from, double power, double spread) {
-		Point to = from.add(shooter.getPosition().direction());
-		shoot(from, to, power, spread);
+		Point to = from.add(this.shooter.getPosition().direction());
+        this.shoot(from, to, power, spread);
 	}
 
 	@Deprecated
 	public void shootTo(Point to, double power, double spread) {
-		final var from = this.shooter.getPosition().add(0D, shooter.getEyeHeight(), 0D);
-		shoot(from, to, power, spread);
+		final var from = this.shooter.getPosition().add(0D, this.shooter.getEyeHeight(), 0D);
+        this.shoot(from, to, power, spread);
 	}
 
 	public void shootFromRotation(float pitch, float yaw, float yBias, double power, double spread) {
@@ -128,7 +128,7 @@ public class CustomEntityProjectile extends Entity {
 
 		final double mul = ServerFlag.SERVER_TICKS_PER_SECOND * power;
 		this.velocity = new Vec(dx * mul, dy * mul, dz * mul);
-		setView(
+        this.setView(
 				(float) Math.toDegrees(Math.atan2(dx, dz)),
 				(float) Math.toDegrees(Math.atan2(dy, Math.sqrt(dx * dx + dz * dz)))
 		);
@@ -144,12 +144,12 @@ public class CustomEntityProjectile extends Entity {
 		double dx = to.x() - from.x();
 		double dy = to.y() - from.y() + pitchAdjust;
 		double dz = to.z() - from.z();
-		if (!hasNoGravity()) {
+		if (!this.hasNoGravity()) {
 			final double xzLength = Math.sqrt(dx * dx + dz * dz);
 			dy += xzLength * 0.20000000298023224D;
 		}
 
-		shoot(dx, dy, dz, power, spread);
+        this.shoot(dx, dy, dz, power, spread);
 	}
 
 	@Override
@@ -160,24 +160,24 @@ public class CustomEntityProjectile extends Entity {
 	@Override
 	public void tick(long time) {
 		super.tick(time);
-		if (isRemoved()) return;
+		if (this.isRemoved()) return;
 
-		if (isStuck() && shouldUnstuck()) {
+		if (this.isStuck() && this.shouldUnstuck()) {
 			EventDispatcher.call(new ProjectileUncollideEvent(this));
-			collisionDirection = null;
-			setNoGravity(false);
-			onUnstuck();
+            this.collisionDirection = null;
+            this.setNoGravity(false);
+            this.onUnstuck();
 		}
 	}
 
 	public boolean isStuck() {
-		return collisionDirection != null;
+		return this.collisionDirection != null;
 	}
 
 	private boolean shouldUnstuck() {
-		Point collidedPoint = position.add(collisionDirection.mul(0.003)); // Move slightly inside the collided block
+		Point collidedPoint = this.position.add(this.collisionDirection.mul(0.003)); // Move slightly inside the collided block
 		Point collidedBlockVec = new BlockVec(collidedPoint);
-		Block block = instance.getBlock(collidedPoint);
+		Block block = this.instance.getBlock(collidedPoint);
 
 		return !block.registry().collisionShape().intersectBox(collidedPoint.sub(collidedBlockVec).sub(0, 0.6, 0), UNSTUCK_BOX);
 	}
@@ -191,7 +191,7 @@ public class CustomEntityProjectile extends Entity {
 		// For some reason, sending a synchronization when stuck means the position of the arrow will change slightly
 		// on the client even though the position on the server has not changed at all. Why? No clue.
 		// This check does solve the issue though.
-		if (isStuck()) return;
+		if (this.isStuck()) return;
 
 		super.synchronizePosition();
 	}
@@ -201,106 +201,106 @@ public class CustomEntityProjectile extends Entity {
 	@Override
 	protected void movementTick() {
 		// Mostly copied from Minestom
-		this.gravityTickCount = isStuck() ? 0 : gravityTickCount + 1;
-		if (vehicle != null) return;
+		this.gravityTickCount = this.isStuck() ? 0 : this.gravityTickCount + 1;
+		if (this.vehicle != null) return;
 
-		if (!isStuck()) {
-			Vec diff = velocity.div(ServerFlag.SERVER_TICKS_PER_SECOND);
+		if (!this.isStuck()) {
+			Vec diff = this.velocity.div(ServerFlag.SERVER_TICKS_PER_SECOND);
 			// Prevent entity infinitely in the void
-			if (instance.isInVoid(position)) {
-				scheduler().scheduleNextProcess(this::remove);
+			if (this.instance.isInVoid(this.position)) {
+                this.scheduler().scheduleNextProcess(this::remove);
 				return;
 			}
 
-            ChunkCache blockGetter = new ChunkCache(instance, currentChunk, Block.AIR);
-			PhysicsResult physicsResult = ProjectileUtil.simulateMovement(position, diff, POINT_BOX,
-					instance.getWorldBorder(), blockGetter, hasPhysics, previousPhysicsResult, true);
+            ChunkCache blockGetter = new ChunkCache(this.instance, this.currentChunk, Block.AIR);
+			PhysicsResult physicsResult = ProjectileUtil.simulateMovement(this.position, diff, POINT_BOX,
+                    this.instance.getWorldBorder(), blockGetter, this.hasPhysics, this.previousPhysicsResult, true);
 			this.previousPhysicsResult = physicsResult;
 
 			Pos newPosition = physicsResult.newPosition();
 
-			if (!noClip) {
+			if (!this.noClip) {
 				// We won't check collisions with self for first ticks of projectile's life, because it spawns in the
 				// shooter and will immediately be triggered by him.
-				boolean noCollideShooter = getAliveTicks() < 6;
-				Collection<EntityCollisionResult> entityResult = CollisionUtils.checkEntityCollisions(instance, boundingBox.expand(0.1, 0.3, 0.1),
-						position.add(0, -0.3, 0), diff, 3, e -> {
-							if (noCollideShooter && e == shooter) return false;
-							return e != this && canHit(e);
+				boolean noCollideShooter = this.getAliveTicks() < 6;
+				Collection<EntityCollisionResult> entityResult = CollisionUtils.checkEntityCollisions(this.instance, this.boundingBox.expand(0.1, 0.3, 0.1),
+                        this.position.add(0, -0.3, 0), diff, 3, e -> {
+							if (noCollideShooter && e == this.shooter) return false;
+							return e != this && this.canHit(e);
 						}, physicsResult);
 
 				if (!entityResult.isEmpty()) {
-					Vec prevVelocity = velocity;
+					Vec prevVelocity = this.velocity;
 					EntityCollisionResult collided = entityResult.stream().findFirst().orElse(null);
 
 					var event = new ProjectileCollideWithEntityEvent(this, Pos.fromPoint(collided.collisionPoint()), collided.entity());
 					EventDispatcher.call(event);
 					if (!event.isCancelled()) {
-						if (onHit(collided.entity())) {
+						if (this.onHit(collided.entity())) {
 							// Don't remove now because rest of Entity#tick might throw errors
-							scheduler().scheduleNextProcess(this::remove);
+                            this.scheduler().scheduleNextProcess(this::remove);
 							// Prevent hitting blocks
 							return;
 						} else {
 							// If velocity has been changed because of bounce, prevent projectile from moving further
-							if (velocity != prevVelocity) newPosition = position;
+							if (this.velocity != prevVelocity) newPosition = this.position;
 						}
 					}
 				}
 			}
 
-			Chunk finalChunk = ChunkUtils.retrieve(instance, currentChunk, physicsResult.newPosition());
+			Chunk finalChunk = ChunkUtils.retrieve(this.instance, this.currentChunk, physicsResult.newPosition());
 			if (!ChunkUtils.isLoaded(finalChunk)) return;
 
-			if (physicsResult.hasCollision() && !isStuck()) {
-				double signumX = physicsResult.collisionX() ? Math.signum(velocity.x()) : 0;
-				double signumY = physicsResult.collisionY() ? Math.signum(velocity.y()) : 0;
-				double signumZ = physicsResult.collisionZ() ? Math.signum(velocity.z()) : 0;
+			if (physicsResult.hasCollision() && !this.isStuck()) {
+				double signumX = physicsResult.collisionX() ? Math.signum(this.velocity.x()) : 0;
+				double signumY = physicsResult.collisionY() ? Math.signum(this.velocity.y()) : 0;
+				double signumZ = physicsResult.collisionZ() ? Math.signum(this.velocity.z()) : 0;
 				Vec collisionDirection = new Vec(signumX, signumY, signumZ);
 
 				Point collidedPosition = collisionDirection.add(physicsResult.newPosition()).apply(Vec.Operator.FLOOR);
-				Block block = instance.getBlock(collidedPosition);
+				Block block = this.instance.getBlock(collidedPosition);
 
 				var event = new ProjectileCollideWithBlockEvent(this, physicsResult.newPosition().withCoord(collidedPosition), block);
 				EventDispatcher.call(event);
 				if (!event.isCancelled()) {
-					setNoGravity(true);
-					setVelocity(Vec.ZERO);
+                    this.setNoGravity(true);
+                    this.setVelocity(Vec.ZERO);
 					this.collisionDirection = collisionDirection;
 
-					if (onStuck()) {
+					if (this.onStuck()) {
 						// Don't remove now because rest of Entity#tick might throw errors
-						scheduler().scheduleNextProcess(this::remove);
+                        this.scheduler().scheduleNextProcess(this::remove);
 					}
 				}
 			}
 
-			Aerodynamics aerodynamics = getAerodynamics();
-			velocity = velocity.mul(
+			Aerodynamics aerodynamics = this.getAerodynamics();
+            this.velocity = this.velocity.mul(
 					aerodynamics.horizontalAirResistance(),
 					aerodynamics.verticalAirResistance(),
 					aerodynamics.horizontalAirResistance()
-			).sub(0, hasNoGravity() ? 0 : getAerodynamics().gravity() * ServerFlag.SERVER_TICKS_PER_SECOND, 0);
-			onGround = physicsResult.isOnGround();
+			).sub(0, this.hasNoGravity() ? 0 : this.getAerodynamics().gravity() * ServerFlag.SERVER_TICKS_PER_SECOND, 0);
+            this.onGround = physicsResult.isOnGround();
 
-			float yaw = position.yaw();
-			float pitch = position.pitch();
+			float yaw = this.position.yaw();
+			float pitch = this.position.pitch();
 
-			if (!noClip) {
+			if (!this.noClip) {
 				yaw = (float) Math.toDegrees(Math.atan2(diff.x(), diff.z()));
 				pitch = (float) Math.toDegrees(
 						Math.atan2(diff.y(), Math.sqrt(diff.x() * diff.x() + diff.z() * diff.z())));
 
 				// Vanilla really likes to use variables from the render code
 				// on the server side in a way that does not make sense at all
-				yaw = lerp(prevYaw, yaw);
-				pitch = lerp(prevPitch, pitch);
+				yaw = lerp(this.prevYaw, yaw);
+				pitch = lerp(this.prevPitch, pitch);
 			}
 
 			this.prevYaw = yaw;
 			this.prevPitch = pitch;
 
-			refreshPosition(newPosition.withView(yaw, pitch), noClip, isStuck());
+            this.refreshPosition(newPosition.withView(yaw, pitch), this.noClip, this.isStuck());
 		}
 	}
 

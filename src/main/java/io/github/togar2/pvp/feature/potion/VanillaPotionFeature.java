@@ -55,9 +55,9 @@ public class VanillaPotionFeature implements PotionFeature, RegistrableFeature {
 
 	@Override
 	public void initDependencies() {
-		this.effectFeature = configuration.get(FeatureType.EFFECT);
-		this.exhaustionFeature = configuration.get(FeatureType.EXHAUSTION);
-		this.foodFeature = configuration.get(FeatureType.FOOD);
+		this.effectFeature = this.configuration.get(FeatureType.EFFECT);
+		this.exhaustionFeature = this.configuration.get(FeatureType.EXHAUSTION);
+		this.foodFeature = this.configuration.get(FeatureType.FOOD);
 	}
 
 	@Override
@@ -74,9 +74,9 @@ public class VanillaPotionFeature implements PotionFeature, RegistrableFeature {
 			Player player = event.getPlayer();
 			ItemStack stack = event.getItemStack();
 
-			triggerDrinkingSound(player);
+            this.triggerDrinkingSound(player);
 
-			List<Potion> potions = effectFeature.getAllPotions(stack.get(DataComponents.POTION_CONTENTS));
+			List<Potion> potions = this.effectFeature.getAllPotions(stack.get(DataComponents.POTION_CONTENTS));
 
 			// Apply the potions
 			for (Potion potion : potions) {
@@ -84,7 +84,7 @@ public class VanillaPotionFeature implements PotionFeature, RegistrableFeature {
 
 				if (combatPotionEffect.isInstant()) {
 					combatPotionEffect.applyInstantEffect(player, player, player, potion.amplifier(),
-							1.0, exhaustionFeature, foodFeature);
+							1.0, this.exhaustionFeature, this.foodFeature);
 				} else {
 					player.addEffect(potion);
 				}
@@ -110,7 +110,7 @@ public class VanillaPotionFeature implements PotionFeature, RegistrableFeature {
 			Player player = event.getPlayer();
 			if (player.isSilent() || !player.isEating()) return;
 
-			tickDrinkingSounds(player);
+            this.tickDrinkingSounds(player);
 		});
 
 		node.addListener(PlayerUseItemEvent.class, event -> {
@@ -122,7 +122,7 @@ public class VanillaPotionFeature implements PotionFeature, RegistrableFeature {
 					0.5f, 0.4f / (random.nextFloat() * 0.4f + 0.8f)
 			), event.getPlayer());
 
-			throwPotion(event.getPlayer(), event.getItemStack(), event.getHand());
+            this.throwPotion(event.getPlayer(), event.getItemStack(), event.getHand());
 		});
 
 		node.addListener(PlayerUseItemEvent.class, event -> {
@@ -134,12 +134,12 @@ public class VanillaPotionFeature implements PotionFeature, RegistrableFeature {
 					0.5f, 0.4f / (random.nextFloat() * 0.4f + 0.8f)
 			), event.getPlayer());
 
-			throwPotion(event.getPlayer(), event.getItemStack(), event.getHand());
+            this.throwPotion(event.getPlayer(), event.getItemStack(), event.getHand());
 		});
 	}
 
 	protected void throwPotion(Player player, ItemStack stack, PlayerHand hand) {
-		ThrownPotion thrownPotion = new ThrownPotion(player, effectFeature, false);
+		ThrownPotion thrownPotion = new ThrownPotion(player, this.effectFeature, false);
 		thrownPotion.setItem(stack);
 
 		Pos position = player.getPosition().add(0, player.getEyeHeight(), 0);
@@ -166,7 +166,7 @@ public class VanillaPotionFeature implements PotionFeature, RegistrableFeature {
 		boolean shouldTrigger = canTrigger && remainingUseTicks % 4 == 0;
 		if (!shouldTrigger) return;
 
-		triggerDrinkingSound(player);
+        this.triggerDrinkingSound(player);
 	}
 
 	protected void triggerDrinkingSound(Player player) {

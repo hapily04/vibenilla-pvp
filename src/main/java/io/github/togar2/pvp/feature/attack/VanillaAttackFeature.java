@@ -70,14 +70,14 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 
 	@Override
 	public void initDependencies() {
-		this.cooldownFeature = configuration.get(FeatureType.ATTACK_COOLDOWN);
-		this.exhaustionFeature = configuration.get(FeatureType.EXHAUSTION);
-		this.itemDamageFeature = configuration.get(FeatureType.ITEM_DAMAGE);
-		this.enchantmentFeature = configuration.get(FeatureType.ENCHANTMENT);
-		this.criticalFeature = configuration.get(FeatureType.CRITICAL);
-		this.sweepingFeature = configuration.get(FeatureType.SWEEPING);
-		this.knockbackFeature = configuration.get(FeatureType.KNOCKBACK);
-		this.version = configuration.get(FeatureType.VERSION);
+		this.cooldownFeature = this.configuration.get(FeatureType.ATTACK_COOLDOWN);
+		this.exhaustionFeature = this.configuration.get(FeatureType.EXHAUSTION);
+		this.itemDamageFeature = this.configuration.get(FeatureType.ITEM_DAMAGE);
+		this.enchantmentFeature = this.configuration.get(FeatureType.ENCHANTMENT);
+		this.criticalFeature = this.configuration.get(FeatureType.CRITICAL);
+		this.sweepingFeature = this.configuration.get(FeatureType.SWEEPING);
+		this.knockbackFeature = this.configuration.get(FeatureType.KNOCKBACK);
+		this.version = this.configuration.get(FeatureType.VERSION);
 	}
 
 	@Override
@@ -87,7 +87,7 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 				Entity target = event.getTarget();
 				double maxDistanceSquared = Math.pow(player.getAttributeValue(Attribute.ENTITY_INTERACTION_RANGE) + ATTACK_RANGE_MARGIN, 2);
 				if (player.getPosition().distanceSquared(target.getPosition().add(0, target.getEyeHeight(), 0)) < maxDistanceSquared)
-					performAttack(player, target);
+                    this.performAttack(player, target);
 			}
 		});
 	}
@@ -97,7 +97,7 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 		PrepareAttackEvent prepareAttackEvent = new PrepareAttackEvent(attacker, target);
 		EventDispatcher.call(prepareAttackEvent);
 		if (prepareAttackEvent.isCancelled()) return false;
-		AttackValues.Final attack = prepareAttack(attacker, target);
+		AttackValues.Final attack = this.prepareAttack(attacker, target);
 		if (attack == null) return false; // Event cancelled
 
 		float originalHealth = 0;
@@ -127,9 +127,9 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 		Collection<LivingEntity> affectedEntities = List.of(living);
 
 		// Knockback and sweeping
-		knockbackFeature.applyAttackKnockback(attacker, living, attack.knockback());
+        this.knockbackFeature.applyAttackKnockback(attacker, living, attack.knockback());
 		if (attack.sweeping()) {
-			affectedEntities = sweepingFeature.applySweeping(attacker, living, attack.damage());
+			affectedEntities = this.sweepingFeature.applySweeping(attacker, living, attack.damage());
 			affectedEntities.add(living);
 		}
 
@@ -177,8 +177,8 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 
 		for (LivingEntity affectedEntity : affectedEntities) {
 			// Thorns
-			enchantmentFeature.onUserDamaged(affectedEntity, attacker);
-			enchantmentFeature.onTargetDamaged(attacker, affectedEntity);
+            this.enchantmentFeature.onUserDamaged(affectedEntity, attacker);
+            this.enchantmentFeature.onTargetDamaged(attacker, affectedEntity);
 
 			if (attack.fireAspect() > 0) {
 				for (LivingEntity entity : affectedEntities) {
@@ -189,7 +189,7 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 
 		// Damage item
 		Tool tool = Tool.fromMaterial(attacker.getItemInMainHand().material());
-		if (tool != null) itemDamageFeature.damageEquipment(attacker, EquipmentSlot.MAIN_HAND,
+		if (tool != null) this.itemDamageFeature.damageEquipment(attacker, EquipmentSlot.MAIN_HAND,
 			(tool.isSword() || tool == Tool.TRIDENT) ? 1 : 2);
 
 		// Damage indicator particles
@@ -206,22 +206,22 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 		}
 
 		if (attacker instanceof Player player)
-			exhaustionFeature.addAttackExhaustion(player);
+            this.exhaustionFeature.addAttackExhaustion(player);
 
 		return true;
 	}
 
 	protected @Nullable AttackValues.Final prepareAttack(LivingEntity attacker, Entity target) {
 		float damage = (float) attacker.getAttributeValue(Attribute.ATTACK_DAMAGE);
-		float magicalDamage = enchantmentFeature.getAttackDamage(
+		float magicalDamage = this.enchantmentFeature.getAttackDamage(
 			attacker.getItemInMainHand(),
 			target instanceof LivingEntity living ? EntityGroup.ofEntity(living) : EntityGroup.DEFAULT
 		);
 
 		double cooldownProgress = 1;
 		if (attacker instanceof Player player) {
-			cooldownProgress = cooldownFeature.getAttackCooldownProgress(player);
-			cooldownFeature.resetCooldownProgress(player);
+			cooldownProgress = this.cooldownFeature.getAttackCooldownProgress(player);
+            this.cooldownFeature.resetCooldownProgress(player);
 		}
 
 		// Apply cooldownProgress to damage
@@ -231,21 +231,21 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 		// Calculate attacks
 		boolean strongAttack = cooldownProgress > 0.9;
 		boolean sprintAttack = attacker.isSprinting() && strongAttack;
-		int knockback = enchantmentFeature.getKnockback(attacker);
-		int fireAspect = enchantmentFeature.getFireAspect(attacker);
+		int knockback = this.enchantmentFeature.getKnockback(attacker);
+		int fireAspect = this.enchantmentFeature.getFireAspect(attacker);
 
 		// Use features to determine critical and sweeping
 		AttackValues.PreCritical preCritical = new AttackValues.PreCritical(
 			damage, magicalDamage, cooldownProgress,
 			strongAttack, sprintAttack, knockback, fireAspect
 		);
-		AttackValues.PreSweeping preSweeping = preCritical.withCritical(criticalFeature.shouldCrit(attacker, preCritical));
-		AttackValues.PreSounds preSounds = preSweeping.withSweeping(sweepingFeature.shouldSweep(attacker, preSweeping));
+		AttackValues.PreSweeping preSweeping = preCritical.withCritical(this.criticalFeature.shouldCrit(attacker, preCritical));
+		AttackValues.PreSounds preSounds = preSweeping.withSweeping(this.sweepingFeature.shouldSweep(attacker, preSweeping));
 
 		boolean critical = preSounds.critical();
 		boolean sweeping = preSounds.sweeping();
 
-		boolean sounds = version.modern();
+		boolean sounds = this.version.modern();
 
 		// Call event which can modify attack values
 		FinalAttackEvent finalAttackEvent = new FinalAttackEvent(
@@ -262,7 +262,7 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 		magicalDamage = finalAttackEvent.getEnchantsExtraDamage();
 
 		// Apply critical damage and knockback
-		if (critical) damage = criticalFeature.applyToDamage(damage);
+		if (critical) damage = this.criticalFeature.applyToDamage(damage);
 		damage += magicalDamage;
 
 		if (sprintAttack) knockback++;

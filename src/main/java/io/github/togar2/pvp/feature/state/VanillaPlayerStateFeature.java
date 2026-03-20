@@ -41,7 +41,7 @@ public class VanillaPlayerStateFeature implements PlayerStateFeature, Registrabl
 
 		node.addListener(PlayerMoveEvent.class, event -> {
 			Player player = event.getPlayer();
-			if (isClimbing(player)) {
+			if (this.isClimbing(player)) {
 				player.setTag(LAST_CLIMBED_BLOCK, player.getInstance().getBlock(player.getPosition()));
 			}
 		});

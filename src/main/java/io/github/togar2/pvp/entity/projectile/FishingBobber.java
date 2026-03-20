@@ -23,57 +23,57 @@ public class FishingBobber extends CustomEntityProjectile {
 	public FishingBobber(@Nullable Entity shooter, boolean legacy) {
 		super(shooter, EntityType.FISHING_BOBBER);
 		this.legacy = legacy;
-		setOwnerEntity(shooter);
+        this.setOwnerEntity(shooter);
 
 		// Custom gravity logic: gravity is applied before movement
-		customGravity = legacy ? 0.04 : 0.03;
-		setAerodynamics(getAerodynamics().withGravity(0));
+        this.customGravity = legacy ? 0.04 : 0.03;
+        this.setAerodynamics(this.getAerodynamics().withGravity(0));
 
 		// Minestom seems to like having wrong values in its registries
-		setAerodynamics(getAerodynamics().withHorizontalAirResistance(0.92).withVerticalAirResistance(0.92));
+        this.setAerodynamics(this.getAerodynamics().withHorizontalAirResistance(0.92).withVerticalAirResistance(0.92));
 	}
 
 	@Override
 	public void tick(long time) {
-		prevPos = getPosition();
-		velocity = velocity.add(0, -customGravity * ServerFlag.SERVER_TICKS_PER_SECOND, 0);
+        this.prevPos = this.getPosition();
+        this.velocity = this.velocity.add(0, -this.customGravity * ServerFlag.SERVER_TICKS_PER_SECOND, 0);
 		super.tick(time);
 	}
 
 	@Override
 	public void update(long time) {
-		if (!(getShooter() instanceof Player shooter)) {
-			remove();
+		if (!(this.getShooter() instanceof Player shooter)) {
+            this.remove();
 			return;
 		}
-		if (shouldStopFishing(shooter)) return;
+		if (this.shouldStopFishing(shooter)) return;
 
-		if (onGround) {
-			stuckTime++;
-			if (stuckTime >= 1200) {
-				remove();
+		if (this.onGround) {
+            this.stuckTime++;
+			if (this.stuckTime >= 1200) {
+                this.remove();
 				return;
 			}
 		} else {
-			stuckTime = 0;
+            this.stuckTime = 0;
 		}
 
-		if (state == State.IN_AIR) {
-			if (hooked != null) {
-				velocity = Vec.ZERO;
-				setNoGravity(true);
-				state = State.HOOKED_ENTITY;
+		if (this.state == State.IN_AIR) {
+			if (this.hooked != null) {
+                this.velocity = Vec.ZERO;
+                this.setNoGravity(true);
+                this.state = State.HOOKED_ENTITY;
 			}
 		} else {
-			if (state == State.HOOKED_ENTITY) {
-				if (hooked != null) {
-					if (hooked.isRemoved() || hooked.getInstance() != getInstance()) {
-						setHookedEntity(null);
-						setNoGravity(false);
-						state = State.IN_AIR;
+			if (this.state == State.HOOKED_ENTITY) {
+				if (this.hooked != null) {
+					if (this.hooked.isRemoved() || this.hooked.getInstance() != this.getInstance()) {
+                        this.setHookedEntity(null);
+                        this.setNoGravity(false);
+                        this.state = State.IN_AIR;
 					} else {
-						Pos hookedPos = hooked.getPosition();
-						teleport(hookedPos.withY(hookedPos.y() + hooked.getBoundingBox().height() * 0.8));
+						Pos hookedPos = this.hooked.getPosition();
+                        this.teleport(hookedPos.withY(hookedPos.y() + this.hooked.getBoundingBox().height() * 0.8));
 					}
 				}
 			}
@@ -82,18 +82,18 @@ public class FishingBobber extends CustomEntityProjectile {
 
 	@Override
 	public boolean onHit(Entity entity) {
-		if (hooked != null) return false;
-		setHookedEntity(entity);
+		if (this.hooked != null) return false;
+        this.setHookedEntity(entity);
 
-		if (legacy) {
+		if (this.legacy) {
 			if (entity instanceof Player player
-					&& (player == getShooter() || player.getGameMode() == GameMode.CREATIVE))
+					&& (player == this.getShooter() || player.getGameMode() == GameMode.CREATIVE))
 				return false;
 
 			Pos posNow = this.position;
-			this.position = prevPos;
+			this.position = this.prevPos;
 			if (((LivingEntity) entity).damage(new Damage(DamageType.GENERIC, null, null, null, 0))) {
-				entity.setVelocity(calculateLegacyKnockback(entity.getVelocity(), entity.getPosition()));
+				entity.setVelocity(this.calculateLegacyKnockback(entity.getVelocity(), entity.getPosition()));
 			}
 			this.position = posNow;
 		}
@@ -103,20 +103,20 @@ public class FishingBobber extends CustomEntityProjectile {
 
 	private void setHookedEntity(@Nullable Entity entity) {
 		this.hooked = entity;
-		((FishingHookMeta) getEntityMeta()).setHookedEntity(entity);
+		((FishingHookMeta) this.getEntityMeta()).setHookedEntity(entity);
 	}
 
 	private void setOwnerEntity(@Nullable Entity entity) {
-		((FishingHookMeta) getEntityMeta()).setOwnerEntity(entity);
+		((FishingHookMeta) this.getEntityMeta()).setOwnerEntity(entity);
 	}
 
 	private boolean shouldStopFishing(Player player) {
 		boolean main = player.getItemInMainHand().material() == Material.FISHING_ROD;
 		boolean off = player.getItemInOffHand().material() == Material.FISHING_ROD;
 		if (player.isRemoved() || player.isDead() || (!main && !off)
-				|| (!legacy && getDistanceSquared(player) > 1024)) {
-			setOwnerEntity(null);
-			remove();
+				|| (!this.legacy && this.getDistanceSquared(player) > 1024)) {
+            this.setOwnerEntity(null);
+            this.remove();
 			return true;
 		}
 
@@ -124,29 +124,29 @@ public class FishingBobber extends CustomEntityProjectile {
 	}
 
 	public int retrieve() {
-		if (!(getShooter() instanceof Player shooter)) return 0;
-		if (shouldStopFishing(shooter)) return 0;
+		if (!(this.getShooter() instanceof Player shooter)) return 0;
+		if (this.shouldStopFishing(shooter)) return 0;
 
 		int durability = 0;
-		if (hooked != null) {
-			if (!legacy) {
-				pullEntity(hooked);
-				triggerStatus((byte) 31);
+		if (this.hooked != null) {
+			if (!this.legacy) {
+                this.pullEntity(this.hooked);
+                this.triggerStatus((byte) 31);
 			}
-			durability = hooked instanceof ItemEntity ? 3 : 5;
+			durability = this.hooked instanceof ItemEntity ? 3 : 5;
 		}
 
-		remove();
+        this.remove();
 
 		return durability;
 	}
 
 	private void pullEntity(Entity entity) {
-		Entity shooter = getShooter();
+		Entity shooter = this.getShooter();
 		if (shooter == null) return;
 
 		Pos shooterPos = shooter.getPosition();
-		Pos pos = getPosition();
+		Pos pos = this.getPosition();
 		Vec velocity = new Vec(shooterPos.x() - pos.x(), shooterPos.y() - pos.y(),
 				shooterPos.z() - pos.z()).mul(0.1);
 		velocity = velocity.mul(ServerFlag.SERVER_TICKS_PER_SECOND);
@@ -156,7 +156,7 @@ public class FishingBobber extends CustomEntityProjectile {
 	private Vec calculateLegacyKnockback(Vec currentVelocity, Pos entityPos) {
 		currentVelocity = currentVelocity.div(ServerFlag.SERVER_TICKS_PER_SECOND);
 
-		Pos position = getPosition();
+		Pos position = this.getPosition();
 		double dx = position.x() - entityPos.x();
 		double dz = position.z() - entityPos.z();
 
@@ -184,7 +184,7 @@ public class FishingBobber extends CustomEntityProjectile {
 
 	@Override
 	public void remove() {
-		Entity shooter = getShooter();
+		Entity shooter = this.getShooter();
 		if (shooter != null) {
 			if (shooter.getTag(VanillaFishingRodFeature.FISHING_BOBBER) == this) {
 				shooter.removeTag(VanillaFishingRodFeature.FISHING_BOBBER);

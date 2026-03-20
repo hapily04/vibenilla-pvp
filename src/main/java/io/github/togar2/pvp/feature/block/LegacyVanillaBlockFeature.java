@@ -65,11 +65,11 @@ public class LegacyVanillaBlockFeature extends VanillaBlockFeature
 
 	@Override
 	public void block(Player player) {
-		if (!isBlocking(player)) {
+		if (!this.isBlocking(player)) {
 			player.setTag(BLOCK_REPLACEMENT_ITEM, player.getItemInOffHand());
 			player.setTag(BLOCKING_SWORD, true);
 
-			player.setItemInOffHand(blockingItem);
+			player.setItemInOffHand(this.blockingItem);
 			player.refreshActiveHand(true, true, false);
 			player.sendPacketToViewersAndSelf(player.getMetadataPacket());
 		}
@@ -77,7 +77,7 @@ public class LegacyVanillaBlockFeature extends VanillaBlockFeature
 
 	@Override
 	public void unblock(Player player) {
-		if (isBlocking(player)) {
+		if (this.isBlocking(player)) {
 			player.setTag(BLOCKING_SWORD, false);
 			player.setItemInOffHand(player.getTag(BLOCK_REPLACEMENT_ITEM));
 			player.removeTag(BLOCK_REPLACEMENT_ITEM);
@@ -87,31 +87,31 @@ public class LegacyVanillaBlockFeature extends VanillaBlockFeature
 	private void handleUseItem(PlayerUseItemEvent event) {
 		Player player = event.getPlayer();
 
-		if (event.getHand() == PlayerHand.MAIN && !isBlocking(player) && canBlockWith(player, event.getItemStack())) {
+		if (event.getHand() == PlayerHand.MAIN && !this.isBlocking(player) && this.canBlockWith(player, event.getItemStack())) {
 			long elapsedSwingTime = System.currentTimeMillis() - player.getTag(LAST_SWING_TIME);
 			if (elapsedSwingTime < 50) {
 				return;
 			}
 
-			block(player);
+            this.block(player);
 		}
 	}
 
 	protected void handleUpdateState(PlayerFinishItemUseEvent event) {
-		if (event.getHand() == PlayerHand.OFF && event.getItemStack().isSimilar(blockingItem))
-			unblock(event.getPlayer());
+		if (event.getHand() == PlayerHand.OFF && event.getItemStack().isSimilar(this.blockingItem))
+            this.unblock(event.getPlayer());
 	}
 
 	protected void handleSwapItem(PlayerSwapItemEvent event) {
 		Player player = event.getPlayer();
-		if (player.getItemInOffHand().isSimilar(blockingItem) && isBlocking(player))
+		if (player.getItemInOffHand().isSimilar(this.blockingItem) && this.isBlocking(player))
 			event.setCancelled(true);
 	}
 
 	protected void handleChangeSlot(PlayerChangeHeldSlotEvent event) {
 		Player player = event.getPlayer();
-		if (player.getItemInOffHand().isSimilar(blockingItem) && isBlocking(player))
-			unblock(player);
+		if (player.getItemInOffHand().isSimilar(this.blockingItem) && this.isBlocking(player))
+            this.unblock(player);
 	}
 
 	@Override

@@ -38,9 +38,9 @@ public interface RegistrableFeature extends CombatFeature {
 	 * @return the event node
 	 */
 	default EventNode<EntityInstanceEvent> createNode() {
-		var node = EventNode.type(getClass().getTypeName(), ENTITY_INSTANCE_FILTER);
-		node.setPriority(getPriority());
-		init(node);
+		var node = EventNode.type(this.getClass().getTypeName(), ENTITY_INSTANCE_FILTER);
+		node.setPriority(this.getPriority());
+        this.init(node);
 		return node;
 	}
 }

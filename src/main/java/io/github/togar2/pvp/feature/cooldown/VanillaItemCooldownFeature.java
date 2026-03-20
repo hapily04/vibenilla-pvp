@@ -52,13 +52,13 @@ public class VanillaItemCooldownFeature implements ItemCooldownFeature, Registra
 				Map.Entry<Material, Long> entry = iterator.next();
 				if (entry.getValue() <= time) {
 					iterator.remove();
-					sendCooldownPacket(player, entry.getKey(), 0);
+                    this.sendCooldownPacket(player, entry.getKey(), 0);
 				}
 			}
 		});
 
 		node.addListener(PlayerUseItemEvent.class, event -> {
-			if (hasCooldown(event.getPlayer(), event.getItemStack().material()))
+			if (this.hasCooldown(event.getPlayer(), event.getItemStack().material()))
 				event.setCancelled(true);
 		});
 	}
@@ -73,7 +73,7 @@ public class VanillaItemCooldownFeature implements ItemCooldownFeature, Registra
 	public void setCooldown(Player player, Material material, int ticks) {
 		Map<Material, Long> cooldown = player.getTag(COOLDOWN_END);
 		cooldown.put(material, System.currentTimeMillis() + (long) ticks * MinecraftServer.TICK_MS);
-		sendCooldownPacket(player, material, ticks);
+        this.sendCooldownPacket(player, material, ticks);
 	}
 
 	protected void sendCooldownPacket(Player player, Material material, int ticks) {

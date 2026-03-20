@@ -23,7 +23,7 @@ public class FishingBobberRetrieveEvent implements PlayerInstanceEvent, Cancella
 
 	@Override
 	public boolean isCancelled() {
-		return cancelled;
+		return this.cancelled;
 	}
 
 	@Override
@@ -33,7 +33,7 @@ public class FishingBobberRetrieveEvent implements PlayerInstanceEvent, Cancella
 
 	@Override
 	public @NotNull Player getPlayer() {
-		return player;
+		return this.player;
 	}
 
 	/**
@@ -42,6 +42,6 @@ public class FishingBobberRetrieveEvent implements PlayerInstanceEvent, Cancella
 	 * @return the fishing bobber
 	 */
 	public FishingBobber getBobber() {
-		return bobber;
+		return this.bobber;
 	}
 }

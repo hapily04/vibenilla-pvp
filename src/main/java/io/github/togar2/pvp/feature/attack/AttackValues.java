@@ -5,8 +5,8 @@ public class AttackValues {
 	                          boolean strong, boolean sprint, int knockback, int fireAspect) {
 		public PreSweeping withCritical(boolean critical) {
 			return new PreSweeping(
-					damage, magicalDamage, cooldownProgress,
-					strong, sprint, critical, knockback, fireAspect
+                    this.damage, this.magicalDamage, this.cooldownProgress,
+                    this.strong, this.sprint, critical, this.knockback, this.fireAspect
 			);
 		}
 	}
@@ -16,9 +16,9 @@ public class AttackValues {
 	                          int knockback, int fireAspect) {
 		public PreSounds withSweeping(boolean sweeping) {
 			return new PreSounds(
-					damage, magicalDamage, cooldownProgress,
-					strong, sprint, critical, sweeping,
-					knockback, fireAspect
+                    this.damage, this.magicalDamage, this.cooldownProgress,
+                    this.strong, this.sprint, this.critical, sweeping,
+                    this.knockback, this.fireAspect
 			);
 		}
 	}

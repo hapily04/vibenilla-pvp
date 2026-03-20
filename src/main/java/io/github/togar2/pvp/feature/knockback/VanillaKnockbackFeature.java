@@ -37,7 +37,7 @@ public class VanillaKnockbackFeature implements KnockbackFeature {
 
 	@Override
 	public void initDependencies() {
-		this.version = configuration.get(FeatureType.VERSION);
+		this.version = this.configuration.get(FeatureType.VERSION);
 	}
 
 	@Override
@@ -56,10 +56,10 @@ public class VanillaKnockbackFeature implements KnockbackFeature {
 		}
 
 		// Set the velocity
-		return applyKnockback(
+		return this.applyKnockback(
 				target, attacker, source,
 				EntityKnockbackEvent.KnockbackType.DAMAGE, 0,
-				dx, dz, version.legacy()
+				dx, dz, this.version.legacy()
 		);
 	}
 
@@ -68,20 +68,20 @@ public class VanillaKnockbackFeature implements KnockbackFeature {
 		if (knockback <= 0) return false;
 
 		// If legacy, attacker velocity is reduced before the knockback
-		if (version.legacy() && attacker instanceof CombatPlayer custom)
+		if (this.version.legacy() && attacker instanceof CombatPlayer custom)
 			custom.afterSprintAttack();
 
 		double dx = Math.sin(Math.toRadians(attacker.getPosition().yaw()));
 		double dz = -Math.cos(Math.toRadians(attacker.getPosition().yaw()));
 
-		if (!applyKnockback(
+		if (!this.applyKnockback(
 				target, attacker, attacker,
 				EntityKnockbackEvent.KnockbackType.ATTACK, knockback,
-				dx, dz, version.legacy()
+				dx, dz, this.version.legacy()
 		)) return false;
 
 		// If not legacy, attacker velocity is reduced after the knockback
-		if (version.modern() && attacker instanceof CombatPlayer custom)
+		if (this.version.modern() && attacker instanceof CombatPlayer custom)
 			custom.afterSprintAttack();
 
 		attacker.setSprinting(false);
@@ -93,10 +93,10 @@ public class VanillaKnockbackFeature implements KnockbackFeature {
 		double dx = Math.sin(Math.toRadians(attacker.getPosition().yaw()));
 		double dz = -Math.cos(Math.toRadians(attacker.getPosition().yaw()));
 
-		return applyKnockback(
+		return this.applyKnockback(
 				target, attacker, null,
 				EntityKnockbackEvent.KnockbackType.SWEEPING, 0,
-				dx, dz, version.legacy()
+				dx, dz, this.version.legacy()
 		);
 	}
 
@@ -147,7 +147,7 @@ public class VanillaKnockbackFeature implements KnockbackFeature {
 	protected boolean applyKnockback(LivingEntity target, Entity attacker, @Nullable Entity source,
 	                                 EntityKnockbackEvent.KnockbackType type, int extraKnockback,
 	                                 double dx, double dz, boolean legacy) {
-		KnockbackValues values = prepareKnockback(target, attacker, source, type, extraKnockback, dx, dz, legacy);
+		KnockbackValues values = this.prepareKnockback(target, attacker, source, type, extraKnockback, dx, dz, legacy);
 		if (values == null) return false;
 
 		Vec velocity = target.getVelocity();
@@ -170,7 +170,7 @@ public class VanillaKnockbackFeature implements KnockbackFeature {
 		if (values.animationType() == EntityKnockbackEvent.AnimationType.DIRECTIONAL) {
 			// Send player a packet with its hurt direction
 			if (target instanceof Player player) {
-				sendDirectionalEvent(player, dx, dz);
+                this.sendDirectionalEvent(player, dx, dz);
 			}
 		}
 

@@ -65,9 +65,9 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 
 	@Override
 	public void initDependencies() {
-		this.exhaustionFeature = configuration.get(FeatureType.EXHAUSTION);
-		this.foodFeature = configuration.get(FeatureType.FOOD);
-		this.version = configuration.get(FeatureType.VERSION);
+		this.exhaustionFeature = this.configuration.get(FeatureType.EXHAUSTION);
+		this.foodFeature = this.configuration.get(FeatureType.FOOD);
+		this.version = this.configuration.get(FeatureType.VERSION);
 	}
 
 	@Override
@@ -77,7 +77,7 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 
 		node.addListener(EntityTickEvent.class, event -> {
 			if (!(event.getEntity() instanceof LivingEntity entity)) return;
-			Map<PotionEffect, Integer> potionMap = getDurationLeftMap(entity);
+			Map<PotionEffect, Integer> potionMap = this.getDurationLeftMap(entity);
 
 			for (TimedPotion potion : entity.getActiveEffects()) {
 				potionMap.putIfAbsent(potion.potion().effect(), potion.potion().duration() - 1);
@@ -88,7 +88,7 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 					int amplifier = potion.potion().amplifier();
 
 					if (combatPotionEffect.canApplyUpdateEffect(durationLeft, amplifier)) {
-						combatPotionEffect.applyUpdateEffect(entity, amplifier, exhaustionFeature, foodFeature);
+						combatPotionEffect.applyUpdateEffect(entity, amplifier, this.exhaustionFeature, this.foodFeature);
 					}
 
 					potionMap.put(potion.potion().effect(), durationLeft - 1);
@@ -107,25 +107,25 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 
 		node.addListener(EntityPotionAddEvent.class, event -> {
 			if (!(event.getEntity() instanceof LivingEntity entity)) return;
-			Map<PotionEffect, Integer> potionMap = getDurationLeftMap(entity);
+			Map<PotionEffect, Integer> potionMap = this.getDurationLeftMap(entity);
 			boolean infinite = event.getPotion().duration() == Potion.INFINITE_DURATION;
 			potionMap.put(event.getPotion().effect(), infinite ? Integer.MAX_VALUE : event.getPotion().duration());
 
 			CombatPotionEffect combatPotionEffect = CombatPotionEffects.get(event.getPotion().effect());
-			combatPotionEffect.onApplied(entity, event.getPotion().amplifier(), version);
+			combatPotionEffect.onApplied(entity, event.getPotion().amplifier(), this.version);
 
-			updatePotionVisibility(entity);
+            this.updatePotionVisibility(entity);
 		});
 
 		node.addListener(EntityPotionRemoveEvent.class, event -> {
 			if (!(event.getEntity() instanceof LivingEntity entity)) return;
 
 			CombatPotionEffect combatPotionEffect = CombatPotionEffects.get(event.getPotion().effect());
-			combatPotionEffect.onRemoved(entity, event.getPotion().amplifier(), version);
+			combatPotionEffect.onRemoved(entity, event.getPotion().amplifier(), this.version);
 
 			//Delay update 1 tick because we need to have the removing effect removed
 			MinecraftServer.getSchedulerManager()
-					.buildTask(() -> updatePotionVisibility(entity))
+					.buildTask(() -> this.updatePotionVisibility(entity))
 					.delay(1, TimeUnit.SERVER_TICK)
 					.schedule();
 		});
@@ -148,7 +148,7 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 		} else if (contents.equals(PotionContents.EMPTY)) {
 			return DEFAULT_POTION_COLOR;
 		} else {
-			Collection<Potion> effects = getAllPotions(contents);
+			Collection<Potion> effects = this.getAllPotions(contents);
 			int color = PotionColorUtils.getPotionColor(effects);
 			return color == -1 ? DEFAULT_POTION_COLOR : color;
 		}
@@ -161,7 +161,7 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 		List<Potion> potions = new ArrayList<>();
 
 		CombatPotionType combatPotionType = CombatPotionTypes.get(potionType);
-		if (combatPotionType != null) potions.addAll(combatPotionType.getEffects(version));
+		if (combatPotionType != null) potions.addAll(combatPotionType.getEffects(this.version));
 
 		potions.addAll(customEffects.stream().map((customPotion) ->
 				new Potion(Objects.requireNonNull(customPotion.id()),
@@ -226,11 +226,11 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 
 		CombatPotionType combatPotionType = CombatPotionTypes.get(potionContents.potion());
 		if (combatPotionType != null) {
-			for (Potion potion : combatPotionType.getEffects(version)) {
+			for (Potion potion : combatPotionType.getEffects(this.version)) {
 				CombatPotionEffect combatPotionEffect = CombatPotionEffects.get(potion.effect());
 				if (combatPotionEffect.isInstant()) {
 					combatPotionEffect.applyInstantEffect(arrow, null,
-							entity, potion.amplifier(), 1.0, exhaustionFeature, foodFeature);
+							entity, potion.amplifier(), 1.0, this.exhaustionFeature, this.foodFeature);
 				} else {
 					int duration = Math.max(potion.duration() / 8, 1);
 					entity.addEffect(new Potion(potion.effect(), potion.amplifier(), duration, potion.flags()));
@@ -252,7 +252,7 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 					CombatPotionEffect combatPotionEffect = CombatPotionEffects.get(potion.effect());
 					if (combatPotionEffect.isInstant()) {
 						combatPotionEffect.applyInstantEffect(arrow, null,
-								entity, potion.amplifier(), 1.0, exhaustionFeature, foodFeature);
+								entity, potion.amplifier(), 1.0, this.exhaustionFeature, this.foodFeature);
 					} else {
 						entity.addEffect(new Potion(potion.effect(), potion.amplifier(),
 								potion.duration(), potion.flags()));
@@ -263,14 +263,14 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 	@Override
 	public void addSplashPotionEffects(LivingEntity entity, PotionContents potionContents, double proximity,
 	                                   @Nullable Entity source, @Nullable Entity attacker) {
-		for (Potion potion : getAllPotions(potionContents)) {
+		for (Potion potion : this.getAllPotions(potionContents)) {
 			CombatPotionEffect combatPotionEffect = CombatPotionEffects.get(potion.effect());
 			if (combatPotionEffect.isInstant()) {
 				combatPotionEffect.applyInstantEffect(source, attacker,
-						entity, potion.amplifier(), proximity, exhaustionFeature, foodFeature);
+						entity, potion.amplifier(), proximity, this.exhaustionFeature, this.foodFeature);
 			} else {
 				int duration = potion.duration();
-				if (version.legacy()) duration = (int) Math.floor(duration * 0.75);
+				if (this.version.legacy()) duration = (int) Math.floor(duration * 0.75);
 				duration = (int) (proximity * (double) duration + 0.5);
 
 				if (duration > 20) {

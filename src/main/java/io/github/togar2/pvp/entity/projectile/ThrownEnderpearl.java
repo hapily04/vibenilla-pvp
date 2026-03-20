@@ -28,11 +28,11 @@ public class ThrownEnderpearl extends CustomEntityProjectile implements ItemHold
 	}
 
 	private void teleportOwner() {
-		Pos position = prevPos;
+		Pos position = this.prevPos;
 		ThreadLocalRandom random = ThreadLocalRandom.current();
 
 		for (int i = 0; i < 32; i++) {
-			sendPacketToViewersAndSelf(new ParticlePacket(
+            this.sendPacketToViewersAndSelf(new ParticlePacket(
 					Particle.PORTAL, false, false,
 					position.x(), position.y() + random.nextDouble() * 2, position.z(),
 					(float) random.nextGaussian(), 0.0F, (float) random.nextGaussian(),
@@ -40,23 +40,23 @@ public class ThrownEnderpearl extends CustomEntityProjectile implements ItemHold
 			));
 		}
 
-		if (isRemoved()) return;
+		if (this.isRemoved()) return;
 
-		Entity shooter = getShooter();
+		Entity shooter = this.getShooter();
 		if (shooter != null) {
 			Pos shooterPos = shooter.getPosition();
 			position = position.withPitch(shooterPos.pitch()).withYaw(shooterPos.yaw());
 		}
 
 		if (shooter instanceof Player player) {
-			if (player.isOnline() && player.getInstance() == getInstance()
+			if (player.isOnline() && player.getInstance() == this.getInstance()
 					&& player.getPlayerMeta().getBedInWhichSleepingPosition() == null) {
 				if (player.getVehicle() != null) {
 					player.getVehicle().removePassenger(player);
 				}
 
 				player.teleport(position);
-				fallFeature.resetFallDistance(player);
+                this.fallFeature.resetFallDistance(player);
 
 				player.damage(DamageType.FALL, 5.0F);
 			}
@@ -67,31 +67,31 @@ public class ThrownEnderpearl extends CustomEntityProjectile implements ItemHold
 
 	@Override
 	public boolean onHit(Entity entity) {
-		((LivingEntity) entity).damage(new Damage(DamageType.THROWN, this, getShooter(), null, 0));
+		((LivingEntity) entity).damage(new Damage(DamageType.THROWN, this, this.getShooter(), null, 0));
 
-		teleportOwner();
+        this.teleportOwner();
 		return true;
 	}
 
 	@Override
 	public boolean onStuck() {
-		teleportOwner();
+        this.teleportOwner();
 		return true;
 	}
 
 	@Override
 	public void tick(long time) {
-		Entity shooter = getShooter();
+		Entity shooter = this.getShooter();
 		if (shooter instanceof Player && ((Player) shooter).isDead()) {
-			remove();
+            this.remove();
 		} else {
-			prevPos = getPosition();
+            this.prevPos = this.getPosition();
 			super.tick(time);
 		}
 	}
 
 	@Override
 	public void setItem(@NotNull ItemStack item) {
-		((ThrownEnderPearlMeta) getEntityMeta()).setItem(item);
+		((ThrownEnderPearlMeta) this.getEntityMeta()).setItem(item);
 	}
 }

@@ -25,7 +25,7 @@ public class EquipmentDamageEvent implements EntityInstanceEvent, CancellableEve
 
 	@Override
 	public @NotNull LivingEntity getEntity() {
-		return entity;
+		return this.entity;
 	}
 
 	/**
@@ -34,7 +34,7 @@ public class EquipmentDamageEvent implements EntityInstanceEvent, CancellableEve
 	 * @return the equipment slot
 	 */
 	public EquipmentSlot getSlot() {
-		return slot;
+		return this.slot;
 	}
 
 	/**
@@ -43,7 +43,7 @@ public class EquipmentDamageEvent implements EntityInstanceEvent, CancellableEve
 	 * @return the amount of damage
 	 */
 	public int getAmount() {
-		return amount;
+		return this.amount;
 	}
 
 	/**
@@ -57,7 +57,7 @@ public class EquipmentDamageEvent implements EntityInstanceEvent, CancellableEve
 
 	@Override
 	public boolean isCancelled() {
-		return cancelled;
+		return this.cancelled;
 	}
 
 	@Override

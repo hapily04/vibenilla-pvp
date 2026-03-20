@@ -47,9 +47,9 @@ public class VanillaBlockFeature implements BlockFeature {
 
 	@Override
 	public void initDependencies() {
-		this.itemDamageFeature = configuration.get(FeatureType.ITEM_DAMAGE);
-		this.itemCooldownFeature = configuration.get(FeatureType.ITEM_COOLDOWN);
-		this.version = configuration.get(FeatureType.VERSION);
+		this.itemDamageFeature = this.configuration.get(FeatureType.ITEM_DAMAGE);
+		this.itemCooldownFeature = this.configuration.get(FeatureType.ITEM_COOLDOWN);
+		this.version = this.configuration.get(FeatureType.VERSION);
 	}
 
 	protected boolean isPiercing(Damage damage) {
@@ -67,10 +67,10 @@ public class VanillaBlockFeature implements BlockFeature {
 		DamageTypeInfo info = DamageTypeInfo.of(damage.getType());
 
 		// If damage doesn't bypass armor, no piercing, and a shield is active
-		if (!info.bypassesArmor() && !isPiercing(damage)
+		if (!info.bypassesArmor() && !this.isPiercing(damage)
 				&& entity.getEntityMeta() instanceof LivingEntityMeta meta
 				&& meta.isHandActive() && entity.getItemInHand(meta.getActiveHand()).material() == Material.SHIELD) {
-			if (version.legacy()) return true;
+			if (this.version.legacy()) return true;
 
 			if (damage.getSource() != null) {
 				Pos attackerPos = damage.getSource().getPosition();
@@ -92,7 +92,7 @@ public class VanillaBlockFeature implements BlockFeature {
 	@Override
 	public boolean applyBlock(LivingEntity entity, Damage damage) {
 		float amount = damage.getAmount();
-		float resultingDamage = version.legacy() ? Math.max(0, (amount + 1) * 0.5f) : 0;
+		float resultingDamage = this.version.legacy() ? Math.max(0, (amount + 1) * 0.5f) : 0;
 
 		DamageBlockEvent damageBlockEvent = new DamageBlockEvent(entity, amount, resultingDamage, false);
 		EventDispatcher.call(damageBlockEvent);
@@ -102,7 +102,7 @@ public class VanillaBlockFeature implements BlockFeature {
 		if (amount >= 3) {
 			int shieldDamage = 1 + (int) Math.floor(amount);
 			PlayerHand hand = ((LivingEntityMeta) entity.getEntityMeta()).getActiveHand();
-			itemDamageFeature.damageEquipment(
+            this.itemDamageFeature.damageEquipment(
 					entity,
 					hand == PlayerHand.MAIN ?
 							EquipmentSlot.MAIN_HAND : EquipmentSlot.OFF_HAND,
@@ -121,7 +121,7 @@ public class VanillaBlockFeature implements BlockFeature {
 		// Take shield hit (knockback and disabling)
 		DamageTypeInfo info = DamageTypeInfo.of(damage.getType());
 		if (!info.projectile() && damage.getAttacker() instanceof LivingEntity attacker)
-			takeShieldHit(entity, attacker, damageBlockEvent.knockbackAttacker());
+            this.takeShieldHit(entity, attacker, damageBlockEvent.knockbackAttacker());
 
 		return resultingDamage == 0;
 	}
@@ -139,12 +139,12 @@ public class VanillaBlockFeature implements BlockFeature {
 		if (!(entity instanceof Player)) return;
 		Tool tool = Tool.fromMaterial(attacker.getItemInMainHand().material());
 		if (tool != null && tool.isAxe()) {
-			disableShield((Player) entity);
+            this.disableShield((Player) entity);
 		}
 	}
 
 	protected void disableShield(Player player) {
-		itemCooldownFeature.setCooldown(player, Material.SHIELD, 100);
+        this.itemCooldownFeature.setCooldown(player, Material.SHIELD, 100);
 
 		// Shield disable status
 		player.triggerStatus((byte) 30);

@@ -36,7 +36,7 @@ public class ExplosionEvent implements InstanceEvent, CancellableEvent {
 	 * @return the list of blocks affected by the explosion
 	 */
 	public @NotNull List<Point> getAffectedBlocks() {
-		return affectedBlocks;
+		return this.affectedBlocks;
 	}
 
 	/**
@@ -46,7 +46,7 @@ public class ExplosionEvent implements InstanceEvent, CancellableEvent {
 	 * @return the list of entities affected by the explosion
 	 */
 	public @NotNull List<Entity> getAffectedEntities() {
-		return affectedEntities;
+		return this.affectedEntities;
 	}
 
 	/**
@@ -56,7 +56,7 @@ public class ExplosionEvent implements InstanceEvent, CancellableEvent {
 	 * @return the damage object
 	 */
 	public @NotNull Damage getDamageObject() {
-		return damageObject;
+		return this.damageObject;
 	}
 
 	/**
@@ -71,12 +71,12 @@ public class ExplosionEvent implements InstanceEvent, CancellableEvent {
 
 	@Override
 	public @NotNull Instance getInstance() {
-		return instance;
+		return this.instance;
 	}
 
 	@Override
 	public boolean isCancelled() {
-		return cancelled;
+		return this.cancelled;
 	}
 
 	@Override

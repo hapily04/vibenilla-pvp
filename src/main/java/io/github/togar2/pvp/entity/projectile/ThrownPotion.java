@@ -29,36 +29,36 @@ public class ThrownPotion extends CustomEntityProjectile implements ItemHoldingP
 		this.lingering = lingering;
 
 		// Why does Minestom have the wrong value 0.03 in its registries?
-		setAerodynamics(getAerodynamics().withGravity(0.05));
+        this.setAerodynamics(this.getAerodynamics().withGravity(0.05));
 	}
 
 	@Override
 	public boolean onHit(Entity entity) {
-		splash(entity);
+        this.splash(entity);
 		return true;
 	}
 
 	@Override
 	public boolean onStuck() {
-		splash(null);
+        this.splash(null);
 		return true;
 	}
 
 	public void splash(@Nullable Entity entity) {
-		ItemStack item = getItem();
+		ItemStack item = this.getItem();
 
 		PotionContents potionContents = item.get(DataComponents.POTION_CONTENTS);
-		List<Potion> potions = effectFeature.getAllPotions(potionContents);
+		List<Potion> potions = this.effectFeature.getAllPotions(potionContents);
 
 		if (!potions.isEmpty()) {
-			if (lingering) {
+			if (this.lingering) {
 				//TODO lingering
 			} else {
-				applySplash(potionContents, entity);
+                this.applySplash(potionContents, entity);
 			}
 		}
 
-		Pos position = getPosition();
+		Pos position = this.getPosition();
 
 		boolean instantEffect = false;
 		for (Potion potion : potions) {
@@ -70,16 +70,16 @@ public class ThrownPotion extends CustomEntityProjectile implements ItemHoldingP
 
 		WorldEvent effect = instantEffect ? WorldEvent.PARTICLES_INSTANT_POTION_SPLASH : WorldEvent.PARTICLES_SPELL_POTION_SPLASH;
 		EffectUtil.sendNearby(
-				Objects.requireNonNull(getInstance()), effect, position.blockX(),
-				position.blockY(), position.blockZ(), effectFeature.getPotionColor(potionContents),
+				Objects.requireNonNull(this.getInstance()), effect, position.blockX(),
+				position.blockY(), position.blockZ(), this.effectFeature.getPotionColor(potionContents),
 				64.0, false
 		);
 	}
 
 	private void applySplash(PotionContents potionContents, @Nullable Entity hitEntity) {
-		BoundingBox boundingBox = getBoundingBox().expand(8.0, 4.0, 8.0);
-		List<LivingEntity> entities = Objects.requireNonNull(getInstance()).getEntities().stream()
-				.filter(entity -> boundingBox.intersectEntity(getPosition().add(0, -2, 0), entity))
+		BoundingBox boundingBox = this.getBoundingBox().expand(8.0, 4.0, 8.0);
+		List<LivingEntity> entities = Objects.requireNonNull(this.getInstance()).getEntities().stream()
+				.filter(entity -> boundingBox.intersectEntity(this.getPosition().add(0, -2, 0), entity))
 				.filter(entity -> entity instanceof LivingEntity
 						&& !(entity instanceof Player player && player.getGameMode() == GameMode.SPECTATOR))
 				.map(entity -> (LivingEntity) entity).collect(Collectors.toList());
@@ -91,28 +91,28 @@ public class ThrownPotion extends CustomEntityProjectile implements ItemHoldingP
 		for (LivingEntity entity : entities) {
 			if (entity.getEntityType() == EntityType.ARMOR_STAND) continue;
 
-			double distanceSquared = getDistanceSquared(entity);
+			double distanceSquared = this.getDistanceSquared(entity);
 			if (distanceSquared >= 16.0) continue;
 
 			double proximity = entity == hitEntity ? 1.0 : (1.0 - Math.sqrt(distanceSquared) / 4.0);
-			effectFeature.addSplashPotionEffects(entity, potionContents, proximity, this, getShooter());
+            this.effectFeature.addSplashPotionEffects(entity, potionContents, proximity, this, this.getShooter());
 		}
 	}
 
 	@NotNull
 	public ItemStack getItem() {
-		if (lingering) {
-			return ((LingeringPotionMeta) getEntityMeta()).getItem();
+		if (this.lingering) {
+			return ((LingeringPotionMeta) this.getEntityMeta()).getItem();
 		}
-		return ((SplashPotionMeta) getEntityMeta()).getItem();
+		return ((SplashPotionMeta) this.getEntityMeta()).getItem();
 	}
 
 	@Override
 	public void setItem(@NotNull ItemStack item) {
-		if (lingering) {
-			((LingeringPotionMeta) getEntityMeta()).setItem(item);
+		if (this.lingering) {
+			((LingeringPotionMeta) this.getEntityMeta()).setItem(item);
 		} else {
-			((SplashPotionMeta) getEntityMeta()).setItem(item);
+			((SplashPotionMeta) this.getEntityMeta()).setItem(item);
 		}
 	}
 }

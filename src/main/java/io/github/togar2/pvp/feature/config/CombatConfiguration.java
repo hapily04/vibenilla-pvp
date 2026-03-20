@@ -28,20 +28,20 @@ public class CombatConfiguration {
 
 	public final CombatConfiguration addAll(Collection<DefinedFeature<?>> constructors) {
 		for (DefinedFeature<?> constructor : constructors) {
-			add(constructor);
+            this.add(constructor);
 		}
 		return this;
 	}
 
 	public final CombatConfiguration addAll(DefinedFeature<?>... constructors) {
 		for (DefinedFeature<?> constructor : constructors) {
-			add(constructor);
+            this.add(constructor);
 		}
 		return this;
 	}
 
 	public CombatConfiguration version(CombatVersion version) {
-		return add(FeatureType.VERSION, version);
+		return this.add(FeatureType.VERSION, version);
 	}
 
 	/**
@@ -49,11 +49,11 @@ public class CombatConfiguration {
 	 */
 	@Deprecated
 	public CombatConfiguration legacy(boolean legacy) {
-		return version(CombatVersion.fromLegacy(legacy));
+		return this.version(CombatVersion.fromLegacy(legacy));
 	}
 
 	public CombatConfiguration difficulty(DifficultyProvider difficulty) {
-		return add(FeatureType.DIFFICULTY, difficulty);
+		return this.add(FeatureType.DIFFICULTY, difficulty);
 	}
 
 	/**
@@ -63,7 +63,7 @@ public class CombatConfiguration {
 	 * @return this
 	 */
 	public CombatConfiguration add(ConstructableFeature feature) {
-		features.put(feature.type, feature);
+        this.features.put(feature.type, feature);
 		return this;
 	}
 
@@ -75,7 +75,7 @@ public class CombatConfiguration {
 	 * @return this
 	 */
 	public CombatConfiguration add(FeatureType<?> type, CombatFeature feature) {
-		return add(wrap(type, feature));
+		return this.add(wrap(type, feature));
 	}
 
 	/**
@@ -87,7 +87,7 @@ public class CombatConfiguration {
 	 * @return this
 	 */
 	public CombatConfiguration add(DefinedFeature<?> constructor, FeatureConfiguration override) {
-		return add(wrap(constructor, override));
+		return this.add(wrap(constructor, override));
 	}
 
 	/**
@@ -99,11 +99,11 @@ public class CombatConfiguration {
 	 * @return this
 	 */
 	public CombatConfiguration add(DefinedFeature<?> constructor, DefinedFeature<?>... override) {
-		return add(wrap(constructor, override));
+		return this.add(wrap(constructor, override));
 	}
 
 	public CombatConfiguration remove(FeatureType<?> type) {
-		features.remove(type);
+        this.features.remove(type);
 		return this;
 	}
 
@@ -150,7 +150,7 @@ public class CombatConfiguration {
 
 		//List<ConstructableFeature> buildOrder = getBuildOrder();
 
-		for (ConstructableFeature feature : features.values()) {
+		for (ConstructableFeature feature : this.features.values()) {
 			CombatFeature currentResult = feature.construct(result);
 			result.add(feature.type, currentResult);
 		}
@@ -161,7 +161,7 @@ public class CombatConfiguration {
 	}
 
 	private @Nullable ConstructableFeature getFeatureOf(FeatureType<?> type) {
-		return features.get(type);
+		return this.features.get(type);
 	}
 
 	public sealed abstract static class ConstructableFeature {
@@ -184,7 +184,7 @@ public class CombatConfiguration {
 
 		@Override
 		CombatFeature construct(FeatureConfiguration configuration) {
-			return feature;
+			return this.feature;
 		}
 	}
 
@@ -199,15 +199,15 @@ public class CombatConfiguration {
 		}
 
 		public @Nullable ConstructableFeature getOverrideOf(FeatureType<?> featureType) {
-			return override.get(featureType);
+			return this.override.get(featureType);
 		}
 
 		@Override
 		CombatFeature construct(FeatureConfiguration configuration) {
 			FeatureConfiguration local = configuration.overlay();
-			override.forEach((k, v) -> local.add(k, v.construct(configuration)));
+            this.override.forEach((k, v) -> local.add(k, v.construct(configuration)));
 
-			return constructor.construct(local);
+			return this.constructor.construct(local);
 		}
 	}
 }

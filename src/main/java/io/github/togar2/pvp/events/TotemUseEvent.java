@@ -25,17 +25,17 @@ public class TotemUseEvent implements EntityInstanceEvent, CancellableEvent {
 	@NotNull
 	@Override
 	public LivingEntity getEntity() {
-		return entity;
+		return this.entity;
 	}
 
 	@NotNull
 	public PlayerHand getHand() {
-		return hand;
+		return this.hand;
 	}
 
 	@Override
 	public boolean isCancelled() {
-		return cancelled;
+		return this.cancelled;
 	}
 
 	@Override

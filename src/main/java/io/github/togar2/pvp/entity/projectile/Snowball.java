@@ -18,23 +18,23 @@ public class Snowball extends CustomEntityProjectile implements ItemHoldingProje
 
 	@Override
 	public boolean onHit(Entity entity) {
-		triggerStatus((byte) 3); // Snowball particles
+        this.triggerStatus((byte) 3); // Snowball particles
 
 		int damage = entity.getEntityType() == EntityType.BLAZE ? 3 : 0;
-		((LivingEntity) entity).damage(new Damage(DamageType.THROWN, this, getShooter(), null, damage));
+		((LivingEntity) entity).damage(new Damage(DamageType.THROWN, this, this.getShooter(), null, damage));
 
 		return true;
 	}
 
 	@Override
 	public boolean onStuck() {
-		triggerStatus((byte) 3); // Snowball particles
+        this.triggerStatus((byte) 3); // Snowball particles
 
 		return true;
 	}
 
 	@Override
 	public void setItem(@NotNull ItemStack item) {
-		((SnowballMeta) getEntityMeta()).setItem(item);
+		((SnowballMeta) this.getEntityMeta()).setItem(item);
 	}
 }

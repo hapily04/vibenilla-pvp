@@ -23,11 +23,11 @@ public class CrystalPlaceEvent implements PlayerInstanceEvent, CancellableEvent 
 
 	@Override
 	public @NotNull Player getPlayer() {
-		return player;
+		return this.player;
 	}
 
 	public @NotNull Point getSpawnPosition() {
-		return spawnPosition;
+		return this.spawnPosition;
 	}
 
 	public void setSpawnPosition(@NotNull Point spawnPosition) {
@@ -36,7 +36,7 @@ public class CrystalPlaceEvent implements PlayerInstanceEvent, CancellableEvent 
 
 	@Override
 	public boolean isCancelled() {
-		return cancelled;
+		return this.cancelled;
 	}
 
 	@Override

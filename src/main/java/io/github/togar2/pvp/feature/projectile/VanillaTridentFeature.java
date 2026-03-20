@@ -54,8 +54,8 @@ public class VanillaTridentFeature implements TridentFeature, RegistrableFeature
 
 	@Override
 	public void initDependencies() {
-		this.itemDamageFeature = configuration.get(FeatureType.ITEM_DAMAGE);
-		this.enchantmentFeature = configuration.get(FeatureType.ENCHANTMENT);
+		this.itemDamageFeature = this.configuration.get(FeatureType.ITEM_DAMAGE);
+		this.enchantmentFeature = this.configuration.get(FeatureType.ENCHANTMENT);
 	}
 
 	@Override
@@ -71,13 +71,13 @@ public class VanillaTridentFeature implements TridentFeature, RegistrableFeature
 			int riptide = stack.get(DataComponents.ENCHANTMENTS).level(Enchantment.RIPTIDE);
 			if (riptide > 0 && !FluidUtil.isTouchingWater(player)) return;
 
-			itemDamageFeature.damageEquipment(player, event.getHand() == PlayerHand.MAIN ?
+            this.itemDamageFeature.damageEquipment(player, event.getHand() == PlayerHand.MAIN ?
 					EquipmentSlot.MAIN_HAND : EquipmentSlot.OFF_HAND, 1);
 
 			if (riptide > 0) {
-				applyRiptide(player, riptide);
+                this.applyRiptide(player, riptide);
 			} else {
-				ThrownTrident trident = new ThrownTrident(player, stack, enchantmentFeature);
+				ThrownTrident trident = new ThrownTrident(player, stack, this.enchantmentFeature);
 
 				Pos position = player.getPosition().add(0, player.getEyeHeight() - 0.1, 0);
 				trident.shootFromRotation(position.pitch(), position.yaw(), 0, 2.5, 1.0);

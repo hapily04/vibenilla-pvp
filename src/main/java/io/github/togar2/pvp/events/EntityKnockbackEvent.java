@@ -40,7 +40,7 @@ public class EntityKnockbackEvent implements EntityInstanceEvent, CancellableEve
 	@NotNull
 	@Override
 	public Entity getEntity() {
-		return entity;
+		return this.entity;
 	}
 
 	/**
@@ -51,7 +51,7 @@ public class EntityKnockbackEvent implements EntityInstanceEvent, CancellableEve
 	 */
 	@NotNull
 	public Entity getAttacker() {
-		return attacker;
+		return this.attacker;
 	}
 
 	/**
@@ -61,7 +61,7 @@ public class EntityKnockbackEvent implements EntityInstanceEvent, CancellableEve
 	 * @see KnockbackType
 	 */
 	public KnockbackType getKnockbackType() {
-		return knockbackType;
+		return this.knockbackType;
 	}
 
 	/**
@@ -71,7 +71,7 @@ public class EntityKnockbackEvent implements EntityInstanceEvent, CancellableEve
 	 * @see AnimationType
 	 */
 	public AnimationType getAnimationType() {
-		return animationType;
+		return this.animationType;
 	}
 
 	/**
@@ -90,7 +90,7 @@ public class EntityKnockbackEvent implements EntityInstanceEvent, CancellableEve
 	 * @return the strength
 	 */
 	public KnockbackSettings getSettings() {
-		return settings;
+		return this.settings;
 	}
 
 	/**
@@ -104,7 +104,7 @@ public class EntityKnockbackEvent implements EntityInstanceEvent, CancellableEve
 
 	@Override
 	public boolean isCancelled() {
-		return cancelled;
+		return this.cancelled;
 	}
 
 	@Override

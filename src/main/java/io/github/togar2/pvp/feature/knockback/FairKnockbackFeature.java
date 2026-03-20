@@ -59,7 +59,7 @@ public class FairKnockbackFeature extends VanillaKnockbackFeature {
 		if (!(target instanceof Player player) || player.getLatency() < PING_OFFSET)
 			return super.applyKnockback(target, attacker, source, type, extraKnockback, dx, dz, legacy);
 
-		KnockbackValues values = prepareKnockback(target, attacker, source, type, extraKnockback, dx, dz, legacy);
+		KnockbackValues values = this.prepareKnockback(target, attacker, source, type, extraKnockback, dx, dz, legacy);
 		if (values == null) return false;
 
 		Vec velocity = target.getVelocity();
@@ -75,9 +75,9 @@ public class FairKnockbackFeature extends VanillaKnockbackFeature {
 
 			int latencyTicks = getLatencyTicks(player.getLatency());
 			double vertical;
-			if (isOnGroundClientSide(player, latencyTicks)) {
+			if (this.isOnGroundClientSide(player, latencyTicks)) {
 				vertical = Math.min(values.verticalLimit(), velocity.y() / 2d + values.vertical());
-			} else if (compensateFallKnockback) {
+			} else if (this.compensateFallKnockback) {
 				vertical = getCompensatedVerticalVelocity(player.getAerodynamics(), velocity.y(), latencyTicks);
 			} else {
 				vertical = velocity.y();
@@ -92,7 +92,7 @@ public class FairKnockbackFeature extends VanillaKnockbackFeature {
 
 		if (values.animationType() == EntityKnockbackEvent.AnimationType.DIRECTIONAL) {
 			// Send player a packet with its hurt direction
-			sendDirectionalEvent(player, dx, dz);
+            this.sendDirectionalEvent(player, dx, dz);
 		}
 
 		return true;

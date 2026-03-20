@@ -25,7 +25,7 @@ public class PlayerRegenerateEvent implements PlayerEvent, EntityInstanceEvent, 
 
 	@Override
 	public @NotNull Player getPlayer() {
-		return player;
+		return this.player;
 	}
 
 	/**
@@ -34,7 +34,7 @@ public class PlayerRegenerateEvent implements PlayerEvent, EntityInstanceEvent, 
 	 * @return the amount of health
 	 */
 	public float getAmount() {
-		return amount;
+		return this.amount;
 	}
 
 	/**
@@ -52,7 +52,7 @@ public class PlayerRegenerateEvent implements PlayerEvent, EntityInstanceEvent, 
 	 * @return the amount of exhaustion
 	 */
 	public float getExhaustion() {
-		return exhaustion;
+		return this.exhaustion;
 	}
 
 	/**
@@ -66,7 +66,7 @@ public class PlayerRegenerateEvent implements PlayerEvent, EntityInstanceEvent, 
 
 	@Override
 	public boolean isCancelled() {
-		return cancelled;
+		return this.cancelled;
 	}
 
 	@Override

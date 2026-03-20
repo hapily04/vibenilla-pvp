@@ -23,16 +23,16 @@ public class AnchorExplodeEvent implements PlayerInstanceEvent, CancellableEvent
 
 	@Override
 	public @NotNull Player getPlayer() {
-		return player;
+		return this.player;
 	}
 
 	public @NotNull Point getBlockPosition() {
-		return blockPosition;
+		return this.blockPosition;
 	}
 
 	@Override
 	public boolean isCancelled() {
-		return cancelled;
+		return this.cancelled;
 	}
 
 	@Override

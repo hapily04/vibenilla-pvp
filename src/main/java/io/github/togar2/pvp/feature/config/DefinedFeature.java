@@ -43,19 +43,19 @@ public class DefinedFeature<F extends CombatFeature> {
 	public F construct(FeatureConfiguration configuration) {
 		// Registers player init
 		CombatFeatureRegistry.init(this);
-		return constructor.construct(configuration);
+		return this.constructor.construct(configuration);
 	}
 
 	public FeatureType<?> featureType() {
-		return featureType;
+		return this.featureType;
 	}
 
 	public Set<FeatureType<?>> dependencies() {
-		return dependencies;
+		return this.dependencies;
 	}
 
 	@Nullable PlayerInit playerInit() {
-		return playerInit;
+		return this.playerInit;
 	}
 
 	@FunctionalInterface

@@ -73,15 +73,15 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 
 	@Override
 	public void initDependencies() {
-		this.difficultyProvider = configuration.get(FeatureType.DIFFICULTY);
-		this.blockFeature = configuration.get(FeatureType.BLOCK);
-		this.armorFeature = configuration.get(FeatureType.ARMOR);
-		this.totemFeature = configuration.get(FeatureType.TOTEM);
-		this.exhaustionFeature = configuration.get(FeatureType.EXHAUSTION);
-		this.knockbackFeature = configuration.get(FeatureType.KNOCKBACK);
-		this.trackingFeature = configuration.get(FeatureType.TRACKING);
-		this.itemDamageFeature = configuration.get(FeatureType.ITEM_DAMAGE);
-		this.version = configuration.get(FeatureType.VERSION);
+		this.difficultyProvider = this.configuration.get(FeatureType.DIFFICULTY);
+		this.blockFeature = this.configuration.get(FeatureType.BLOCK);
+		this.armorFeature = this.configuration.get(FeatureType.ARMOR);
+		this.totemFeature = this.configuration.get(FeatureType.TOTEM);
+		this.exhaustionFeature = this.configuration.get(FeatureType.EXHAUSTION);
+		this.knockbackFeature = this.configuration.get(FeatureType.KNOCKBACK);
+		this.trackingFeature = this.configuration.get(FeatureType.TRACKING);
+		this.itemDamageFeature = this.configuration.get(FeatureType.ITEM_DAMAGE);
+		this.version = this.configuration.get(FeatureType.VERSION);
 	}
 
 	@Override
@@ -106,7 +106,7 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 
 		DamageTypeInfo typeInfo = DamageTypeInfo.of(damage.getType());
 		if (event.getEntity() instanceof Player player && typeInfo.shouldScaleWithDifficulty(damage))
-			damage.setAmount(scaleWithDifficulty(player, damage.getAmount()));
+			damage.setAmount(this.scaleWithDifficulty(player, damage.getAmount()));
 
 		if (typeInfo.fire() && entity.hasEffect(PotionEffect.FIRE_RESISTANCE)) {
 			event.setCancelled(true);
@@ -116,8 +116,8 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 		// This will be used to determine whether knockback should be applied
 		// We can't just check if the remaining damage is 0 because this would apply no knockback for snowballs & eggs
 		boolean fullyBlocked = false;
-		if (blockFeature.isDamageBlocked(entity, damage)) {
-			fullyBlocked = blockFeature.applyBlock(entity, damage);
+		if (this.blockFeature.isDamageBlocked(entity, damage)) {
+			fullyBlocked = this.blockFeature.applyBlock(entity, damage);
 		}
 
 		float amount = damage.getAmount();
@@ -129,7 +129,7 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 		}
 
 		if (typeInfo.damagesHelmet() && !entity.getEquipment(EquipmentSlot.HELMET).isAir()) {
-			itemDamageFeature.damageArmor(entity, damageType, amount, EquipmentSlot.HELMET);
+            this.itemDamageFeature.damageArmor(entity, damageType, amount, EquipmentSlot.HELMET);
 			amount *= 0.75F;
 		}
 
@@ -151,7 +151,7 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 		}
 
 		// Process armor and effects
-		amount = armorFeature.getDamageWithProtection(entity, damageType, amount);
+		amount = this.armorFeature.getDamageWithProtection(entity, damageType, amount);
 
 		damage.setAmount(amount);
 		FinalDamageEvent finalDamageEvent = new FinalDamageEvent(entity, damage, 10, shouldAnimate);
@@ -165,13 +165,13 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 		}
 
 		// Register damage to tracking feature
-		boolean register = version.legacy() || amount > 0;
+		boolean register = this.version.legacy() || amount > 0;
 		if (register && entity instanceof Player player)
-			trackingFeature.recordDamage(player, attacker, damage);
+            this.trackingFeature.recordDamage(player, attacker, damage);
 
 		// Exhaustion from damage
 		if (amountBeforeProcessing != 0 && entity instanceof Player player)
-			exhaustionFeature.addDamageExhaustion(player, damageType);
+            this.exhaustionFeature.addDamageExhaustion(player, damageType);
 
 		if (register) entity.setTag(LAST_DAMAGE_AMOUNT, amountBeforeProcessing);
 
@@ -194,7 +194,7 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 
 			if (!fullyBlocked && damage.getType() != DamageType.DROWN) {
 				if (attacker != null && !typeInfo.explosive()) {
-					knockbackFeature.applyDamageKnockback(damage, entity);
+                    this.knockbackFeature.applyDamageKnockback(damage, entity);
 				} else {
 					// Update velocity
 					entity.setVelocity(entity.getVelocity());
@@ -211,7 +211,7 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 		float totalHealth = entity.getHealth() +
 				(entity instanceof Player player ? player.getAdditionalHearts() : 0);
 		if (totalHealth - amount <= 0) {
-			boolean totem = totemFeature.tryProtect(entity, damageType);
+			boolean totem = this.totemFeature.tryProtect(entity, damageType);
 
 			if (totem) {
 				event.setCancelled(true);
@@ -271,7 +271,7 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 	}
 
 	protected float scaleWithDifficulty(Player player, float amount) {
-		return switch (difficultyProvider.getValue(player)) {
+		return switch (this.difficultyProvider.getValue(player)) {
 			case PEACEFUL -> -1;
 			case EASY -> Math.min(amount / 2.0f + 1.0f, amount);
 			case HARD -> amount * 3.0f / 2.0f;

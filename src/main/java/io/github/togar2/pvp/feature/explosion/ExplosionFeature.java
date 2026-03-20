@@ -42,7 +42,7 @@ public interface ExplosionFeature extends CombatFeature {
 		record ByPlayer(Player player) implements IgnitionCause {
 			@Override
 			public @Nullable Player causingEntity() {
-				return player;
+				return this.player;
 			}
 		}
 

@@ -37,7 +37,7 @@ public class VanillaItemDamageFeature implements ItemDamageFeature {
 
 	@Override
 	public void initDependencies() {
-		this.enchantmentFeature = configuration.get(FeatureType.ENCHANTMENT);
+		this.enchantmentFeature = this.configuration.get(FeatureType.ENCHANTMENT);
 	}
 
 	protected ItemStack damage(ItemStack stack, int amount) {
@@ -48,7 +48,7 @@ public class VanillaItemDamageFeature implements ItemDamageFeature {
 		int newAmount = amount;
 
 		for (int i = 0; i < newAmount; i++) {
-			if (enchantmentFeature.shouldUnbreakingPreventDamage(stack)) {
+			if (this.enchantmentFeature.shouldUnbreakingPreventDamage(stack)) {
 				preventAmount++;
 			}
 		}
@@ -65,7 +65,7 @@ public class VanillaItemDamageFeature implements ItemDamageFeature {
 		if (amount == 0 || stack.get(DataComponents.MAX_DAMAGE, 0) <= 0)
 			return stack;
 
-		ItemStack newStack = damage(stack, amount);
+		ItemStack newStack = this.damage(stack, amount);
 		if (newStack.get(DataComponents.DAMAGE, 0) >= stack.get(DataComponents.MAX_DAMAGE, 0)) {
 			breakCallback.accept(entity);
 			newStack = newStack.withAmount(i -> i - 1).with(DataComponents.DAMAGE, 0);
@@ -78,7 +78,7 @@ public class VanillaItemDamageFeature implements ItemDamageFeature {
 	public void damageEquipment(LivingEntity entity, EquipmentSlot slot, int amount) {
 		EquipmentDamageEvent equipmentDamageEvent = new EquipmentDamageEvent(entity, slot, amount);
 		EventDispatcher.callCancellable(equipmentDamageEvent, () ->
-				entity.setEquipment(slot, damage(entity.getEquipment(slot), amount, entity,
+				entity.setEquipment(slot, this.damage(entity.getEquipment(slot), amount, entity,
 						e -> triggerEquipmentBreak(e, slot))));
 	}
 
@@ -96,7 +96,7 @@ public class VanillaItemDamageFeature implements ItemDamageFeature {
 			DamageTypeInfo info = DamageTypeInfo.of(MinecraftServer.getDamageTypeRegistry().getKey(damageType));
 			if (!(info.fire() && stack.material().key().value().toLowerCase().contains("netherite"))
 					&& ArmorMaterial.fromMaterial(stack.material()) != null) {
-				damageEquipment(entity, slot, (int) damage);
+                this.damageEquipment(entity, slot, (int) damage);
 			}
 		}
 	}

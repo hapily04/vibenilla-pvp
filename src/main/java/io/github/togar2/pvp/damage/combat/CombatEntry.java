@@ -11,23 +11,23 @@ import org.jetbrains.annotations.Nullable;
 public record CombatEntry(Damage damage, @Nullable String fallLocation, double fallDistance) {
 
 	public String getMessageFallLocation() {
-		return fallLocation == null ? "generic" : fallLocation;
+		return this.fallLocation == null ? "generic" : this.fallLocation;
 	}
 
 	public double getFallDistance() {
-		DamageTypeInfo info = DamageTypeInfo.of(damage.getType());
-		return info.outOfWorld() ? Double.MAX_VALUE : fallDistance;
+		DamageTypeInfo info = DamageTypeInfo.of(this.damage.getType());
+		return info.outOfWorld() ? Double.MAX_VALUE : this.fallDistance;
 	}
 
 	public boolean isCombat() {
-		return damage.getAttacker() instanceof LivingEntity;
+		return this.damage.getAttacker() instanceof LivingEntity;
 	}
 
 	public @Nullable Entity getAttacker() {
-		return damage.getAttacker();
+		return this.damage.getAttacker();
 	}
 
 	public @Nullable Component getAttackerName() {
-		return getAttacker() == null ? null : EntityUtil.getName(getAttacker());
+		return this.getAttacker() == null ? null : EntityUtil.getName(this.getAttacker());
 	}
 }

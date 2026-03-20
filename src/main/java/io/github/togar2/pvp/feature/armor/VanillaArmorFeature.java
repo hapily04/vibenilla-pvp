@@ -33,26 +33,26 @@ public class VanillaArmorFeature implements ArmorFeature {
 
 	@Override
 	public void initDependencies() {
-		this.enchantmentFeature = configuration.get(FeatureType.ENCHANTMENT);
-		this.version = configuration.get(FeatureType.VERSION);
+		this.enchantmentFeature = this.configuration.get(FeatureType.ENCHANTMENT);
+		this.version = this.configuration.get(FeatureType.VERSION);
 	}
 
 	@Override
 	public float getDamageWithProtection(LivingEntity entity, DamageType type, float amount) {
 		DamageTypeInfo info = DamageTypeInfo.of(MinecraftServer.getDamageTypeRegistry().getKey(type));
-		amount = getDamageWithArmor(entity, info, amount);
-		return getDamageWithEnchantments(entity, type, amount);
+		amount = this.getDamageWithArmor(entity, info, amount);
+		return this.getDamageWithEnchantments(entity, type, amount);
 	}
 
 	protected float getDamageWithArmor(LivingEntity entity, DamageTypeInfo typeInfo, float amount) {
 		if (typeInfo.bypassesArmor()) return amount;
 
 		double armorValue = entity.getAttributeValue(Attribute.ARMOR);
-		if (version.legacy()) {
+		if (this.version.legacy()) {
 			int armorMultiplier = 25 - (int) armorValue;
 			return (amount * (float) armorMultiplier) / 25;
 		} else {
-			return getDamageLeft(
+			return this.getDamageLeft(
 					amount, (float) Math.floor(armorValue),
 					(float) entity.getAttributeValue(Attribute.ARMOR_TOUGHNESS)
 			);
@@ -75,10 +75,10 @@ public class VanillaArmorFeature implements ArmorFeature {
 		if (amount <= 0) {
 			return 0;
 		} else {
-			k = enchantmentFeature.getProtectionAmount(entity, damageType);
-			if (version.modern()) {
+			k = this.enchantmentFeature.getProtectionAmount(entity, damageType);
+			if (this.version.modern()) {
 				if (k > 0) {
-					amount = getDamageAfterProtectionEnchantment(amount, (float) k);
+					amount = this.getDamageAfterProtectionEnchantment(amount, (float) k);
 				}
 			} else {
 				if (k > 20) {

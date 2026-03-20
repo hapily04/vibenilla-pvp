@@ -30,7 +30,7 @@ public class CombatPlayerImpl extends Player implements CombatPlayer {
 		// Default value is 2.0, but base value is 1.0 for players in vanilla
 		// This is difficult to implement as a feature and assumed everyone using
 		// this extension would want it to match vanilla
-		getAttribute(Attribute.ATTACK_DAMAGE).setBaseValue(1.0);
+        this.getAttribute(Attribute.ATTACK_DAMAGE).setBaseValue(1.0);
 	}
 
 	@Override
@@ -38,40 +38,40 @@ public class CombatPlayerImpl extends Player implements CombatPlayer {
 		EntityVelocityEvent entityVelocityEvent = new EntityVelocityEvent(this, velocity);
 		EventDispatcher.callCancellable(entityVelocityEvent, () -> {
 			this.velocity = entityVelocityEvent.getVelocity();
-			velocityUpdate = true;
+            this.velocityUpdate = true;
 		});
 	}
 
 	@Override
 	public void setVelocityNoUpdate(Function<Vec, Vec> function) {
-		velocity = function.apply(velocity);
+        this.velocity = function.apply(this.velocity);
 	}
 
 	@Override
 	public void sendImmediateVelocityUpdate() {
-		if (velocityUpdate) {
-			velocityUpdate = false;
-			sendPacketToViewersAndSelf(getVelocityPacket());
+		if (this.velocityUpdate) {
+            this.velocityUpdate = false;
+            this.sendPacketToViewersAndSelf(this.getVelocityPacket());
 		}
 	}
 
 	public boolean isOnGroundAfterTicks(int ticks) {
-		if (vehicle != null) return false;
+		if (this.vehicle != null) return false;
 
 		final double tps = ServerFlag.SERVER_TICKS_PER_SECOND;
 		Vec velocity = this.velocity.div(tps);
 		Pos position = this.position;
 
 		// Slow falling effect
-		Aerodynamics aerodynamics = getAerodynamics();
-		if (velocity.y() < 0 && hasEffect(PotionEffect.SLOW_FALLING))
+		Aerodynamics aerodynamics = this.getAerodynamics();
+		if (velocity.y() < 0 && this.hasEffect(PotionEffect.SLOW_FALLING))
 			aerodynamics = aerodynamics.withGravity(0.01);
 
 		// Do movementTick() calculations for the given amount of ticks
-		PhysicsResult prevPhysicsResult = previousPhysicsResult;
+		PhysicsResult prevPhysicsResult = this.previousPhysicsResult;
 		for (int i = 0; i < ticks; i++) {
-			PhysicsResult physicsResult = PhysicsUtils.simulateMovement(position, velocity, boundingBox,
-					instance.getWorldBorder(), instance, aerodynamics, hasNoGravity(), hasPhysics, onGround, isFlying(), prevPhysicsResult);
+			PhysicsResult physicsResult = PhysicsUtils.simulateMovement(position, velocity, this.boundingBox,
+                    this.instance.getWorldBorder(), this.instance, aerodynamics, this.hasNoGravity(), this.hasPhysics, this.onGround, this.isFlying(), prevPhysicsResult);
 			prevPhysicsResult = physicsResult;
 
 			if (physicsResult.isOnGround()) return true;
@@ -80,7 +80,7 @@ public class CombatPlayerImpl extends Player implements CombatPlayer {
 			position = physicsResult.newPosition();
 
 			// Levitation effect
-			TimedPotion levitation = getEffect(PotionEffect.LEVITATION);
+			TimedPotion levitation = this.getEffect(PotionEffect.LEVITATION);
 			if (levitation != null) {
 				velocity = velocity.withY(
 						((0.05 * (double) (levitation.potion().amplifier() + 1) - (velocity.y())) * 0.2)
@@ -93,33 +93,33 @@ public class CombatPlayerImpl extends Player implements CombatPlayer {
 
 	@Override
 	protected void movementTick() {
-		this.gravityTickCount = onGround ? 0 : gravityTickCount + 1;
-		if (vehicle != null) return;
+		this.gravityTickCount = this.onGround ? 0 : this.gravityTickCount + 1;
+		if (this.vehicle != null) return;
 
 		final double tps = ServerFlag.SERVER_TICKS_PER_SECOND;
 
 		// Slow falling effect
-		Aerodynamics aerodynamics = getAerodynamics();
-		if (velocity.y() < 0 && hasEffect(PotionEffect.SLOW_FALLING))
+		Aerodynamics aerodynamics = this.getAerodynamics();
+		if (this.velocity.y() < 0 && this.hasEffect(PotionEffect.SLOW_FALLING))
 			aerodynamics = aerodynamics.withGravity(0.01);
 
-		PhysicsResult physicsResult = PhysicsUtils.simulateMovement(position, velocity.div(tps), boundingBox,
-				instance.getWorldBorder(), instance, aerodynamics, hasNoGravity(), hasPhysics, onGround, isFlying(), previousPhysicsResult);
+		PhysicsResult physicsResult = PhysicsUtils.simulateMovement(this.position, this.velocity.div(tps), this.boundingBox,
+                this.instance.getWorldBorder(), this.instance, aerodynamics, this.hasNoGravity(), this.hasPhysics, this.onGround, this.isFlying(), this.previousPhysicsResult);
 		this.previousPhysicsResult = physicsResult;
 
-		Chunk finalChunk = ChunkUtils.retrieve(instance, currentChunk, physicsResult.newPosition());
+		Chunk finalChunk = ChunkUtils.retrieve(this.instance, this.currentChunk, physicsResult.newPosition());
 		if (!ChunkUtils.isLoaded(finalChunk)) return;
 
-		velocity = physicsResult.newVelocity().mul(tps);
+        this.velocity = physicsResult.newVelocity().mul(tps);
 		//onGround = physicsResult.isOnGround();
 
 		// Levitation effect
-		TimedPotion levitation = getEffect(PotionEffect.LEVITATION);
+		TimedPotion levitation = this.getEffect(PotionEffect.LEVITATION);
 		if (levitation != null) {
-			velocity = velocity.withY(
+            this.velocity = this.velocity.withY(
 					((0.05 * (double)
 							(levitation.potion().amplifier() + 1)
-							- (velocity.y() / tps)) * 0.2) * tps
+							- (this.velocity.y() / tps)) * 0.2) * tps
 			);
 		}
 
@@ -127,6 +127,6 @@ public class CombatPlayerImpl extends Player implements CombatPlayer {
 		//if (!PlayerUtils.isSocketClient(this)) {
 		//	refreshPosition(physicsResult.newPosition(), true, true);
 		//}
-		sendImmediateVelocityUpdate();
+        this.sendImmediateVelocityUpdate();
 	}
 }

@@ -20,7 +20,7 @@ public class SpectralArrow extends AbstractArrow {
 	}
 
 	public int getDuration() {
-		return duration;
+		return this.duration;
 	}
 
 	public void setDuration(int duration) {
@@ -34,6 +34,6 @@ public class SpectralArrow extends AbstractArrow {
 
 	@Override
 	protected void onHurt(LivingEntity entity) {
-		entity.addEffect(new Potion(PotionEffect.GLOWING, (byte) 0, duration, PotionFlags.defaultFlags()));
+		entity.addEffect(new Potion(PotionEffect.GLOWING, (byte) 0, this.duration, PotionFlags.defaultFlags()));
 	}
 }

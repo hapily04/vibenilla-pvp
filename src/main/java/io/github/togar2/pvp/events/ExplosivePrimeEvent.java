@@ -30,11 +30,11 @@ public class ExplosivePrimeEvent implements InstanceEvent, CancellableEvent {
 
 	@Override
 	public @NotNull Instance getInstance() {
-		return instance;
+		return this.instance;
 	}
 
 	public @NotNull Point getBlockPosition() {
-		return blockPosition;
+		return this.blockPosition;
 	}
 
 	/**
@@ -43,7 +43,7 @@ public class ExplosivePrimeEvent implements InstanceEvent, CancellableEvent {
 	 * @return the cause
 	 */
 	public ExplosionFeature.IgnitionCause getCause() {
-		return cause;
+		return this.cause;
 	}
 
 	/**
@@ -52,7 +52,7 @@ public class ExplosivePrimeEvent implements InstanceEvent, CancellableEvent {
 	 * @return the fuse in ticks
 	 */
 	public int getFuse() {
-		return fuse;
+		return this.fuse;
 	}
 
 	/**
@@ -66,7 +66,7 @@ public class ExplosivePrimeEvent implements InstanceEvent, CancellableEvent {
 
 	@Override
 	public boolean isCancelled() {
-		return cancelled;
+		return this.cancelled;
 	}
 
 	@Override

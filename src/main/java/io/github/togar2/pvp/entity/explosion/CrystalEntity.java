@@ -16,9 +16,9 @@ public class CrystalEntity extends LivingEntity {
 	public CrystalEntity(boolean fire, boolean showingBottom) {
 		super(EntityType.END_CRYSTAL);
 		this.fire = fire;
-		setNoGravity(true);
-		hasPhysics = false;
-		((EndCrystalMeta) getEntityMeta()).setShowingBottom(showingBottom);
+        this.setNoGravity(true);
+        this.hasPhysics = false;
+		((EndCrystalMeta) this.getEntityMeta()).setShowingBottom(showingBottom);
 	}
 
 	public CrystalEntity() {
@@ -27,15 +27,15 @@ public class CrystalEntity extends LivingEntity {
 
 	@Override
 	public void update(long time) {
-		if (fire && !instance.getBlock(position).compare(Block.FIRE))
-			instance.setBlock(position, Block.FIRE);
+		if (this.fire && !this.instance.getBlock(this.position).compare(Block.FIRE))
+            this.instance.setBlock(this.position, Block.FIRE);
 	}
 
 	@Override
 	public boolean damage(@NotNull Damage damage) {
-		if (isDead() || isRemoved())
+		if (this.isDead() || this.isRemoved())
 			return false;
-		if (isInvulnerable() || isImmune(damage.getType())) {
+		if (this.isInvulnerable() || this.isImmune(damage.getType())) {
 			return false;
 		}
 
@@ -44,10 +44,10 @@ public class CrystalEntity extends LivingEntity {
 
 		// Save this.instance locally
 		Instance instance = this.instance;
-		remove();
+        this.remove();
 		if (instance.getExplosionSupplier() != null
 				&& !DamageTypeInfo.of(damage.getType()).explosive()) {
-			instance.explode((float) position.x(), (float) position.y(), (float) position.z(), 6.0f);
+			instance.explode((float) this.position.x(), (float) this.position.y(), (float) this.position.z(), 6.0f);
 		}
 
 		return true;

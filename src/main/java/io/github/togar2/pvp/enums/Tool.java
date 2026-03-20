@@ -108,11 +108,11 @@ public enum Tool {
 	}
 
 	public boolean isAxe() {
-		return isAxe;
+		return this.isAxe;
 	}
 
 	public boolean isSword() {
-		return isSword;
+		return this.isSword;
 	}
 
 	public static Tool fromMaterial(Material material) {

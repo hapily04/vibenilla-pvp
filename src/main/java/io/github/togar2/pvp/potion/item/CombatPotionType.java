@@ -17,16 +17,16 @@ public class CombatPotionType {
 	}
 
 	public CombatPotionType legacy(Potion... effects) {
-		legacyEffects = List.of(effects);
+        this.legacyEffects = List.of(effects);
 		return this;
 	}
 
 	public PotionType getPotionType() {
-		return potionType;
+		return this.potionType;
 	}
 
 	public List<Potion> getEffects(CombatVersion version) {
-		if (legacyEffects == null) return effects;
-		return version.legacy() ? legacyEffects : effects;
+		if (this.legacyEffects == null) return this.effects;
+		return version.legacy() ? this.legacyEffects : this.effects;
 	}
 }

@@ -19,17 +19,17 @@ public class PrepareAttackEvent implements EntityInstanceEvent, CancellableEvent
 
 	@Override
 	public @NotNull Entity getEntity() {
-		return entity;
+		return this.entity;
 	}
 
 	public @NotNull Entity getTarget() {
-		return target;
+		return this.target;
 	}
 
 
 	@Override
 	public boolean isCancelled() {
-		return cancelled;
+		return this.cancelled;
 	}
 
 	@Override

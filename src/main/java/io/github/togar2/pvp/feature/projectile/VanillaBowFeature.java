@@ -54,10 +54,10 @@ public class VanillaBowFeature implements BowFeature, RegistrableFeature {
 
 	@Override
 	public void initDependencies() {
-		this.itemDamageFeature = configuration.get(FeatureType.ITEM_DAMAGE);
-		this.effectFeature = configuration.get(FeatureType.EFFECT);
-		this.enchantmentFeature = configuration.get(FeatureType.ENCHANTMENT);
-		this.projectileItemFeature = configuration.get(FeatureType.PROJECTILE_ITEM);
+		this.itemDamageFeature = this.configuration.get(FeatureType.ITEM_DAMAGE);
+		this.effectFeature = this.configuration.get(FeatureType.EFFECT);
+		this.enchantmentFeature = this.configuration.get(FeatureType.ENCHANTMENT);
+		this.projectileItemFeature = this.configuration.get(FeatureType.PROJECTILE_ITEM);
 	}
 
 	@Override
@@ -65,7 +65,7 @@ public class VanillaBowFeature implements BowFeature, RegistrableFeature {
 		node.addListener(PlayerBeginItemUseEvent.class, event -> {
 			if (event.getAnimation() == ItemAnimation.BOW) {
 				if (event.getPlayer().getGameMode() != GameMode.CREATIVE
-						&& projectileItemFeature.getBowProjectile(event.getPlayer()) == null) {
+						&& this.projectileItemFeature.getBowProjectile(event.getPlayer()) == null) {
 					event.setCancelled(true);
 				}
 			}
@@ -85,7 +85,7 @@ public class VanillaBowFeature implements BowFeature, RegistrableFeature {
 			ItemStack projectileItem;
 			int projectileSlot;
 
-			ProjectileItemFeature.ProjectileItem projectile = projectileItemFeature.getBowProjectile(player);
+			ProjectileItemFeature.ProjectileItem projectile = this.projectileItemFeature.getBowProjectile(player);
 			if (!infinite && projectile == null) return;
 			if (projectile == null) {
 				projectileItem = Arrow.DEFAULT_ARROW;
@@ -96,11 +96,11 @@ public class VanillaBowFeature implements BowFeature, RegistrableFeature {
 			}
 
 			long useTicks = player.getCurrentItemUseTime();
-			double power = getBowPower(useTicks);
+			double power = this.getBowPower(useTicks);
 			if (power < 0.1) return;
 
 			// Arrow creation
-			AbstractArrow arrow = createArrow(projectileItem.withAmount(1), player);
+			AbstractArrow arrow = this.createArrow(projectileItem.withAmount(1), player);
 
 			if (power >= 1) arrow.setCritical(true);
 
@@ -114,7 +114,7 @@ public class VanillaBowFeature implements BowFeature, RegistrableFeature {
 			if (enchantmentList.level(Enchantment.FLAME) > 0)
 				arrow.setFireTicksLeft(100 * ServerFlag.SERVER_TICKS_PER_SECOND); // 100 seconds
 
-			itemDamageFeature.damageEquipment(player, event.getHand() == PlayerHand.MAIN ?
+            this.itemDamageFeature.damageEquipment(player, event.getHand() == PlayerHand.MAIN ?
 					EquipmentSlot.MAIN_HAND : EquipmentSlot.OFF_HAND, 1);
 
 			boolean reallyInfinite = infinite && projectileItem.material() == Material.ARROW;
@@ -157,9 +157,9 @@ public class VanillaBowFeature implements BowFeature, RegistrableFeature {
 
 	protected AbstractArrow createArrow(ItemStack stack, @Nullable Entity shooter) {
 		if (stack.material() == Material.SPECTRAL_ARROW) {
-			return new SpectralArrow(shooter, enchantmentFeature);
+			return new SpectralArrow(shooter, this.enchantmentFeature);
 		} else {
-			Arrow arrow = new Arrow(shooter, effectFeature, enchantmentFeature);
+			Arrow arrow = new Arrow(shooter, this.effectFeature, this.enchantmentFeature);
 			arrow.setItemStack(stack);
 			return arrow;
 		}

@@ -36,7 +36,7 @@ public class VanillaEquipmentFeature implements EquipmentFeature, RegistrableFea
 
 	@Override
 	public void initDependencies() {
-		this.version = configuration.get(FeatureType.VERSION);
+		this.version = this.configuration.get(FeatureType.VERSION);
 	}
 
 	@Override
@@ -45,7 +45,7 @@ public class VanillaEquipmentFeature implements EquipmentFeature, RegistrableFea
 		node.addListener(PlayerChangeHeldSlotEvent.class, event -> {
 			LivingEntity entity = event.getPlayer();
 			ItemStack newItem = event.getPlayer().getInventory().getItemStack(event.getNewSlot());
-			Tool.updateEquipmentAttributes(entity, entity.getEquipment(EquipmentSlot.MAIN_HAND), newItem, EquipmentSlot.MAIN_HAND, version);
+			Tool.updateEquipmentAttributes(entity, entity.getEquipment(EquipmentSlot.MAIN_HAND), newItem, EquipmentSlot.MAIN_HAND, this.version);
 		});
 	}
 
@@ -54,9 +54,9 @@ public class VanillaEquipmentFeature implements EquipmentFeature, RegistrableFea
 
 		EquipmentSlot slot = event.getSlot();
 		if (slot.isArmor()) {
-			ArmorMaterial.updateEquipmentAttributes(entity, entity.getEquipment(slot), event.getEquippedItem(), slot, version);
+			ArmorMaterial.updateEquipmentAttributes(entity, entity.getEquipment(slot), event.getEquippedItem(), slot, this.version);
 		} else if (slot.isHand()) {
-			Tool.updateEquipmentAttributes(entity, entity.getEquipment(slot), event.getEquippedItem(), slot, version);
+			Tool.updateEquipmentAttributes(entity, entity.getEquipment(slot), event.getEquippedItem(), slot, this.version);
 		}
 	}
 }

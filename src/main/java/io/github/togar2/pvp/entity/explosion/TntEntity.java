@@ -21,37 +21,37 @@ public class TntEntity extends Entity {
 		this.causingEntity = causingEntity;
 
 		double angle = ThreadLocalRandom.current().nextDouble() * 2 * Math.PI;
-		setVelocity(new Vec(-Math.sin(angle) * 0.02, 0.2f, -Math.cos(angle) * 0.02)
+        this.setVelocity(new Vec(-Math.sin(angle) * 0.02, 0.2f, -Math.cos(angle) * 0.02)
 				.mul(ServerFlag.SERVER_TICKS_PER_SECOND));
 	}
 
 	public int getFuse() {
-		return ((PrimedTntMeta) getEntityMeta()).getFuseTime();
+		return ((PrimedTntMeta) this.getEntityMeta()).getFuseTime();
 	}
 
 	public void setFuse(int fuse) {
-		((PrimedTntMeta) getEntityMeta()).setFuseTime(fuse);
+		((PrimedTntMeta) this.getEntityMeta()).setFuseTime(fuse);
 	}
 
 	@Override
 	public void update(long time) {
-		if (onGround) velocity = velocity.mul(0.7, -0.5, 0.7);
-		int newFuse = getFuse() - 1;
-		setFuse(newFuse);
+		if (this.onGround) this.velocity = this.velocity.mul(0.7, -0.5, 0.7);
+		int newFuse = this.getFuse() - 1;
+        this.setFuse(newFuse);
 		if (newFuse <= 0) {
 			Instance instance = this.instance;
 			Pos position = this.position;
 			BoundingBox boundingBox = this.boundingBox;
 
-			remove();
+            this.remove();
 			if (instance.getExplosionSupplier() != null) instance.explode(
 					(float) position.x(),
 					(float) (position.y() + boundingBox.height() * 0.0625),
 					(float) position.z(),
 					4.0f,
-					causingEntity == null ? null
+                    this.causingEntity == null ? null
 							: CompoundBinaryTag.builder()
-								.putString("causingEntity", causingEntity.getUuid().toString())
+								.putString("causingEntity", this.causingEntity.getUuid().toString())
 								.build()
 			);
 		}

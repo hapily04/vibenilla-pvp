@@ -59,8 +59,8 @@ public class VanillaExplosiveFeature implements ExplosiveFeature, RegistrableFea
 
 	@Override
 	public void initDependencies() {
-		this.explosionFeature = configuration.get(FeatureType.EXPLOSION);
-		this.itemDamageFeature = configuration.get(FeatureType.ITEM_DAMAGE);
+		this.explosionFeature = this.configuration.get(FeatureType.EXPLOSION);
+		this.itemDamageFeature = this.configuration.get(FeatureType.ITEM_DAMAGE);
 	}
 
 	@Override
@@ -75,12 +75,12 @@ public class VanillaExplosiveFeature implements ExplosiveFeature, RegistrableFea
 			Block block = instance.getBlock(position);
 			if (!block.compare(Block.TNT)) return;
 
-			explosionFeature.primeExplosive(instance, position, new ByPlayer(player), 80);
+            this.explosionFeature.primeExplosive(instance, position, new ByPlayer(player), 80);
 			instance.setBlock(position, Block.AIR);
 
 			if (player.getGameMode() != GameMode.CREATIVE) {
 				if (stack.material() == Material.FLINT_AND_STEEL) {
-					itemDamageFeature.damageEquipment(player, event.getHand() == PlayerHand.MAIN
+                    this.itemDamageFeature.damageEquipment(player, event.getHand() == PlayerHand.MAIN
 							? EquipmentSlot.MAIN_HAND : EquipmentSlot.OFF_HAND, 1);
 				} else {
 					player.setItemInHand(event.getHand(), stack.consume(1));

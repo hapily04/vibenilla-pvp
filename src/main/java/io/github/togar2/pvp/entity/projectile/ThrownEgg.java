@@ -18,22 +18,22 @@ public class ThrownEgg extends CustomEntityProjectile implements ItemHoldingProj
 
 	@Override
 	public boolean onHit(Entity entity) {
-		triggerStatus((byte) 3); // Egg particles
+        this.triggerStatus((byte) 3); // Egg particles
 
-		((LivingEntity) entity).damage(new Damage(DamageType.THROWN, this, getShooter(), null, 0));
+		((LivingEntity) entity).damage(new Damage(DamageType.THROWN, this, this.getShooter(), null, 0));
 
 		return true;
 	}
 
 	@Override
 	public boolean onStuck() {
-		triggerStatus((byte) 3); // Egg particles
+        this.triggerStatus((byte) 3); // Egg particles
 
 		return true;
 	}
 
 	@Override
 	public void setItem(@NotNull ItemStack item) {
-		((ThrownEggMeta) getEntityMeta()).setItem(item);
+		((ThrownEggMeta) this.getEntityMeta()).setItem(item);
 	}
 }

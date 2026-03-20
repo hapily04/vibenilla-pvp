@@ -26,7 +26,7 @@ public class EntityPreDeathEvent implements EntityInstanceEvent, CancellableEven
 
 	@Override
 	public @NotNull Entity getEntity() {
-		return entity;
+		return this.entity;
 	}
 
 	/**
@@ -37,7 +37,7 @@ public class EntityPreDeathEvent implements EntityInstanceEvent, CancellableEven
 	 * @return the damage object
 	 */
 	public @NotNull Damage getDamage() {
-		return damage;
+		return this.damage;
 	}
 
 	/**
@@ -49,7 +49,7 @@ public class EntityPreDeathEvent implements EntityInstanceEvent, CancellableEven
 	 */
 	@Override
 	public boolean isCancelled() {
-		return cancelled;
+		return this.cancelled;
 	}
 
 	/**
@@ -71,7 +71,7 @@ public class EntityPreDeathEvent implements EntityInstanceEvent, CancellableEven
 	 * @return whether the death should be cancelled or not
 	 */
 	public boolean isCancelDeath() {
-		return cancelDeath;
+		return this.cancelDeath;
 	}
 
 	/**

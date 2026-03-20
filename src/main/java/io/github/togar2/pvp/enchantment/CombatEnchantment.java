@@ -33,11 +33,11 @@ public class CombatEnchantment {
 	}
 
 	public RegistryKey<Enchantment> getEnchantment() {
-		return enchantment;
+		return this.enchantment;
 	}
 
 	public Set<FeatureType<?>> getDependencies() {
-		return dependencies;
+		return this.dependencies;
 	}
 
 	public Map<EquipmentSlot, ItemStack> getEquipment(LivingEntity entity) {

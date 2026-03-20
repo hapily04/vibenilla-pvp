@@ -30,27 +30,27 @@ public interface CombatPlayer {
     boolean isOnGroundAfterTicks(int ticks);
 
     default double getJumpVelocity() {
-        return getAttribute(Attribute.JUMP_STRENGTH).getValue();
+        return this.getAttribute(Attribute.JUMP_STRENGTH).getValue();
     }
 
     default double getJumpBoostVelocityModifier() {
-        TimedPotion effect = getEffect(PotionEffect.JUMP_BOOST);
+        TimedPotion effect = this.getEffect(PotionEffect.JUMP_BOOST);
         return effect != null ?
                 (0.1 * (effect.potion().amplifier() + 1)) : 0.0;
     }
 
     default void jump() {
         int tps = ServerFlag.SERVER_TICKS_PER_SECOND;
-        double yVel = getJumpVelocity() + getJumpBoostVelocityModifier();
-        setVelocityNoUpdate(velocity -> velocity.withY(Math.max(velocity.y(), yVel * tps)));
-        if (isSprinting()) {
-            double angle = getPosition().yaw() * (Math.PI / 180);
-            setVelocityNoUpdate(velocity -> velocity.add(-Math.sin(angle) * 0.2 * tps, 0, Math.cos(angle) * 0.2 * tps));
+        double yVel = this.getJumpVelocity() + this.getJumpBoostVelocityModifier();
+        this.setVelocityNoUpdate(velocity -> velocity.withY(Math.max(velocity.y(), yVel * tps)));
+        if (this.isSprinting()) {
+            double angle = this.getPosition().yaw() * (Math.PI / 180);
+            this.setVelocityNoUpdate(velocity -> velocity.add(-Math.sin(angle) * 0.2 * tps, 0, Math.cos(angle) * 0.2 * tps));
         }
     }
 
     default void afterSprintAttack() {
-        setVelocityNoUpdate(velocity -> velocity.mul(0.6, 1, 0.6));
+        this.setVelocityNoUpdate(velocity -> velocity.mul(0.6, 1, 0.6));
     }
 
     void setVelocityNoUpdate(Function<Vec, Vec> function);

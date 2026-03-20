@@ -44,8 +44,8 @@ public class VanillaExhaustionFeature implements ExhaustionFeature, RegistrableF
 
 	@Override
 	public void initDependencies() {
-		this.difficultyFeature = configuration.get(FeatureType.DIFFICULTY);
-		this.version = configuration.get(FeatureType.VERSION);
+		this.difficultyFeature = this.configuration.get(FeatureType.DIFFICULTY);
+		this.version = this.configuration.get(FeatureType.VERSION);
 	}
 
 	public static void initPlayer(Player player, boolean firstInit) {
@@ -54,10 +54,10 @@ public class VanillaExhaustionFeature implements ExhaustionFeature, RegistrableF
 
 	@Override
 	public void init(EventNode<EntityInstanceEvent> node) {
-		node.addListener(PlayerTickEvent.class, event -> onTick(event.getPlayer()));
+		node.addListener(PlayerTickEvent.class, event -> this.onTick(event.getPlayer()));
 
 		node.addListener(PlayerBlockBreakEvent.class, event ->
-				addExhaustion(event.getPlayer(), version.legacy() ? 0.025f : 0.005f));
+                this.addExhaustion(event.getPlayer(), this.version.legacy() ? 0.025f : 0.005f));
 
 		node.addListener(PlayerMoveEvent.class, this::onMove);
 	}
@@ -70,7 +70,7 @@ public class VanillaExhaustionFeature implements ExhaustionFeature, RegistrableF
 			player.setTag(EXHAUSTION, exhaustion - 4);
 			if (player.getFoodSaturation() > 0) {
 				player.setFoodSaturation(Math.max(player.getFoodSaturation() - 1, 0));
-			} else if (difficultyFeature.getValue(player) != Difficulty.PEACEFUL) {
+			} else if (this.difficultyFeature.getValue(player) != Difficulty.PEACEFUL) {
 				player.setFood(Math.max(player.getFood() - 1, 0));
 			}
 		}
@@ -86,19 +86,19 @@ public class VanillaExhaustionFeature implements ExhaustionFeature, RegistrableF
 		// Check if movement was a jump
 		if (yDiff > 0.0D && player.isOnGround()) {
 			if (player.isSprinting()) {
-				addExhaustion(player, version.legacy() ? 0.8f : 0.2f);
+                this.addExhaustion(player, this.version.legacy() ? 0.8f : 0.2f);
 			} else {
-				addExhaustion(player, version.legacy() ? 0.2f : 0.05f);
+                this.addExhaustion(player, this.version.legacy() ? 0.2f : 0.05f);
 			}
 		}
 
 		if (player.isOnGround()) {
 			int l = (int) Math.round(Math.sqrt(xDiff * xDiff + zDiff * zDiff) * 100.0f);
-			if (l > 0) addExhaustion(player, (player.isSprinting() ? 0.1f : 0.0f) * (float) l * 0.01f);
+			if (l > 0) this.addExhaustion(player, (player.isSprinting() ? 0.1f : 0.0f) * (float) l * 0.01f);
 		} else {
 			if (Objects.requireNonNull(player.getInstance()).getBlock(player.getPosition()) == Block.WATER) {
 				int l = (int) Math.round(Math.sqrt(xDiff * xDiff + yDiff * yDiff + zDiff * zDiff) * 100.0f);
-				if (l > 0) addExhaustion(player, 0.01f * (float) l * 0.01f);
+				if (l > 0) this.addExhaustion(player, 0.01f * (float) l * 0.01f);
 			}
 		}
 	}
@@ -113,16 +113,16 @@ public class VanillaExhaustionFeature implements ExhaustionFeature, RegistrableF
 
 	@Override
 	public void addAttackExhaustion(Player player) {
-		addExhaustion(player, version.legacy() ? 0.3f: 0.1f);
+        this.addExhaustion(player, this.version.legacy() ? 0.3f: 0.1f);
 	}
 
 	@Override
 	public void addDamageExhaustion(Player player, DamageType type) {
-		addExhaustion(player, type.exhaustion() * (version.legacy() ? 3 : 1));
+        this.addExhaustion(player, type.exhaustion() * (this.version.legacy() ? 3 : 1));
 	}
 
 	@Override
 	public void applyHungerEffect(Player player, int amplifier) {
-		addExhaustion(player, (version.legacy() ? 0.025f : 0.005f) * (float) (amplifier + 1));
+        this.addExhaustion(player, (this.version.legacy() ? 0.025f : 0.005f) * (float) (amplifier + 1));
 	}
 }

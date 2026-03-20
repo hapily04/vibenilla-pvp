@@ -24,16 +24,16 @@ public class PlayerSpectateEvent implements PlayerEvent, EntityInstanceEvent, Ca
 
 	@Override
 	public @NotNull Player getPlayer() {
-		return player;
+		return this.player;
 	}
 
 	public Entity getTarget() {
-		return target;
+		return this.target;
 	}
 
 	@Override
 	public boolean isCancelled() {
-		return cancelled;
+		return this.cancelled;
 	}
 
 	@Override

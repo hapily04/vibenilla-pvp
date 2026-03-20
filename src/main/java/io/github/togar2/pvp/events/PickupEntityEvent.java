@@ -24,17 +24,17 @@ public class PickupEntityEvent implements EntityInstanceEvent, CancellableEvent 
 
 	@NotNull
 	public Player getPlayer() {
-		return player;
+		return this.player;
 	}
 
 	@NotNull
 	public AbstractArrow getPickedUp() {
-		return arrowEntity;
+		return this.arrowEntity;
 	}
 
 	@Override
 	public boolean isCancelled() {
-		return cancelled;
+		return this.cancelled;
 	}
 
 	@Override
@@ -44,6 +44,6 @@ public class PickupEntityEvent implements EntityInstanceEvent, CancellableEvent 
 
 	@Override
 	public @NotNull Entity getEntity() {
-		return player;
+		return this.player;
 	}
 }

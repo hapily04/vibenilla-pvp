@@ -35,18 +35,18 @@ public class VanillaAttackCooldownFeature implements AttackCooldownFeature, Regi
 
 	@Override
 	public void initDependencies() {
-		this.version = configuration.get(FeatureType.VERSION);
+		this.version = this.configuration.get(FeatureType.VERSION);
 	}
 
 	@Override
 	public void init(EventNode<EntityInstanceEvent> node) {
 		node.addListener(EventListener.builder(PlayerHandAnimationEvent.class).handler(event ->
-				resetCooldownProgress(event.getPlayer())).build());
+                this.resetCooldownProgress(event.getPlayer())).build());
 
 		node.addListener(EventListener.builder(PlayerChangeHeldSlotEvent.class).handler(event -> {
 			if (!event.getPlayer().getItemInMainHand()
 					.isSimilar(event.getPlayer().getInventory().getItemStack(event.getNewSlot()))) {
-				resetCooldownProgress(event.getPlayer());
+                this.resetCooldownProgress(event.getPlayer());
 			}
 		}).build());
 	}
@@ -58,14 +58,14 @@ public class VanillaAttackCooldownFeature implements AttackCooldownFeature, Regi
 
 	@Override
 	public double getAttackCooldownProgress(Player player) {
-		if (version.legacy()) return 1.0;
+		if (this.version.legacy()) return 1.0;
 
 		Long lastAttacked = player.getTag(LAST_ATTACKED_TICKS);
 		if (lastAttacked == null) return 1.0;
 
 		long timeSinceLastAttacked = player.getAliveTicks() - lastAttacked;
 		return MathUtils.clamp(
-				(timeSinceLastAttacked + 0.5) / getAttackCooldownProgressPerTick(player),
+				(timeSinceLastAttacked + 0.5) / this.getAttackCooldownProgressPerTick(player),
 				0, 1
 		);
 	}

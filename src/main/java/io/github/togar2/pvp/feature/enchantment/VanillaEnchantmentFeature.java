@@ -48,7 +48,7 @@ public class VanillaEnchantmentFeature implements EnchantmentFeature, Registrabl
 	public void init(EventNode<EntityInstanceEvent> node) {
 		node.addListener(EntitySetFireEvent.class, event -> {
 			if (event.getEntity() instanceof LivingEntity living)
-				event.setFireTicks(getFireDuration(living, event.getFireTicks()));
+				event.setFireTicks(this.getFireDuration(living, event.getFireTicks()));
 		});
 	}
 
@@ -108,7 +108,7 @@ public class VanillaEnchantmentFeature implements EnchantmentFeature, Registrabl
 		}
 
 		forEachEnchantment(armorItems, (enchantment, level) ->
-				result.addAndGet(enchantment.getProtectionAmount(level, damageType, this, configuration)));
+				result.addAndGet(enchantment.getProtectionAmount(level, damageType, this, this.configuration)));
 		return result.get();
 	}
 
@@ -117,7 +117,7 @@ public class VanillaEnchantmentFeature implements EnchantmentFeature, Registrabl
 		AtomicReference<Float> result = new AtomicReference<>((float) 0);
 		stack.get(DataComponents.ENCHANTMENTS).enchantments().forEach((enchantment, level) -> {
 			CombatEnchantment combatEnchantment = CombatEnchantments.get(enchantment);
-			result.updateAndGet(v -> v + combatEnchantment.getAttackDamage(level, group, this, configuration));
+			result.updateAndGet(v -> v + combatEnchantment.getAttackDamage(level, group, this, this.configuration));
 		});
 
 		return result.get();
@@ -125,31 +125,31 @@ public class VanillaEnchantmentFeature implements EnchantmentFeature, Registrabl
 
 	@Override
 	public double getExplosionKnockback(LivingEntity entity, double strength) {
-		int level = getEquipmentLevel(entity, Enchantment.BLAST_PROTECTION);
+		int level = this.getEquipmentLevel(entity, Enchantment.BLAST_PROTECTION);
 		if (level > 0) strength -= Math.floor((strength * (double) (level * 0.15f)));
 		return strength;
 	}
 
 	@Override
 	public int getFireDuration(LivingEntity entity, int duration) {
-		int level = getEquipmentLevel(entity, Enchantment.FIRE_PROTECTION);
+		int level = this.getEquipmentLevel(entity, Enchantment.FIRE_PROTECTION);
 		if (level > 0) duration -= (int) Math.floor((float) duration * (float) level * 0.15F);
 		return duration;
 	}
 
 	@Override
 	public int getKnockback(LivingEntity entity) {
-		return getEquipmentLevel(entity, Enchantment.KNOCKBACK);
+		return this.getEquipmentLevel(entity, Enchantment.KNOCKBACK);
 	}
 
 	@Override
 	public int getSweeping(LivingEntity entity) {
-		return getEquipmentLevel(entity, Enchantment.SWEEPING_EDGE);
+		return this.getEquipmentLevel(entity, Enchantment.SWEEPING_EDGE);
 	}
 
 	@Override
 	public int getFireAspect(LivingEntity entity) {
-		return getEquipmentLevel(entity, Enchantment.FIRE_ASPECT);
+		return this.getEquipmentLevel(entity, Enchantment.FIRE_ASPECT);
 	}
 
 	@Override
@@ -171,7 +171,7 @@ public class VanillaEnchantmentFeature implements EnchantmentFeature, Registrabl
 				user.getBoots(), user.getLeggings(),
 				user.getChestplate(), user.getHelmet(),
 				user.getItemInMainHand(), user.getItemInOffHand()
-		), (enchantment, level) -> enchantment.onUserDamaged(user, attacker, level, this, configuration));
+		), (enchantment, level) -> enchantment.onUserDamaged(user, attacker, level, this, this.configuration));
 	}
 
 	@Override
@@ -180,6 +180,6 @@ public class VanillaEnchantmentFeature implements EnchantmentFeature, Registrabl
 				user.getBoots(), user.getLeggings(),
 				user.getChestplate(), user.getHelmet(),
 				user.getItemInMainHand(), user.getItemInOffHand()
-		), (enchantment, level) -> enchantment.onTargetDamaged(user, target, level, this, configuration));
+		), (enchantment, level) -> enchantment.onTargetDamaged(user, target, level, this, this.configuration));
 	}
 }

@@ -12,7 +12,7 @@ public class CombatFeatureSet extends FeatureConfiguration implements Registrabl
 
 	@Override
 	public void init(EventNode<EntityInstanceEvent> node) {
-		for (CombatFeature feature : listFeatures()) {
+		for (CombatFeature feature : this.listFeatures()) {
 			if (!(feature instanceof RegistrableFeature registrable)) continue;
 			node.addChild(registrable.createNode());
 		}
@@ -20,15 +20,15 @@ public class CombatFeatureSet extends FeatureConfiguration implements Registrabl
 
 	@Override
 	public void initDependencies() {
-		for (CombatFeature feature : listFeatures()) {
+		for (CombatFeature feature : this.listFeatures()) {
 			feature.initDependencies();
 		}
-		initialized = true;
+        this.initialized = true;
 	}
 
 	@Override
 	public FeatureConfiguration add(FeatureType<?> type, CombatFeature feature) {
-		if (initialized) throw new UnsupportedOperationException("Cannot add features after initialization");
+		if (this.initialized) throw new UnsupportedOperationException("Cannot add features after initialization");
 		return super.add(type, feature);
 	}
 }

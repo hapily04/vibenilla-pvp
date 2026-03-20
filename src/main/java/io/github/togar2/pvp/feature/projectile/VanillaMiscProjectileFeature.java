@@ -43,8 +43,8 @@ public class VanillaMiscProjectileFeature implements MiscProjectileFeature, Regi
 
 	@Override
 	public void initDependencies() {
-		this.itemCooldownFeature = configuration.get(FeatureType.ITEM_COOLDOWN);
-		this.fallFeature = configuration.get(FeatureType.FALL);
+		this.itemCooldownFeature = this.configuration.get(FeatureType.ITEM_COOLDOWN);
+		this.fallFeature = this.configuration.get(FeatureType.FALL);
 	}
 
 	@Override
@@ -68,7 +68,7 @@ public class VanillaMiscProjectileFeature implements MiscProjectileFeature, Regi
 				projectile = new Snowball(player);
 			} else if (enderpearl) {
 				soundEvent = SoundEvent.ENTITY_ENDER_PEARL_THROW;
-				projectile = new ThrownEnderpearl(player, fallFeature);
+				projectile = new ThrownEnderpearl(player, this.fallFeature);
 			} else {
 				soundEvent = SoundEvent.ENTITY_EGG_THROW;
 				projectile = new ThrownEgg(player);
@@ -84,7 +84,7 @@ public class VanillaMiscProjectileFeature implements MiscProjectileFeature, Regi
 			), player);
 
 			if (enderpearl) {
-				itemCooldownFeature.setCooldown(player, Material.ENDER_PEARL, 20);
+                this.itemCooldownFeature.setCooldown(player, Material.ENDER_PEARL, 20);
 			}
 
 			Pos position = player.getPosition().add(0, player.getEyeHeight(), 0);

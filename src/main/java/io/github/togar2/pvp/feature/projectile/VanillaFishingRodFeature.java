@@ -52,8 +52,8 @@ public class VanillaFishingRodFeature implements FishingRodFeature, RegistrableF
 
 	@Override
 	public void initDependencies() {
-		this.itemDamageFeature = configuration.get(FeatureType.ITEM_DAMAGE);
-		this.version = configuration.get(FeatureType.VERSION);
+		this.itemDamageFeature = this.configuration.get(FeatureType.ITEM_DAMAGE);
+		this.version = this.configuration.get(FeatureType.VERSION);
 	}
 
 	@Override
@@ -71,7 +71,7 @@ public class VanillaFishingRodFeature implements FishingRodFeature, RegistrableF
 				EventDispatcher.callCancellable(retrieveEvent, () -> {
 					int durability = bobber.retrieve();
 					if (player.getGameMode() != GameMode.CREATIVE)
-						itemDamageFeature.damageEquipment(player, event.getHand() == PlayerHand.MAIN ?
+                        this.itemDamageFeature.damageEquipment(player, event.getHand() == PlayerHand.MAIN ?
 								EquipmentSlot.MAIN_HAND : EquipmentSlot.OFF_HAND, durability);
 
 					ViewUtil.viewersAndSelf(player).playSound(Sound.sound(
@@ -85,7 +85,7 @@ public class VanillaFishingRodFeature implements FishingRodFeature, RegistrableF
 						0.5f, 0.4f / (random.nextFloat() * 0.4f + 0.8f)
 				), player);
 
-				FishingBobber bobber = new FishingBobber(player, version.legacy());
+				FishingBobber bobber = new FishingBobber(player, this.version.legacy());
 				player.setTag(FISHING_BOBBER, bobber);
 
 				EntityShootEvent shootEvent = new EntityShootEvent(player, bobber,
@@ -95,7 +95,7 @@ public class VanillaFishingRodFeature implements FishingRodFeature, RegistrableF
 					bobber.remove();
 					return;
 				}
-				double spread = shootEvent.getSpread() * (version.legacy() ? 0.0075 : 0.0045);
+				double spread = shootEvent.getSpread() * (this.version.legacy() ? 0.0075 : 0.0045);
 
 				Pos playerPos = player.getPosition();
 				float playerPitch = playerPos.pitch();
@@ -110,7 +110,7 @@ public class VanillaFishingRodFeature implements FishingRodFeature, RegistrableF
 
 				Vec velocity;
 
-				if (version.modern()) {
+				if (this.version.modern()) {
 					velocity = new Vec(
 							-xDir,
 							MathUtils.clamp(-(

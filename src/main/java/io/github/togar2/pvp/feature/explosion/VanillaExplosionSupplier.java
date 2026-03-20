@@ -129,7 +129,7 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 						maxZ - minZ
 				);
 
-				Vec centerPoint = new Vec(getCenterX(), getCenterY(), getCenterZ());
+				Vec centerPoint = new Vec(this.getCenterX(), this.getCenterY(), this.getCenterZ());
 
 				Vec src = centerPoint.sub(0, explosionBox.height() / 2, 0);
 				List<Entity> entities = new ArrayList<>(instance.getEntities().stream()
@@ -145,7 +145,7 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 				if (anchor) {
 					damageObj = new Damage(DamageType.BAD_RESPAWN_POINT, null, null, null, 0);
 				} else {
-					Entity causingEntity = getCausingEntity(instance);
+					Entity causingEntity = this.getCausingEntity(instance);
 					damageObj = new Damage(DamageType.PLAYER_EXPLOSION, causingEntity, causingEntity, null, 0);
 				}
 
@@ -174,7 +174,7 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 							double knockback = currentStrength;
 							if (entity instanceof LivingEntity living) {
 								if (!living.damage(damageObj)) continue;
-								knockback = enchantmentFeature.getExplosionKnockback(living, currentStrength);
+								knockback = VanillaExplosionSupplier.this.enchantmentFeature.getExplosionKnockback(living, currentStrength);
 							}
 
 							Vec knockbackVec = new Vec(
@@ -186,7 +186,7 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 							int tps = ServerFlag.SERVER_TICKS_PER_SECOND;
 							if (entity instanceof Player player) {
 								if (!player.getGameMode().invulnerable() && !player.isFlying()) {
-									playerKnockback.put(player, knockbackVec);
+                                    this.playerKnockback.put(player, knockbackVec);
 
 									if (player instanceof CombatPlayer custom)
 										custom.setVelocityNoUpdate(velocity -> velocity.add(knockbackVec.mul(tps)));
@@ -203,43 +203,43 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 
 			@Override
 			public void apply(@NotNull Instance instance) {
-				List<Point> blocks = prepare(instance);
+				List<Point> blocks = this.prepare(instance);
 				if (blocks == null) return; // Event was cancelled
 				byte[] records = new byte[3 * blocks.size()];
 				for (int i = 0; i < blocks.size(); i++) {
 					final var pos = blocks.get(i);
 					if (instance.getBlock(pos).compare(Block.TNT)) {
-						Entity causingEntity = getCausingEntity(instance);
-						feature.primeExplosive(instance, pos, new ExplosionFeature.IgnitionCause.Explosion(causingEntity),
+						Entity causingEntity = this.getCausingEntity(instance);
+                        VanillaExplosionSupplier.this.feature.primeExplosive(instance, pos, new ExplosionFeature.IgnitionCause.Explosion(causingEntity),
 								ThreadLocalRandom.current().nextInt(20) + 10);
 					}
 					instance.setBlock(pos, Block.AIR);
-					final byte x = (byte) (pos.x() - Math.floor(getCenterX()));
-					final byte y = (byte) (pos.y() - Math.floor(getCenterY()));
-					final byte z = (byte) (pos.z() - Math.floor(getCenterZ()));
+					final byte x = (byte) (pos.x() - Math.floor(this.getCenterX()));
+					final byte y = (byte) (pos.y() - Math.floor(this.getCenterY()));
+					final byte z = (byte) (pos.z() - Math.floor(this.getCenterZ()));
 					records[i * 3] = x;
 					records[i * 3 + 1] = y;
 					records[i * 3 + 2] = z;
 				}
 
-				Chunk chunk = instance.getChunkAt(getCenterX(), getCenterZ());
+				Chunk chunk = instance.getChunkAt(this.getCenterX(), this.getCenterZ());
 				if (chunk != null) {
 					for (Player player : chunk.getViewers()) {
-						Vec knockbackVec = playerKnockback.getOrDefault(player, Vec.ZERO);
+						Vec knockbackVec = this.playerKnockback.getOrDefault(player, Vec.ZERO);
 						player.sendPacket(
                                 new ExplosionPacket(
                                         new BlockVec(centerX, centerY, centerZ),
-                                        getStrength(),
+                                        this.getStrength(),
                                         blocks.size(),
 								        knockbackVec,
                                         Particle.EXPLOSION,
                                         SoundEvent.ENTITY_GENERIC_EXPLODE,
-                                        PARTICLES
+                                        VanillaExplosionSupplier.this.PARTICLES
                                 )
                         );
 					}
 				}
-				playerKnockback.clear();
+                this.playerKnockback.clear();
 
 				if (additionalData != null && additionalData.keySet().contains("fire")) {
 					if (additionalData.getBoolean("fire")) {
@@ -255,7 +255,7 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 					}
 				}
 
-				postSend(instance, blocks);
+                this.postSend(instance, blocks);
 			}
 
 			private @Nullable Entity getCausingEntity(Instance instance) {

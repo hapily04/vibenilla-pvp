@@ -33,7 +33,7 @@ public class FeatureConfiguration {
 	 * @return this configuration
 	 */
 	public FeatureConfiguration add(FeatureType<?> type, CombatFeature feature) {
-		combatFeatures.put(type, feature);
+        this.combatFeatures.put(type, feature);
 		return this;
 	}
 
@@ -47,7 +47,7 @@ public class FeatureConfiguration {
 	 */
 	@SuppressWarnings("unchecked")
 	public <T extends CombatFeature> @NotNull T get(FeatureType<T> type) {
-		return (T) combatFeatures.getOrDefault(type, type.defaultFeature());
+		return (T) this.combatFeatures.getOrDefault(type, type.defaultFeature());
 	}
 
 	/**
@@ -60,23 +60,23 @@ public class FeatureConfiguration {
 	 */
 	@SuppressWarnings("unchecked")
 	<T extends CombatFeature> @Nullable T getDirect(FeatureType<T> type) {
-		return (T) combatFeatures.get(type);
+		return (T) this.combatFeatures.get(type);
 	}
 
 	public Collection<CombatFeature> listFeatures() {
-		return combatFeatures.values();
+		return this.combatFeatures.values();
 	}
 
 	public Set<FeatureType<?>> listTypes() {
-		return combatFeatures.keySet();
+		return this.combatFeatures.keySet();
 	}
 
 	public int size() {
-		return combatFeatures.size();
+		return this.combatFeatures.size();
 	}
 
 	void forEach(BiConsumer<FeatureType<?>, CombatFeature> consumer) {
-		combatFeatures.forEach(consumer);
+        this.combatFeatures.forEach(consumer);
 	}
 
 	FeatureConfiguration overlay() {
@@ -95,7 +95,7 @@ public class FeatureConfiguration {
 			if (super.combatFeatures.containsKey(type)) {
 				return super.get(type);
 			} else {
-				return backing.get(type);
+				return this.backing.get(type);
 			}
 		}
 	}

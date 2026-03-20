@@ -30,7 +30,7 @@ public class PotionVisibilityEvent implements EntityInstanceEvent, CancellableEv
 
 	@Override
 	public @NotNull LivingEntity getEntity() {
-		return entity;
+		return this.entity;
 	}
 
 	/**
@@ -39,7 +39,7 @@ public class PotionVisibilityEvent implements EntityInstanceEvent, CancellableEv
 	 * @return whether the effects contain ambient effects
 	 */
 	public boolean isAmbient() {
-		return ambient;
+		return this.ambient;
 	}
 
 	/**
@@ -58,7 +58,7 @@ public class PotionVisibilityEvent implements EntityInstanceEvent, CancellableEv
 	 * @return the potion color
 	 */
 	public @NotNull List<Particle> getParticles() {
-		return particles;
+		return this.particles;
 	}
 
 	/**
@@ -77,7 +77,7 @@ public class PotionVisibilityEvent implements EntityInstanceEvent, CancellableEv
 	 * @return whether the entity will become invisible
 	 */
 	public boolean isInvisible() {
-		return invisible;
+		return this.invisible;
 	}
 
 	/**
@@ -91,7 +91,7 @@ public class PotionVisibilityEvent implements EntityInstanceEvent, CancellableEv
 
 	@Override
 	public boolean isCancelled() {
-		return cancelled;
+		return this.cancelled;
 	}
 
 	@Override

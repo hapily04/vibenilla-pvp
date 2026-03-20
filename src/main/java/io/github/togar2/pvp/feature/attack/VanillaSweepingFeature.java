@@ -43,8 +43,8 @@ public class VanillaSweepingFeature implements SweepingFeature {
 
 	@Override
 	public void initDependencies() {
-		this.enchantmentFeature = configuration.get(FeatureType.ENCHANTMENT);
-		this.knockbackFeature = configuration.get(FeatureType.KNOCKBACK);
+		this.enchantmentFeature = this.configuration.get(FeatureType.ENCHANTMENT);
+		this.knockbackFeature = this.configuration.get(FeatureType.KNOCKBACK);
 	}
 
 	@Override
@@ -61,14 +61,14 @@ public class VanillaSweepingFeature implements SweepingFeature {
 	@Override
 	public float getSweepingDamage(LivingEntity attacker, float damage) {
 		float sweepingMultiplier = 0;
-		int sweepingLevel = enchantmentFeature.getSweeping(attacker);
+		int sweepingLevel = this.enchantmentFeature.getSweeping(attacker);
 		if (sweepingLevel > 0) sweepingMultiplier = 1.0f - (1.0f / (float) (sweepingLevel + 1));
 		return 1.0f + sweepingMultiplier * damage;
 	}
 
 	@Override
 	public Collection<LivingEntity> applySweeping(LivingEntity attacker, LivingEntity target, float damage) {
-		float sweepingDamage = getSweepingDamage(attacker, damage);
+		float sweepingDamage = this.getSweepingDamage(attacker, damage);
 
 		// Loop and check for colliding entities
 		List<LivingEntity> affectedEntities = new ArrayList<>();
@@ -83,9 +83,9 @@ public class VanillaSweepingFeature implements SweepingFeature {
 			// Apply sweeping knockback and damage to the entity
 			if (attacker.getPosition().distanceSquared(nearbyEntity.getPosition()) < 9.0) {
 				affectedEntities.add(living);
-				knockbackFeature.applySweepingKnockback(attacker, target);
+                this.knockbackFeature.applySweepingKnockback(attacker, target);
 
-				float currentDamage = sweepingDamage + enchantmentFeature.getAttackDamage(
+				float currentDamage = sweepingDamage + this.enchantmentFeature.getAttackDamage(
 						attacker.getItemInMainHand(), EntityGroup.ofEntity(target));
 
 				living.damage(new Damage(

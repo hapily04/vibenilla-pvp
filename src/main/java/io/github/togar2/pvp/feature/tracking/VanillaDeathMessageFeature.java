@@ -42,8 +42,8 @@ public class VanillaDeathMessageFeature implements TrackingFeature, RegistrableF
 
 	@Override
 	public void initDependencies() {
-		this.fallFeature = configuration.get(FeatureType.FALL);
-		this.playerStateFeature = configuration.get(FeatureType.PLAYER_STATE);
+		this.fallFeature = this.configuration.get(FeatureType.FALL);
+		this.playerStateFeature = this.configuration.get(FeatureType.PLAYER_STATE);
 	}
 
 	public static void initPlayer(Player player, boolean firstInit) {
@@ -57,7 +57,7 @@ public class VanillaDeathMessageFeature implements TrackingFeature, RegistrableF
 		node.addListener(PlayerTickEvent.class, event -> event.getPlayer().getTag(COMBAT_MANAGER).tick());
 
 		node.addListener(PlayerDeathEvent.class, event -> {
-			Component message = getDeathMessage(event.getPlayer());
+			Component message = this.getDeathMessage(event.getPlayer());
 			event.setChatMessage(message);
 			event.setDeathText(message);
 		});
@@ -66,7 +66,7 @@ public class VanillaDeathMessageFeature implements TrackingFeature, RegistrableF
 	@Override
 	public void recordDamage(Player player, @Nullable Entity attacker, Damage damage) {
 		int id = attacker == null ? -1 : attacker.getEntityId();
-		player.getTag(COMBAT_MANAGER).recordDamage(id, damage, fallFeature, playerStateFeature);
+		player.getTag(COMBAT_MANAGER).recordDamage(id, damage, this.fallFeature, this.playerStateFeature);
 	}
 
 	@Override

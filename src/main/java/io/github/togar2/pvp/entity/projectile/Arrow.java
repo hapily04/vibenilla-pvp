@@ -34,55 +34,55 @@ public class Arrow extends AbstractArrow {
 	@Override
 	public void update(long time) {
 		super.update(time);
-		if (onGround && stuckTime >= 600 && (!itemStack.has(DataComponents.POTION_CONTENTS)
-				|| !Objects.equals(itemStack.get(DataComponents.POTION_CONTENTS), PotionContents.EMPTY))) {
-			triggerStatus((byte) 0);
-			itemStack = DEFAULT_ARROW;
+		if (this.onGround && this.stuckTime >= 600 && (!this.itemStack.has(DataComponents.POTION_CONTENTS)
+				|| !Objects.equals(this.itemStack.get(DataComponents.POTION_CONTENTS), PotionContents.EMPTY))) {
+            this.triggerStatus((byte) 0);
+            this.itemStack = DEFAULT_ARROW;
 		}
 	}
 
 	@Override
 	protected ItemStack getPickupItem() {
-		return itemStack;
+		return this.itemStack;
 	}
 
 	public void setItemStack(ItemStack itemStack) {
 		this.itemStack = itemStack;
-		updateColor();
+        this.updateColor();
 	}
 
 	@Override
 	protected void onHurt(LivingEntity entity) {
-		effectFeature.addArrowEffects(entity, this);
+        this.effectFeature.addArrowEffects(entity, this);
 	}
 
 	private void updateColor() {
-		PotionContents potionContents = itemStack.get(DataComponents.POTION_CONTENTS);
+		PotionContents potionContents = this.itemStack.get(DataComponents.POTION_CONTENTS);
 		if (potionContents == null || potionContents.equals(PotionContents.EMPTY)) {
-			setColor(-1);
+            this.setColor(-1);
 			return;
 		}
 
-		setColor(effectFeature.getPotionColor(potionContents));
+        this.setColor(this.effectFeature.getPotionColor(potionContents));
 	}
 
 	private void setColor(int color) {
-		((ArrowMeta) getEntityMeta()).setColor(color);
+		((ArrowMeta) this.getEntityMeta()).setColor(color);
 	}
 
 	public @NotNull PotionContents getPotion() {
-		return itemStack.get(DataComponents.POTION_CONTENTS, PotionContents.EMPTY);
+		return this.itemStack.get(DataComponents.POTION_CONTENTS, PotionContents.EMPTY);
 	}
 
 	public void setPotion(@NotNull PotionContents potion) {
-		if (itemStack.material() != Material.TIPPED_ARROW)
-			itemStack = ItemStack.of(Material.TIPPED_ARROW);
-		itemStack = itemStack.with(DataComponents.POTION_CONTENTS, potion);
-		updateColor();
+		if (this.itemStack.material() != Material.TIPPED_ARROW)
+            this.itemStack = ItemStack.of(Material.TIPPED_ARROW);
+        this.itemStack = this.itemStack.with(DataComponents.POTION_CONTENTS, potion);
+        this.updateColor();
 	}
 
 	public void addArrowEffect(CustomPotionEffect effect) {
-		itemStack = itemStack.with(DataComponents.POTION_CONTENTS, (UnaryOperator<PotionContents>) potionContents -> {
+        this.itemStack = this.itemStack.with(DataComponents.POTION_CONTENTS, (UnaryOperator<PotionContents>) potionContents -> {
 			List<CustomPotionEffect> list = new ArrayList<>(potionContents.customEffects());
 			list.add(effect);
 			return new PotionContents(potionContents.potion(), potionContents.customColor(), list);

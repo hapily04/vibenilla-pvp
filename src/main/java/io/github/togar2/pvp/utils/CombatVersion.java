@@ -13,11 +13,11 @@ public final class CombatVersion implements CombatFeature {
 	}
 
 	public boolean modern() {
-		return !legacy;
+		return !this.legacy;
 	}
 
 	public boolean legacy() {
-		return legacy;
+		return this.legacy;
 	}
 
 	public static CombatVersion fromLegacy(boolean legacy) {
@@ -26,7 +26,7 @@ public final class CombatVersion implements CombatFeature {
 
 	@Override
 	public String toString() {
-		return "CombatVersion[legacy=" + legacy + "]";
+		return "CombatVersion[legacy=" + this.legacy + "]";
 	}
 
 }

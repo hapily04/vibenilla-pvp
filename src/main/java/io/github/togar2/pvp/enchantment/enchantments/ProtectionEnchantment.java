@@ -24,16 +24,16 @@ public class ProtectionEnchantment extends CombatEnchantment {
 		DamageTypeInfo damageTypeInfo = DamageTypeInfo.of(MinecraftServer.getDamageTypeRegistry().getKey(damageType));
 		if (damageTypeInfo.outOfWorld()) {
 			return 0;
-		} else if (type == Type.ALL) {
+		} else if (this.type == Type.ALL) {
 			return level;
-		} else if (type == Type.FIRE && damageTypeInfo.fire()) {
+		} else if (this.type == Type.FIRE && damageTypeInfo.fire()) {
 			return level * 2;
-		} else if (type == Type.FALL && damageTypeInfo.fall()) {
+		} else if (this.type == Type.FALL && damageTypeInfo.fall()) {
 			return level * 3;
-		} else if (type == Type.EXPLOSION && damageTypeInfo.explosive()) {
+		} else if (this.type == Type.EXPLOSION && damageTypeInfo.explosive()) {
 			return level * 2;
 		} else {
-			return type == Type.PROJECTILE && damageTypeInfo.projectile() ? level * 2 : 0;
+			return this.type == Type.PROJECTILE && damageTypeInfo.projectile() ? level * 2 : 0;
 		}
 	}
 

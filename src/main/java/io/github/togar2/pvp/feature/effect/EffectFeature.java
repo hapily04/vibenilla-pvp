@@ -38,7 +38,7 @@ public interface EffectFeature extends CombatFeature {
 
 	default List<Potion> getAllPotions(@Nullable PotionContents potionContents) {
 		if (potionContents == null) return List.of();
-		return getAllPotions(potionContents.potion(), potionContents.customEffects());
+		return this.getAllPotions(potionContents.potion(), potionContents.customEffects());
 	}
 
 	List<Potion> getAllPotions(PotionType potionType, Collection<CustomPotionEffect> customEffects);

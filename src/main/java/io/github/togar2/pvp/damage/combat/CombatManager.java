@@ -45,7 +45,7 @@ public class CombatManager {
 	}
 
 	public @Nullable String getFallLocation(PlayerStateFeature playerStateFeature) {
-		Block lastClimbedBlock = playerStateFeature.getLastClimbedBlock(player);
+		Block lastClimbedBlock = playerStateFeature.getLastClimbedBlock(this.player);
 		if (lastClimbedBlock == null) {
 			//TODO check for water at feet
 			return null;
@@ -80,44 +80,44 @@ public class CombatManager {
 
 	public void recordDamage(int attackerId, Damage damage,
 	                         FallFeature fallFeature, PlayerStateFeature playerStateFeature) {
-		recheckStatus();
+        this.recheckStatus();
 
-		CombatEntry entry = new CombatEntry(damage, getFallLocation(playerStateFeature), fallFeature.getFallDistance(player));
-		entries.add(entry);
+		CombatEntry entry = new CombatEntry(damage, this.getFallLocation(playerStateFeature), fallFeature.getFallDistance(this.player));
+        this.entries.add(entry);
 
-		lastDamagedBy = attackerId;
-		lastDamageTime = System.currentTimeMillis();
-		takingDamage = true;
+        this.lastDamagedBy = attackerId;
+        this.lastDamageTime = System.currentTimeMillis();
+        this.takingDamage = true;
 
-		if (entry.isCombat() && !inCombat && !player.isDead()) {
-			inCombat = true;
-			combatStartTime = System.currentTimeMillis();
-			combatEndTime = combatStartTime;
+		if (entry.isCombat() && !this.inCombat && !this.player.isDead()) {
+            this.inCombat = true;
+            this.combatStartTime = System.currentTimeMillis();
+            this.combatEndTime = this.combatStartTime;
 
-			onEnterCombat();
+            this.onEnterCombat();
 		}
 	}
 
 	public Component getDeathMessage() {
-		if (entries.isEmpty()) {
-			return Component.translatable("death.attack.generic", getEntityName());
+		if (this.entries.isEmpty()) {
+			return Component.translatable("death.attack.generic", this.getEntityName());
 		}
 
 		CombatEntry heaviestFall = null;
-		CombatEntry lastEntry = entries.get(entries.size() - 1);
+		CombatEntry lastEntry = this.entries.get(this.entries.size() - 1);
 		DamageTypeInfo lastInfo = DamageTypeInfo.of(lastEntry.damage().getType());
 
 		boolean fall = false;
 		if (lastInfo.fall()) {
-			heaviestFall = getHeaviestFall();
+			heaviestFall = this.getHeaviestFall();
 			fall = heaviestFall != null;
 		}
 
-		if (!fall) return getAttackDeathMessage(lastEntry.damage());
+		if (!fall) return this.getAttackDeathMessage(lastEntry.damage());
 
 		DamageTypeInfo heaviestFallInfo = DamageTypeInfo.of(heaviestFall.damage().getType());
 		if (heaviestFallInfo.fall() || heaviestFallInfo.outOfWorld()) {
-			return Component.translatable("death.fell.accident." + heaviestFall.getMessageFallLocation(), getEntityName());
+			return Component.translatable("death.fell.accident." + heaviestFall.getMessageFallLocation(), this.getEntityName());
 		}
 
 		Entity firstAttacker = heaviestFall.getAttacker();
@@ -126,25 +126,25 @@ public class CombatManager {
 		if (firstAttacker != null && firstAttacker != lastAttacker) {
 			ItemStack weapon = firstAttacker instanceof LivingEntity ? ((LivingEntity) firstAttacker).getItemInMainHand() : ItemStack.AIR;
 			if (!weapon.isAir() && weapon.has(DataComponents.CUSTOM_NAME)) {
-				return Component.translatable("death.fell.assist.item", getEntityName(), EntityUtil.getName(firstAttacker), weapon.get(DataComponents.CUSTOM_NAME));
+				return Component.translatable("death.fell.assist.item", this.getEntityName(), EntityUtil.getName(firstAttacker), weapon.get(DataComponents.CUSTOM_NAME));
 			} else {
-				return Component.translatable("death.fell.assist", getEntityName(), EntityUtil.getName(firstAttacker));
+				return Component.translatable("death.fell.assist", this.getEntityName(), EntityUtil.getName(firstAttacker));
 			}
 		} else if (lastAttacker != null) {
 			ItemStack weapon = lastAttacker instanceof LivingEntity ? ((LivingEntity) lastAttacker).getItemInMainHand() : ItemStack.AIR;
 			if (!weapon.isAir() && weapon.has(DataComponents.CUSTOM_NAME)) {
-				return Component.translatable("death.fell.finish.item", getEntityName(), EntityUtil.getName(lastAttacker), weapon.get(DataComponents.CUSTOM_NAME));
+				return Component.translatable("death.fell.finish.item", this.getEntityName(), EntityUtil.getName(lastAttacker), weapon.get(DataComponents.CUSTOM_NAME));
 			} else {
-				return Component.translatable("death.fell.finish", getEntityName(), EntityUtil.getName(lastAttacker));
+				return Component.translatable("death.fell.finish", this.getEntityName(), EntityUtil.getName(lastAttacker));
 			}
 		} else {
-			return Component.translatable("death.fell.killer", getEntityName());
+			return Component.translatable("death.fell.killer", this.getEntityName());
 		}
 	}
 
 	private Component getAttackDeathMessage(@NotNull Damage damage) {
 		if (damage.getType() == DamageType.BAD_RESPAWN_POINT) {
-			return Component.translatable("death.attack.badRespawnPoint.message", player.getName(), BAD_RESPAWN_POINT_MESSAGE);
+			return Component.translatable("death.attack.badRespawnPoint.message", this.player.getName(), BAD_RESPAWN_POINT_MESSAGE);
 		}
 
 		DamageType damageType = MinecraftServer.getDamageTypeRegistry().get(damage.getType());
@@ -158,27 +158,27 @@ public class CombatManager {
 			Component ownerName = attacker == null ? EntityUtil.getName(source) : EntityUtil.getName(attacker);
 			ItemStack weapon = source instanceof LivingEntity living ? living.getItemInMainHand() : ItemStack.AIR;
 			if (!weapon.isAir() && weapon.has(DataComponents.CUSTOM_NAME)) {
-				return Component.translatable(id + ".item", EntityUtil.getName(player), ownerName, weapon.get(DataComponents.CUSTOM_NAME));
+				return Component.translatable(id + ".item", EntityUtil.getName(this.player), ownerName, weapon.get(DataComponents.CUSTOM_NAME));
 			} else {
-				return Component.translatable(id, EntityUtil.getName(player), ownerName);
+				return Component.translatable(id, EntityUtil.getName(this.player), ownerName);
 			}
 		} else {
-			LivingEntity killer = getKillCredit();
+			LivingEntity killer = this.getKillCredit();
 			if (killer == null) {
-				return Component.translatable(id, EntityUtil.getName(player));
+				return Component.translatable(id, EntityUtil.getName(this.player));
 			} else {
-				return Component.translatable(id + ".player", EntityUtil.getName(player),
+				return Component.translatable(id + ".player", EntityUtil.getName(this.player),
 						EntityUtil.getName(killer));
 			}
 		}
 	}
 
 	private @Nullable LivingEntity getKillCredit() {
-		LivingEntity killer = getKiller();
+		LivingEntity killer = this.getKiller();
 		if (killer != null) return killer;
 
-		if (lastDamagedBy != -1) {
-			Entity entity = player.getInstance().getEntityById(lastDamagedBy);
+		if (this.lastDamagedBy != -1) {
+			Entity entity = this.player.getInstance().getEntityById(this.lastDamagedBy);
 			if (entity instanceof LivingEntity living) return living;
 		}
 
@@ -191,7 +191,7 @@ public class CombatManager {
 		float livingDamage = 0.0F;
 		float playerDamage = 0.0F;
 
-		for (CombatEntry entry : entries) {
+		for (CombatEntry entry : this.entries) {
 			Entity attacker = entry.getAttacker();
 			if (attacker instanceof Player && (player == null || entry.damage().getAmount() > playerDamage)) {
 				player = (Player) attacker;
@@ -215,14 +215,14 @@ public class CombatManager {
 		float mostDamage = 0.0F;
 		double highestFall = 0.0F;
 
-		for (int i = 0; i < entries.size(); i++) {
-			CombatEntry entry = entries.get(i);
+		for (int i = 0; i < this.entries.size(); i++) {
+			CombatEntry entry = this.entries.get(i);
 			DamageTypeInfo info = DamageTypeInfo.of(entry.damage().getType());
 
 			if ((info.fall() || info.outOfWorld())
 					&& entry.getFallDistance() > 0.0 && (mostDamageEntry == null || entry.getFallDistance() > highestFall)) {
 				if (i > 0) {
-					mostDamageEntry = entries.get(i - 1);
+					mostDamageEntry = this.entries.get(i - 1);
 				} else {
 					mostDamageEntry = entry;
 				}
@@ -246,83 +246,83 @@ public class CombatManager {
 	}
 
 	public long getCombatDuration() {
-		return inCombat ? System.currentTimeMillis() - combatStartTime : combatEndTime - combatStartTime;
+		return this.inCombat ? System.currentTimeMillis() - this.combatStartTime : this.combatEndTime - this.combatStartTime;
 	}
 
 	public void tick() {
-		if (player.isDead() || player.getAliveTicks() % 20 == 0)
-			recheckStatus();
+		if (this.player.isDead() || this.player.getAliveTicks() % 20 == 0)
+            this.recheckStatus();
 
-		if (lastDamagedBy != -1) {
-			Entity lastDamager = player.getInstance().getEntityById(lastDamagedBy);
+		if (this.lastDamagedBy != -1) {
+			Entity lastDamager = this.player.getInstance().getEntityById(this.lastDamagedBy);
 			if (lastDamager instanceof LivingEntity living && living.isDead()) {
-				lastDamagedBy = -1;
-			} else if (System.currentTimeMillis() - lastDamageTime > 5000) {
+                this.lastDamagedBy = -1;
+			} else if (System.currentTimeMillis() - this.lastDamageTime > 5000) {
 				// After 5 seconds of no attack the last damaged by does not count anymore
-				lastDamagedBy = -1;
+                this.lastDamagedBy = -1;
 			}
 		}
 	}
 
 	public void recheckStatus() {
 		// Check if combat should end
-		int idleMillis = inCombat ? 300 * MinecraftServer.TICK_MS : 100 * MinecraftServer.TICK_MS;
-		if (takingDamage && (player.isDead() || System.currentTimeMillis() - lastDamageTime > idleMillis)) {
-			reset();
-			combatEndTime = System.currentTimeMillis();
+		int idleMillis = this.inCombat ? 300 * MinecraftServer.TICK_MS : 100 * MinecraftServer.TICK_MS;
+		if (this.takingDamage && (this.player.isDead() || System.currentTimeMillis() - this.lastDamageTime > idleMillis)) {
+            this.reset();
+            this.combatEndTime = System.currentTimeMillis();
 		}
 	}
 
 	public void reset() {
-		boolean wasInCombat = inCombat;
-		takingDamage = false;
-		inCombat = false;
+		boolean wasInCombat = this.inCombat;
+        this.takingDamage = false;
+        this.inCombat = false;
 
 		if (wasInCombat) {
-			onLeaveCombat();
+            this.onLeaveCombat();
 		}
 
-		entries.clear();
+        this.entries.clear();
 	}
 
 	public Component getEntityName() {
-		return EntityUtil.getName(player);
+		return EntityUtil.getName(this.player);
 	}
 
 	private void onEnterCombat() {
-		player.getPlayerConnection().sendPacket(new EnterCombatEventPacket());
+        this.player.getPlayerConnection().sendPacket(new EnterCombatEventPacket());
 	}
 
 	private void onLeaveCombat() {
-		int duration = (int) (getCombatDuration() / MinecraftServer.TICK_MS);
-		player.getPlayerConnection().sendPacket(new EndCombatEventPacket(duration));
+		int duration = (int) (this.getCombatDuration() / MinecraftServer.TICK_MS);
+        this.player.getPlayerConnection().sendPacket(new EndCombatEventPacket(duration));
 	}
 
 	public List<CombatEntry> getEntries() {
-		return entries;
+		return this.entries;
 	}
 
 	public Player getPlayer() {
-		return player;
+		return this.player;
 	}
 
 	public long getLastDamageTime() {
-		return lastDamageTime;
+		return this.lastDamageTime;
 	}
 
 	public long getCombatStartTime() {
-		return combatStartTime;
+		return this.combatStartTime;
 	}
 
 	public long getCombatEndTime() {
-		return combatEndTime;
+		return this.combatEndTime;
 	}
 
 	public boolean isInCombat() {
-		return inCombat;
+		return this.inCombat;
 	}
 
 	public boolean isTakingDamage() {
-		return takingDamage;
+		return this.takingDamage;
 	}
 }

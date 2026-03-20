@@ -59,7 +59,7 @@ public class VanillaFoodFeature implements FoodFeature, RegistrableFeature {
 
 	@Override
 	public void initDependencies() {
-		this.itemCooldownFeature = configuration.get(FeatureType.ITEM_COOLDOWN);
+		this.itemCooldownFeature = this.configuration.get(FeatureType.ITEM_COOLDOWN);
 	}
 
 	@Override
@@ -87,14 +87,14 @@ public class VanillaFoodFeature implements FoodFeature, RegistrableFeature {
 					&& !(event.getItemStack().has(DataComponents.FOOD) || event.getItemStack().has(DataComponents.CONSUMABLE)))
 				return;
 
-			onFinishEating(event.getPlayer(), event.getItemStack(), event.getHand());
+            this.onFinishEating(event.getPlayer(), event.getItemStack(), event.getHand());
 		});
 
 		node.addListener(PlayerTickEvent.class, event -> {
 			Player player = event.getPlayer();
 			if (player.isSilent() || !player.isEating()) return;
 
-			tickEatingSounds(player);
+            this.tickEatingSounds(player);
 		});
 	}
 
@@ -106,7 +106,7 @@ public class VanillaFoodFeature implements FoodFeature, RegistrableFeature {
 		if (consumable == null) return;
 		ThreadLocalRandom random = ThreadLocalRandom.current();
 
-		triggerEatingSound(player, consumable);
+        this.triggerEatingSound(player, consumable);
 
 		if (food != null) {
 			ViewUtil.viewersAndSelf(player).playSound(Sound.sound(
@@ -153,19 +153,19 @@ public class VanillaFoodFeature implements FoodFeature, RegistrableFeature {
 
 	@Override
 	public void eat(Player player, int food, float saturationModifier) {
-		addFood(player, food, (float) food * saturationModifier * 2.0f);
+        this.addFood(player, food, (float) food * saturationModifier * 2.0f);
 	}
 
 	@Override
 	public void eat(Player player, ItemStack stack) {
 		Food foodComponent = stack.get(DataComponents.FOOD);
 		if (foodComponent == null) return;
-		addFood(player, foodComponent.nutrition(), foodComponent.saturationModifier());
+        this.addFood(player, foodComponent.nutrition(), foodComponent.saturationModifier());
 	}
 
 	@Override
 	public void applySaturationEffect(Player player, int amplifier) {
-		eat(player, amplifier + 1, 1.0f);
+        this.eat(player, amplifier + 1, 1.0f);
 	}
 
 	protected void tickEatingSounds(Player player) {
@@ -182,7 +182,7 @@ public class VanillaFoodFeature implements FoodFeature, RegistrableFeature {
 		boolean shouldTrigger = canTrigger && remainingUseTicks % 4 == 0;
 		if (!shouldTrigger) return;
 
-		triggerEatingSound(player, component);
+        this.triggerEatingSound(player, component);
 	}
 
 	protected void triggerEatingSound(Player player, Consumable consumable) {

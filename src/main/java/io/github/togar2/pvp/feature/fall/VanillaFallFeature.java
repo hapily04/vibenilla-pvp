@@ -51,7 +51,7 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 
 	@Override
 	public void initDependencies() {
-		this.playerStateFeature = configuration.get(FeatureType.PLAYER_STATE);
+		this.playerStateFeature = this.configuration.get(FeatureType.PLAYER_STATE);
 	}
 
 	public static void initPlayer(Player player, boolean firstInit) {
@@ -66,15 +66,15 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 			if (livingEntity instanceof Player) return;
 
 			Pos previousPosition = livingEntity.getPreviousPosition();
-			handleFallDamage(livingEntity, previousPosition, livingEntity.getPosition(), livingEntity.isOnGround());
+            this.handleFallDamage(livingEntity, previousPosition, livingEntity.getPosition(), livingEntity.isOnGround());
 		});
 
 		// For players, handle fall damage on move event
 		node.addListener(PlayerMoveEvent.class, event -> {
 			Player player = event.getPlayer();
-			if (playerStateFeature.isClimbing(player)) player.setTag(FALL_DISTANCE, 0.0);
+			if (this.playerStateFeature.isClimbing(player)) player.setTag(FALL_DISTANCE, 0.0);
 
-			handleFallDamage(
+            this.handleFallDamage(
 					player, player.getPosition(),
 					event.getNewPosition(), event.isOnGround()
 			);
@@ -83,7 +83,7 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 
 	public void handleFallDamage(LivingEntity entity, Pos currPos, Pos newPos, boolean onGround) {
 		double dy = newPos.y() - currPos.y();
-		double fallDistance = getFallDistance(entity);
+		double fallDistance = this.getFallDistance(entity);
 
 		if ((entity instanceof Player player && player.isFlying())
 				|| entity.hasEffect(PotionEffect.LEVITATION)
@@ -102,7 +102,7 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 			return;
 		}
 
-		Point landingPos = getLandingPos(entity, newPos);
+		Point landingPos = this.getLandingPos(entity, newPos);
 		Block block = entity.getInstance().getBlock(landingPos);
 
 		if (entity.hasTag(EXTRA_FALL_PARTICLES) && entity.getTag(EXTRA_FALL_PARTICLES) && fallDistance > 0.0) {
@@ -139,9 +139,9 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 		entity.setTag(FALL_DISTANCE, 0.0);
 
 		if (entity instanceof Player player && player.getGameMode().invulnerable()) return;
-		int damage = getFallDamage(entity, fallDistance);
+		int damage = this.getFallDamage(entity, fallDistance);
 		if (damage > 0) {
-			playFallSound(entity, damage);
+            this.playFallSound(entity, damage);
 			entity.damage(DamageType.FALL, damage);
 		}
 	}

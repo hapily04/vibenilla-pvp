@@ -28,7 +28,7 @@ public class ThrownTrident extends AbstractArrow {
 		super(shooter, EntityType.TRIDENT, enchantmentFeature);
 		this.tridentItem = tridentItem;
 
-		ThrownTridentMeta meta = ((ThrownTridentMeta) getEntityMeta());
+		ThrownTridentMeta meta = ((ThrownTridentMeta) this.getEntityMeta());
 		meta.setLoyaltyLevel((byte) tridentItem.get(DataComponents.ENCHANTMENTS).level(Enchantment.LOYALTY));
 
 		meta.setHasEnchantmentGlint(!Objects.requireNonNull(tridentItem.get(DataComponents.ENCHANTMENTS))
@@ -37,31 +37,31 @@ public class ThrownTrident extends AbstractArrow {
 
 	@Override
 	public void update(long time) {
-		if (stuckTime > 4) damageDone = true;
+		if (this.stuckTime > 4) this.damageDone = true;
 
-		Entity shooter = getShooter();
-		int loyalty = ((ThrownTridentMeta) getEntityMeta()).getLoyaltyLevel();
-		if (loyalty > 0 && (damageDone || isNoClip()) && shooter != null) {
+		Entity shooter = this.getShooter();
+		int loyalty = ((ThrownTridentMeta) this.getEntityMeta()).getLoyaltyLevel();
+		if (loyalty > 0 && (this.damageDone || this.isNoClip()) && shooter != null) {
 			if (shooter.isRemoved() || (shooter instanceof LivingEntity living && living.isDead())
 					|| (shooter instanceof Player player && player.getGameMode() == GameMode.SPECTATOR)) {
-				if (pickupMode == PickupMode.ALLOWED)
-					EntityUtil.spawnItemAtLocation(this, tridentItem, 0.1);
-				remove();
+				if (this.pickupMode == PickupMode.ALLOWED)
+					EntityUtil.spawnItemAtLocation(this, this.tridentItem, 0.1);
+                this.remove();
 			} else {
 				// Move towards owner
-				setNoClip(true);
-				setNoGravity(true);
-				Vec vector = shooter.getPosition().add(0, shooter.getEyeHeight(), 0).asVec().sub(position);
-				refreshPosition(position.add(0, vector.y() * 0.015 * loyalty, 0));
-				setVelocity(velocity.mul(0.95).add(vector.normalize().mul(0.05 * loyalty)
+                this.setNoClip(true);
+                this.setNoGravity(true);
+				Vec vector = shooter.getPosition().add(0, shooter.getEyeHeight(), 0).asVec().sub(this.position);
+                this.refreshPosition(this.position.add(0, vector.y() * 0.015 * loyalty, 0));
+                this.setVelocity(this.velocity.mul(0.95).add(vector.normalize().mul(0.05 * loyalty)
 						.mul(ServerFlag.SERVER_TICKS_PER_SECOND)));
 
-				if (!hasStartedReturning) {
-					getViewersAsAudience().playSound(Sound.sound(
+				if (!this.hasStartedReturning) {
+                    this.getViewersAsAudience().playSound(Sound.sound(
 							SoundEvent.ITEM_TRIDENT_RETURN, Sound.Source.NEUTRAL,
 							10.0f, 1.0f
-					), position.x(), position.y(), position.z());
-					hasStartedReturning = true;
+					), this.position.x(), this.position.y(), this.position.z());
+                    this.hasStartedReturning = true;
 				}
 			}
 		}
@@ -71,28 +71,28 @@ public class ThrownTrident extends AbstractArrow {
 
 	@Override
 	protected boolean canHit(Entity entity) {
-		return !damageDone && super.canHit(entity);
+		return !this.damageDone && super.canHit(entity);
 	}
 
 	@Override
 	public boolean onHit(@NotNull Entity entity) {
-		if (damageDone) return false;
+		if (this.damageDone) return false;
 		if (!(entity instanceof LivingEntity living)) return false;
-		Entity shooter = getShooter();
+		Entity shooter = this.getShooter();
 
-		float damage = 8.0f + enchantmentFeature.getAttackDamage(tridentItem, EntityGroup.ofEntity(living));
+		float damage = 8.0f + this.enchantmentFeature.getAttackDamage(this.tridentItem, EntityGroup.ofEntity(living));
 		Damage damageObj = new Damage(DamageType.TRIDENT, this, shooter == null ? this : shooter, null, damage);
 		if (living.damage(damageObj) && shooter instanceof LivingEntity livingShooter) {
-			enchantmentFeature.onUserDamaged(living, livingShooter);
-			enchantmentFeature.onTargetDamaged(livingShooter, living);
+            this.enchantmentFeature.onUserDamaged(living, livingShooter);
+            this.enchantmentFeature.onTargetDamaged(livingShooter, living);
 		}
-		damageDone = true;
+        this.damageDone = true;
 
-		setVelocity(velocity.mul(-0.01, -0.1, -0.01));
-		getViewersAsAudience().playSound(Sound.sound(
+        this.setVelocity(this.velocity.mul(-0.01, -0.1, -0.01));
+        this.getViewersAsAudience().playSound(Sound.sound(
 				SoundEvent.ITEM_TRIDENT_HIT, Sound.Source.NEUTRAL,
 				1.0f, 1.0f
-		), position.x(), position.y(), position.z());
+		), this.position.x(), this.position.y(), this.position.z());
 
 		return false;
 	}
@@ -100,7 +100,7 @@ public class ThrownTrident extends AbstractArrow {
 	@Override
 	public boolean canBePickedUp(@Nullable Player player) {
 		if (player == null) return true;
-		if (getShooter() == player || getShooter() == null) {
+		if (this.getShooter() == player || this.getShooter() == null) {
 			return super.canBePickedUp(player);
 		} else return false;
 	}
@@ -108,13 +108,13 @@ public class ThrownTrident extends AbstractArrow {
 	@Override
 	public boolean pickup(Player player) {
 		return super.pickup(player)
-				|| (isNoClip() && getShooter() == player && player.getInventory().addItemStack(tridentItem));
+				|| (this.isNoClip() && this.getShooter() == player && player.getInventory().addItemStack(this.tridentItem));
 	}
 
 	@Override
 	protected void tickRemoval() {
-		int loyalty = ((ThrownTridentMeta) getEntityMeta()).getLoyaltyLevel();
-		if (pickupMode != PickupMode.ALLOWED || loyalty <= 0)
+		int loyalty = ((ThrownTridentMeta) this.getEntityMeta()).getLoyaltyLevel();
+		if (this.pickupMode != PickupMode.ALLOWED || loyalty <= 0)
 			super.tickRemoval();
 	}
 
@@ -125,6 +125,6 @@ public class ThrownTrident extends AbstractArrow {
 
 	@Override
 	protected ItemStack getPickupItem() {
-		return tridentItem;
+		return this.tridentItem;
 	}
 }

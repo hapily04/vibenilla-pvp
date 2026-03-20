@@ -36,10 +36,10 @@ public class VanillaSpectateFeature implements SpectateFeature, RegistrableFeatu
 	public void init(EventNode<EntityInstanceEvent> node) {
 		node.addListener(EntityAttackEvent.class, event -> {
 			if (event.getEntity() instanceof Player player && player.getGameMode() == GameMode.SPECTATOR)
-				makeSpectate(player, event.getTarget());
+                this.makeSpectate(player, event.getTarget());
 		});
 
-		node.addListener(PlayerTickEvent.class, event -> spectateTick(event.getPlayer()));
+		node.addListener(PlayerTickEvent.class, event -> this.spectateTick(event.getPlayer()));
 	}
 
 	protected void spectateTick(Player player) {
@@ -53,7 +53,7 @@ public class VanillaSpectateFeature implements SpectateFeature, RegistrableFeatu
 
 		if (player.getEntityMeta().isSneaking() || spectating.isRemoved()
 				|| (spectating instanceof LivingEntity livingSpectating && livingSpectating.isDead())) {
-			stopSpectating(player);
+            this.stopSpectating(player);
 		}
 	}
 

@@ -59,7 +59,7 @@ public record KnockbackSettings(double horizontal, double vertical,
 		}
 
 		public KnockbackSettings build() {
-			return new KnockbackSettings(horizontal, vertical, verticalLimit, extraHorizontal, extraVertical);
+			return new KnockbackSettings(this.horizontal, this.vertical, this.verticalLimit, this.extraHorizontal, this.extraVertical);
 		}
 	}
 }

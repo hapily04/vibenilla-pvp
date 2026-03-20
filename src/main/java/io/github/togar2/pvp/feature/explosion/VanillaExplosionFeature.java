@@ -34,12 +34,12 @@ public class VanillaExplosionFeature implements ExplosionFeature {
 
 	@Override
 	public void initDependencies() {
-		this.explosionSupplier = new VanillaExplosionSupplier(this, configuration.get(FeatureType.ENCHANTMENT));
+		this.explosionSupplier = new VanillaExplosionSupplier(this, this.configuration.get(FeatureType.ENCHANTMENT));
 	}
 
 	@Override
 	public VanillaExplosionSupplier getExplosionSupplier() {
-		return explosionSupplier;
+		return this.explosionSupplier;
 	}
 
 	@Override

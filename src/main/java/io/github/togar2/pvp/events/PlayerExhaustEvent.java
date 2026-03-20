@@ -24,7 +24,7 @@ public class PlayerExhaustEvent implements PlayerEvent, EntityInstanceEvent, Can
 
 	@Override
 	public @NotNull Player getPlayer() {
-		return player;
+		return this.player;
 	}
 
 	/**
@@ -33,7 +33,7 @@ public class PlayerExhaustEvent implements PlayerEvent, EntityInstanceEvent, Can
 	 * @return the amount of exhaustion
 	 */
 	public float getAmount() {
-		return amount;
+		return this.amount;
 	}
 
 	/**
@@ -48,7 +48,7 @@ public class PlayerExhaustEvent implements PlayerEvent, EntityInstanceEvent, Can
 
 	@Override
 	public boolean isCancelled() {
-		return cancelled;
+		return this.cancelled;
 	}
 
 	@Override

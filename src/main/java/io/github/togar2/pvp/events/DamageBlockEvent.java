@@ -29,11 +29,11 @@ public class DamageBlockEvent implements EntityInstanceEvent, CancellableEvent {
 	@NotNull
 	@Override
 	public LivingEntity getEntity() {
-		return entity;
+		return this.entity;
 	}
 
 	public boolean knockbackAttacker() {
-		return knockbackAttacker;
+		return this.knockbackAttacker;
 	}
 
 	/**
@@ -53,11 +53,11 @@ public class DamageBlockEvent implements EntityInstanceEvent, CancellableEvent {
 	 * @return the original damage
 	 */
 	public float getDamage() {
-		return damage;
+		return this.damage;
 	}
 
 	public float getResultingDamage() {
-		return resultingDamage;
+		return this.resultingDamage;
 	}
 
 	/**
@@ -71,7 +71,7 @@ public class DamageBlockEvent implements EntityInstanceEvent, CancellableEvent {
 
 	@Override
 	public boolean isCancelled() {
-		return cancelled;
+		return this.cancelled;
 	}
 
 	@Override
