@@ -233,7 +233,7 @@ public class CustomEntityProjectile extends Entity {
 					Vec prevVelocity = this.velocity;
 					EntityCollisionResult collided = entityResult.stream().findFirst().orElse(null);
 
-					var event = new ProjectileCollideWithEntityEvent(this, Pos.fromPoint(collided.collisionPoint()), collided.entity());
+					var event = new ProjectileCollideWithEntityEvent(this, collided.collisionPoint().asPos(), collided.entity());
 					EventDispatcher.call(event);
 					if (!event.isCancelled()) {
 						if (this.onHit(collided.entity())) {

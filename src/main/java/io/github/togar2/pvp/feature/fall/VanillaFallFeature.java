@@ -106,7 +106,7 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 		Block block = entity.getInstance().getBlock(landingPos);
 
 		if (entity.hasTag(EXTRA_FALL_PARTICLES) && entity.getTag(EXTRA_FALL_PARTICLES) && fallDistance > 0.0) {
-			Vec position = Vec.fromPoint(landingPos).apply(Vec.Operator.FLOOR).add(0.5, 1, 0.5);
+			Vec position = landingPos.asVec().apply(Vec.Operator.FLOOR).add(0.5, 1, 0.5);
 			int particleCount = (int) Math.max(0, Math.min(200, 50 * fallDistance));
 
 			entity.sendPacketToViewersAndSelf(new ParticlePacket(
