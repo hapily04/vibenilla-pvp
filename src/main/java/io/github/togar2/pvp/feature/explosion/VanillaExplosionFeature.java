@@ -23,25 +23,25 @@ public class VanillaExplosionFeature implements ExplosionFeature {
 			FeatureType.EXPLOSION, VanillaExplosionFeature::new,
 			FeatureType.ENCHANTMENT
 	);
-	
+
 	private final FeatureConfiguration configuration;
-	
+
 	private VanillaExplosionSupplier explosionSupplier;
-	
+
 	public VanillaExplosionFeature(FeatureConfiguration configuration) {
 		this.configuration = configuration;
 	}
-	
+
 	@Override
 	public void initDependencies() {
 		this.explosionSupplier = new VanillaExplosionSupplier(this, configuration.get(FeatureType.ENCHANTMENT));
 	}
-	
+
 	@Override
 	public VanillaExplosionSupplier getExplosionSupplier() {
 		return explosionSupplier;
 	}
-	
+
 	@Override
 	public void primeExplosive(Instance instance, Point blockPosition, @NotNull IgnitionCause cause, int fuse) {
 		ExplosivePrimeEvent event = new ExplosivePrimeEvent(instance, blockPosition, cause, fuse);

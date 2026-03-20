@@ -10,7 +10,7 @@ public class AttackValues {
 			);
 		}
 	}
-	
+
 	public record PreSweeping(float damage, float magicalDamage, double cooldownProgress,
 	                          boolean strong, boolean sprint, boolean critical,
 	                          int knockback, int fireAspect) {
@@ -22,11 +22,11 @@ public class AttackValues {
 			);
 		}
 	}
-	
+
 	public record PreSounds(float damage, float magicalDamage, double cooldownProgress,
 	                  boolean strong, boolean sprint, boolean critical, boolean sweeping,
 	                  int knockback, int fireAspect) {}
-	
+
 	public record Final(float damage, boolean strong, boolean sprint,
 	                    int knockback, boolean critical, boolean magical,
 	                    int fireAspect, boolean sweeping, boolean sounds,

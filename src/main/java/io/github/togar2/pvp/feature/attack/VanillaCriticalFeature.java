@@ -18,22 +18,22 @@ public class VanillaCriticalFeature implements CriticalFeature {
 			FeatureType.CRITICAL, VanillaCriticalFeature::new,
 			FeatureType.PLAYER_STATE, FeatureType.VERSION
 	);
-	
+
 	private final FeatureConfiguration configuration;
-	
+
 	private PlayerStateFeature playerStateFeature;
 	private CombatVersion version;
-	
+
 	public VanillaCriticalFeature(FeatureConfiguration configuration) {
 		this.configuration = configuration;
 	}
-	
+
 	@Override
 	public void initDependencies() {
 		this.playerStateFeature = configuration.get(FeatureType.PLAYER_STATE);
 		this.version = configuration.get(FeatureType.VERSION);
 	}
-	
+
 	@Override
 	public boolean shouldCrit(LivingEntity attacker, AttackValues.PreCritical values) {
 		boolean critical = values.strong() && !playerStateFeature.isClimbing(attacker)
@@ -41,11 +41,11 @@ public class VanillaCriticalFeature implements CriticalFeature {
 				&& !attacker.hasEffect(PotionEffect.BLINDNESS)
 				&& attacker.getVehicle() == null;
 		if (version.legacy()) return critical;
-		
+
 		// Not sprinting required for critical in 1.9+
 		return critical && !attacker.isSprinting();
 	}
-	
+
 	@Override
 	public float applyToDamage(float damage) {
 		if (version.legacy()) {

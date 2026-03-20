@@ -12,12 +12,12 @@ import net.minestom.server.registry.RegistryKey;
 
 public class ProtectionEnchantment extends CombatEnchantment {
 	private final Type type;
-	
+
 	public ProtectionEnchantment(RegistryKey<Enchantment> enchantment, Type type, EquipmentSlot... slotTypes) {
 		super(enchantment, slotTypes);
 		this.type = type;
 	}
-	
+
 	@Override
 	public int getProtectionAmount(int level, DamageType damageType,
 	                               EnchantmentFeature feature, FeatureConfiguration configuration) {
@@ -36,7 +36,7 @@ public class ProtectionEnchantment extends CombatEnchantment {
 			return type == Type.PROJECTILE && damageTypeInfo.projectile() ? level * 2 : 0;
 		}
 	}
-	
+
 	public enum Type {
 		ALL, FIRE, FALL, EXPLOSION, PROJECTILE
 	}

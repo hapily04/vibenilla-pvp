@@ -9,7 +9,7 @@ import net.minestom.server.entity.LivingEntity;
  */
 public interface AttackFeature extends CombatFeature {
 	AttackFeature NO_OP = (attacker, target) -> false;
-	
+
 	/**
 	 * Performs an attack on the target entity.
 	 *

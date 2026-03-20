@@ -14,15 +14,15 @@ public interface TrackingFeature extends CombatFeature {
 	TrackingFeature NO_OP = new TrackingFeature() {
 		@Override
 		public void recordDamage(Player player, @Nullable Entity attacker, Damage damage) {}
-		
+
 		@Override
 		public @Nullable Component getDeathMessage(Player player) {
 			return null;
 		}
 	};
-	
+
 	void recordDamage(Player player, @Nullable Entity attacker, Damage damage);
-	
+
 	@Nullable
 	Component getDeathMessage(Player player);
 }

@@ -12,14 +12,14 @@ import org.jetbrains.annotations.NotNull;
  * This event should be used, unless you want to detect how much damage was originally dealt.
  */
 public class FinalDamageEvent implements EntityInstanceEvent, CancellableEvent {
-	
+
 	private final LivingEntity entity;
 	private final Damage damage;
 	private int invulnerabilityTicks;
 	private boolean animation;
-	
+
 	private boolean cancelled;
-	
+
 	public FinalDamageEvent(@NotNull LivingEntity entity, @NotNull Damage damage,
 	                        int invulnerabilityTicks, boolean animation) {
 		this.entity = entity;
@@ -27,13 +27,13 @@ public class FinalDamageEvent implements EntityInstanceEvent, CancellableEvent {
 		this.invulnerabilityTicks = invulnerabilityTicks;
 		this.animation = animation;
 	}
-	
+
 	@NotNull
 	@Override
 	public LivingEntity getEntity() {
 		return entity;
 	}
-	
+
 	/**
 	 * Gets the damage info, which can be used to set the damage amount.
 	 *
@@ -42,7 +42,7 @@ public class FinalDamageEvent implements EntityInstanceEvent, CancellableEvent {
 	public Damage getDamage() {
 		return damage;
 	}
-	
+
 	/**
 	 * Gets the amount of ticks the entity is invulnerable after the damage has been applied.
 	 * By default it is 10 (half a second).
@@ -52,7 +52,7 @@ public class FinalDamageEvent implements EntityInstanceEvent, CancellableEvent {
 	public int getInvulnerabilityTicks() {
 		return invulnerabilityTicks;
 	}
-	
+
 	/**
 	 * Sets the amount of ticks the entity is invulnerable after the damage has been applied.
 	 * By default it is 10 (half a second).
@@ -62,7 +62,7 @@ public class FinalDamageEvent implements EntityInstanceEvent, CancellableEvent {
 	public void setInvulnerabilityTicks(int invulnerabilityTicks) {
 		this.invulnerabilityTicks = invulnerabilityTicks;
 	}
-	
+
 	/**
 	 * Gets whether the damage animation should be played.
 	 *
@@ -71,7 +71,7 @@ public class FinalDamageEvent implements EntityInstanceEvent, CancellableEvent {
 	public boolean shouldAnimate() {
 		return animation;
 	}
-	
+
 	/**
 	 * Sets whether the damage animation should be played.
 	 *
@@ -80,7 +80,7 @@ public class FinalDamageEvent implements EntityInstanceEvent, CancellableEvent {
 	public void setAnimate(boolean animation) {
 		this.animation = animation;
 	}
-	
+
 	/**
 	 * Checks if the damage will kill the entity.
 	 * <br><br>
@@ -91,7 +91,7 @@ public class FinalDamageEvent implements EntityInstanceEvent, CancellableEvent {
 	 */
 	public boolean doesKillEntity() {
 		float remainingDamage = damage.getAmount();
-		
+
 		// Additional hearts support
 		if (entity instanceof final Player player) {
 			final float additionalHearts = player.getAdditionalHearts();
@@ -103,16 +103,16 @@ public class FinalDamageEvent implements EntityInstanceEvent, CancellableEvent {
 				}
 			}
 		}
-		
+
 		float finalHealth = entity.getHealth() - remainingDamage;
 		return finalHealth <= 0;
 	}
-	
+
 	@Override
 	public boolean isCancelled() {
 		return cancelled;
 	}
-	
+
 	@Override
 	public void setCancelled(boolean cancel) {
 		this.cancelled = cancel;

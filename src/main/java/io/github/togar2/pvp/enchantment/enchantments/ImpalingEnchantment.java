@@ -11,7 +11,7 @@ public class ImpalingEnchantment extends CombatEnchantment {
 	public ImpalingEnchantment(EquipmentSlot... slotTypes) {
 		super(Enchantment.IMPALING, slotTypes);
 	}
-	
+
 	@Override
 	public float getAttackDamage(int level, EntityGroup group,
 	                             EnchantmentFeature feature, FeatureConfiguration configuration) {

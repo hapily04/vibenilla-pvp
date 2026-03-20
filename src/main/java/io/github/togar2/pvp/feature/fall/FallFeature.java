@@ -13,24 +13,24 @@ public interface FallFeature extends CombatFeature {
 		public int getFallDamage(LivingEntity entity, double fallDistance) {
 			return 0;
 		}
-		
+
 		@Override
 		public double getFallDistance(LivingEntity entity) {
 			return 0;
 		}
-		
+
 		@Override
 		public void resetFallDistance(LivingEntity entity) {}
-		
+
 		@Override
 		public void setExtraFallParticles(LivingEntity entity, boolean extraFallParticles) {}
 	};
-	
+
 	int getFallDamage(LivingEntity entity, double fallDistance);
-	
+
 	double getFallDistance(LivingEntity entity);
-	
+
 	void resetFallDistance(LivingEntity entity);
-	
+
 	void setExtraFallParticles(LivingEntity entity, boolean extraFallParticles);
 }

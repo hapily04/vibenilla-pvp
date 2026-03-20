@@ -40,18 +40,18 @@ public class VanillaBowFeature implements BowFeature, RegistrableFeature {
 			FeatureType.BOW, VanillaBowFeature::new,
 			FeatureType.ITEM_DAMAGE, FeatureType.EFFECT, FeatureType.ENCHANTMENT, FeatureType.PROJECTILE_ITEM
 	);
-	
+
 	private final FeatureConfiguration configuration;
-	
+
 	private ItemDamageFeature itemDamageFeature;
 	private EffectFeature effectFeature;
 	private EnchantmentFeature enchantmentFeature;
 	private ProjectileItemFeature projectileItemFeature;
-	
+
 	public VanillaBowFeature(FeatureConfiguration configuration) {
 		this.configuration = configuration;
 	}
-	
+
 	@Override
 	public void initDependencies() {
 		this.itemDamageFeature = configuration.get(FeatureType.ITEM_DAMAGE);
@@ -59,7 +59,7 @@ public class VanillaBowFeature implements BowFeature, RegistrableFeature {
 		this.enchantmentFeature = configuration.get(FeatureType.ENCHANTMENT);
 		this.projectileItemFeature = configuration.get(FeatureType.PROJECTILE_ITEM);
 	}
-	
+
 	@Override
 	public void init(EventNode<EntityInstanceEvent> node) {
 		node.addListener(PlayerBeginItemUseEvent.class, event -> {
@@ -70,21 +70,21 @@ public class VanillaBowFeature implements BowFeature, RegistrableFeature {
 				}
 			}
 		});
-		
+
 		node.addListener(PlayerCancelItemUseEvent.class, event -> {
 			Player player = event.getPlayer();
 			ItemStack stack = event.getItemStack();
 			if (stack.material() != Material.BOW) return;
-			
+
 			EnchantmentList enchantmentList = stack.get(DataComponents.ENCHANTMENTS);
 			assert enchantmentList != null;
-			
+
 			boolean infinite = player.getGameMode() == GameMode.CREATIVE
 					|| enchantmentList.level(Enchantment.INFINITY) > 0;
-			
+
 			ItemStack projectileItem;
 			int projectileSlot;
-			
+
 			ProjectileItemFeature.ProjectileItem projectile = projectileItemFeature.getBowProjectile(player);
 			if (!infinite && projectile == null) return;
 			if (projectile == null) {
@@ -94,36 +94,36 @@ public class VanillaBowFeature implements BowFeature, RegistrableFeature {
 				projectileItem = projectile.stack();
 				projectileSlot = projectile.slot();
 			}
-			
+
 			long useTicks = player.getCurrentItemUseTime();
 			double power = getBowPower(useTicks);
 			if (power < 0.1) return;
-			
+
 			// Arrow creation
 			AbstractArrow arrow = createArrow(projectileItem.withAmount(1), player);
-			
+
 			if (power >= 1) arrow.setCritical(true);
-			
+
 			int powerEnchantment = enchantmentList.level(Enchantment.POWER);
 			if (powerEnchantment > 0)
 				arrow.setBaseDamage(arrow.getBaseDamage() + (double) powerEnchantment * 0.5 + 0.5);
-			
+
 			int punchEnchantment = enchantmentList.level(Enchantment.PUNCH);
 			if (punchEnchantment > 0) arrow.setKnockback(punchEnchantment);
-			
+
 			if (enchantmentList.level(Enchantment.FLAME) > 0)
 				arrow.setFireTicksLeft(100 * ServerFlag.SERVER_TICKS_PER_SECOND); // 100 seconds
-			
+
 			itemDamageFeature.damageEquipment(player, event.getHand() == PlayerHand.MAIN ?
 					EquipmentSlot.MAIN_HAND : EquipmentSlot.OFF_HAND, 1);
-			
+
 			boolean reallyInfinite = infinite && projectileItem.material() == Material.ARROW;
 			if (reallyInfinite || player.getGameMode() == GameMode.CREATIVE
 					&& (projectileItem.material() == Material.SPECTRAL_ARROW
 					|| projectileItem.material() == Material.TIPPED_ARROW)) {
 				arrow.setPickupMode(AbstractArrow.PickupMode.CREATIVE_ONLY);
 			}
-			
+
 			// Arrow shooting
 			Pos position = player.getPosition().add(0D, player.getEyeHeight() - 0.1, 0D);
 			arrow.shootFromRotation(position.pitch(), position.yaw(), 0 , power * 3, 1.0);
@@ -131,30 +131,30 @@ public class VanillaBowFeature implements BowFeature, RegistrableFeature {
 			arrow.setVelocity(arrow.getVelocity().add(playerVel.x(),
 					player.isOnGround() ? 0.0D : playerVel.y(), playerVel.z()));
 			arrow.setInstance(Objects.requireNonNull(player.getInstance()), position.withView(arrow.getPosition()));
-			
+
 			ThreadLocalRandom random = ThreadLocalRandom.current();
 			ViewUtil.viewersAndSelf(player).playSound(Sound.sound(
 					SoundEvent.ENTITY_ARROW_SHOOT, Sound.Source.PLAYER,
 					1.0f, 1.0f / (random.nextFloat() * 0.4f + 1.2f) + (float) power * 0.5f
 			), player);
-			
+
 			if (!reallyInfinite && player.getGameMode() != GameMode.CREATIVE && projectileSlot >= 0) {
 				player.getInventory().setItemStack(projectileSlot,
 						projectileItem.withAmount(projectileItem.amount() - 1));
 			}
 		});
 	}
-	
+
 	protected double getBowPower(long ticks) {
 		double seconds = ticks / (double) ServerFlag.SERVER_TICKS_PER_SECOND;
 		double power = (seconds * seconds + seconds * 2.0) / 3.0;
 		if (power > 1) {
 			power = 1;
 		}
-		
+
 		return power;
 	}
-	
+
 	protected AbstractArrow createArrow(ItemStack stack, @Nullable Entity shooter) {
 		if (stack.material() == Material.SPECTRAL_ARROW) {
 			return new SpectralArrow(shooter, enchantmentFeature);

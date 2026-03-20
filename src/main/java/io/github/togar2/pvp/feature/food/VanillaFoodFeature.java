@@ -48,20 +48,20 @@ public class VanillaFoodFeature implements FoodFeature, RegistrableFeature {
 			FeatureType.FOOD, VanillaFoodFeature::new,
 			FeatureType.ITEM_COOLDOWN
 	);
-	
+
 	private final FeatureConfiguration configuration;
-	
+
 	private ItemCooldownFeature itemCooldownFeature;
-	
+
 	public VanillaFoodFeature(FeatureConfiguration configuration) {
 		this.configuration = configuration;
 	}
-	
+
 	@Override
 	public void initDependencies() {
 		this.itemCooldownFeature = configuration.get(FeatureType.ITEM_COOLDOWN);
 	}
-	
+
 	@Override
 	public void init(EventNode<EntityInstanceEvent> node) {
 		node.addListener(PlayerPreEatEvent.class, event -> {
@@ -69,7 +69,7 @@ public class VanillaFoodFeature implements FoodFeature, RegistrableFeature {
 				return;
 			@Nullable Food foodComponent = event.getItemStack().get(DataComponents.FOOD);
 			@Nullable Consumable consumableComponent = event.getItemStack().get(DataComponents.CONSUMABLE);
-			
+
 			// If the players hunger is full and the food is not always edible, cancel
 			// For some reason vanilla doesn't say honey is always edible but just overrides the method to always consume it
 			boolean alwaysEat = foodComponent == null || foodComponent.canAlwaysEat() || event.getItemStack().material() == Material.HONEY_BOTTLE;
@@ -78,49 +78,49 @@ public class VanillaFoodFeature implements FoodFeature, RegistrableFeature {
 				event.setCancelled(true);
 				return;
 			}
-			
+
 			if (consumableComponent != null) event.setEatingTime(consumableComponent.consumeTicks());
 		});
-		
+
 		node.addListener(PlayerFinishItemUseEvent.class, event -> {
 			if (event.getItemStack().material() != Material.MILK_BUCKET
 					&& !(event.getItemStack().has(DataComponents.FOOD) || event.getItemStack().has(DataComponents.CONSUMABLE)))
 				return;
-			
+
 			onFinishEating(event.getPlayer(), event.getItemStack(), event.getHand());
 		});
-		
+
 		node.addListener(PlayerTickEvent.class, event -> {
 			Player player = event.getPlayer();
 			if (player.isSilent() || !player.isEating()) return;
-			
+
 			tickEatingSounds(player);
 		});
 	}
-	
+
 	protected void onFinishEating(Player player, ItemStack stack, PlayerHand hand) {
 		this.eat(player, stack);
-		
+
 		Food food = stack.get(DataComponents.FOOD);
 		Consumable consumable = stack.get(DataComponents.CONSUMABLE);
 		if (consumable == null) return;
 		ThreadLocalRandom random = ThreadLocalRandom.current();
-		
+
 		triggerEatingSound(player, consumable);
-		
+
 		if (food != null) {
 			ViewUtil.viewersAndSelf(player).playSound(Sound.sound(
 					SoundEvent.ENTITY_PLAYER_BURP, Sound.Source.PLAYER,
 					0.5f, random.nextFloat() * 0.1f + 0.9f
 			), player);
 		}
-		
+
 		List<ConsumeEffect> effectList = consumable.effects();
-		
+
 		for (ConsumeEffect effect : effectList) {
 			applyConsumeEffect(player, effect, random);
 		}
-		
+
 		if (stack.has(DataComponents.SUSPICIOUS_STEW_EFFECTS)) {
 			SuspiciousStewEffects effects = stack.get(DataComponents.SUSPICIOUS_STEW_EFFECTS);
 			assert effects != null;
@@ -128,10 +128,10 @@ public class VanillaFoodFeature implements FoodFeature, RegistrableFeature {
 				player.addEffect(new Potion(effect.id(), (byte) 0, effect.durationTicks(), PotionFlags.defaultFlags()));
 			}
 		}
-		
+
 		if (player.getGameMode() != GameMode.CREATIVE) {
 			ItemStack remainder = stack.get(DataComponents.USE_REMAINDER);
-			
+
 			if (remainder != null && !remainder.isAir()) {
 				if (stack.amount() == 1) {
 					player.setItemInHand(hand, remainder);
@@ -144,47 +144,47 @@ public class VanillaFoodFeature implements FoodFeature, RegistrableFeature {
 			}
 		}
 	}
-	
+
 	@Override
 	public void addFood(Player player, int food, float saturation) {
 		player.setFood(Math.min(food + player.getFood(), 20));
 		player.setFoodSaturation(Math.min(player.getFoodSaturation() + saturation, player.getFood()));
 	}
-	
+
 	@Override
 	public void eat(Player player, int food, float saturationModifier) {
 		addFood(player, food, (float) food * saturationModifier * 2.0f);
 	}
-	
+
 	@Override
 	public void eat(Player player, ItemStack stack) {
 		Food foodComponent = stack.get(DataComponents.FOOD);
 		if (foodComponent == null) return;
 		addFood(player, foodComponent.nutrition(), foodComponent.saturationModifier());
 	}
-	
+
 	@Override
 	public void applySaturationEffect(Player player, int amplifier) {
 		eat(player, amplifier + 1, 1.0f);
 	}
-	
+
 	protected void tickEatingSounds(Player player) {
 		ItemStack stack = player.getItemInHand(Objects.requireNonNull(player.getItemUseHand()));
-		
+
 		Consumable component = stack.get(DataComponents.CONSUMABLE);
 		if (component == null) return;
-		
+
 		long useTime = component.consumeTicks();
 		long usedTicks = player.getCurrentItemUseTime();
 		long remainingUseTicks = useTime - usedTicks;
-		
+
 		boolean canTrigger = component.consumeTicks() < 32 || remainingUseTicks <= useTime - 7;
 		boolean shouldTrigger = canTrigger && remainingUseTicks % 4 == 0;
 		if (!shouldTrigger) return;
-		
+
 		triggerEatingSound(player, component);
 	}
-	
+
 	protected void triggerEatingSound(Player player, Consumable consumable) {
 		ThreadLocalRandom random = ThreadLocalRandom.current();
 		player.getViewersAsAudience().playSound(Sound.sound(
@@ -193,7 +193,7 @@ public class VanillaFoodFeature implements FoodFeature, RegistrableFeature {
 				(random.nextFloat() - random.nextFloat()) * 0.2f + 1.0f
 		), player);
 	}
-	
+
 	public static void applyConsumeEffect(Entity entity, ConsumeEffect effect, Random random) {
 		switch (effect) {
 			case ApplyEffects(List<CustomPotionEffect> effects, float probability) -> {

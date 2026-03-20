@@ -17,10 +17,10 @@ public class ExplosionEvent implements InstanceEvent, CancellableEvent {
 	private final Instance instance;
 	private final List<Point> affectedBlocks;
 	private final List<Entity> affectedEntities;
-	
+
 	private Damage damageObject;
 	private boolean cancelled;
-	
+
 	public ExplosionEvent(@NotNull Instance instance, @NotNull List<Point> affectedBlocks,
 	                      @NotNull List<Entity> affectedEntities, @NotNull Damage damageObject) {
 		this.instance = instance;
@@ -28,7 +28,7 @@ public class ExplosionEvent implements InstanceEvent, CancellableEvent {
 		this.affectedEntities = affectedEntities;
 		this.damageObject = damageObject;
 	}
-	
+
 	/**
 	 * Gets the blocks affected by this explosion.
 	 * The list may be modified.
@@ -38,7 +38,7 @@ public class ExplosionEvent implements InstanceEvent, CancellableEvent {
 	public @NotNull List<Point> getAffectedBlocks() {
 		return affectedBlocks;
 	}
-	
+
 	/**
 	 * Gets the entities affected by this explosion.
 	 * The list may be modified.
@@ -48,7 +48,7 @@ public class ExplosionEvent implements InstanceEvent, CancellableEvent {
 	public @NotNull List<Entity> getAffectedEntities() {
 		return affectedEntities;
 	}
-	
+
 	/**
 	 * Gets the damage object which will be used to damage any affected entities.
 	 * The damage amount of this object will be overwritten depending on the entity.
@@ -58,7 +58,7 @@ public class ExplosionEvent implements InstanceEvent, CancellableEvent {
 	public @NotNull Damage getDamageObject() {
 		return damageObject;
 	}
-	
+
 	/**
 	 * Sets the damage object which will be used to damage any affected entities.
 	 * The damage amount of this object will be overwritten depending on the entity.
@@ -68,17 +68,17 @@ public class ExplosionEvent implements InstanceEvent, CancellableEvent {
 	public void setDamageObject(@NotNull Damage damageObject) {
 		this.damageObject = damageObject;
 	}
-	
+
 	@Override
 	public @NotNull Instance getInstance() {
 		return instance;
 	}
-	
+
 	@Override
 	public boolean isCancelled() {
 		return cancelled;
 	}
-	
+
 	@Override
 	public void setCancelled(boolean cancel) {
 		this.cancelled = cancel;

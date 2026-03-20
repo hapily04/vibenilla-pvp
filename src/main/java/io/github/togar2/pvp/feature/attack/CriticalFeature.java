@@ -12,15 +12,15 @@ public interface CriticalFeature extends CombatFeature {
 		public boolean shouldCrit(LivingEntity attacker, AttackValues.PreCritical values) {
 			return false;
 		}
-		
+
 		@Override
 		public float applyToDamage(float damage) {
 			return damage;
 		}
 	};
-	
+
 	boolean shouldCrit(LivingEntity attacker, AttackValues.PreCritical values);
-	
+
 	/**
 	 * Determines the new damage amount when the attack was critical.
 	 *

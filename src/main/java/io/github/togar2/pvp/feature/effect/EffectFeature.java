@@ -22,34 +22,34 @@ public interface EffectFeature extends CombatFeature {
 		public int getPotionColor(PotionContents contents) {
 			return 0;
 		}
-		
+
 		@Override
 		public List<Potion> getAllPotions(PotionType potionType, Collection<CustomPotionEffect> customEffects) {
 			return List.of();
 		}
-		
+
 		@Override public void updatePotionVisibility(LivingEntity entity) {}
 		@Override public void addArrowEffects(LivingEntity entity, Arrow arrow) {}
 		@Override public void addSplashPotionEffects(LivingEntity entity, PotionContents potionContents, double proximity,
 		                                             @Nullable Entity source, @Nullable Entity attacker) {}
 	};
-	
+
 	int getPotionColor(PotionContents contents);
-	
+
 	default List<Potion> getAllPotions(@Nullable PotionContents potionContents) {
 		if (potionContents == null) return List.of();
 		return getAllPotions(potionContents.potion(), potionContents.customEffects());
 	}
-	
+
 	List<Potion> getAllPotions(PotionType potionType, Collection<CustomPotionEffect> customEffects);
-	
+
 	/**
 	 * Updates the potion visibility of an entity. This includes particles and invisibility status.
 	 *
 	 * @param entity the entity to update the potion visibility of
 	 */
 	void updatePotionVisibility(LivingEntity entity);
-	
+
 	/**
 	 * Applies the effects of a (tipped) arrow to an entity.
 	 *
@@ -57,7 +57,7 @@ public interface EffectFeature extends CombatFeature {
 	 * @param arrow the arrow
 	 */
 	void addArrowEffects(LivingEntity entity, Arrow arrow);
-	
+
 	/**
 	 * Applies the effects of a splash potion to an entity.
 	 * The proximity is usually calculated following: {@code 1.0 - Math.sqrt(distanceSquared) / 4.0}

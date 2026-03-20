@@ -12,7 +12,7 @@ import net.minestom.server.instance.block.Block;
 
 public class CrystalEntity extends LivingEntity {
 	private final boolean fire;
-	
+
 	public CrystalEntity(boolean fire, boolean showingBottom) {
 		super(EntityType.END_CRYSTAL);
 		this.fire = fire;
@@ -20,17 +20,17 @@ public class CrystalEntity extends LivingEntity {
 		hasPhysics = false;
 		((EndCrystalMeta) getEntityMeta()).setShowingBottom(showingBottom);
 	}
-	
+
 	public CrystalEntity() {
 		this(false, false);
 	}
-	
+
 	@Override
 	public void update(long time) {
 		if (fire && !instance.getBlock(position).compare(Block.FIRE))
 			instance.setBlock(position, Block.FIRE);
 	}
-	
+
 	@Override
 	public boolean damage(@NotNull Damage damage) {
 		if (isDead() || isRemoved())

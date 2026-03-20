@@ -17,12 +17,12 @@ import java.util.Objects;
 public class EntityUtil {
 	public static void spawnItemAtLocation(Entity entity, ItemStack itemStack, double up) {
 		if (itemStack.isAir()) return;
-		
+
 		ItemEntity item = new ItemEntity(itemStack);
 		item.setPickupDelay(10, TimeUnit.SERVER_TICK); // Default 0.5 seconds
 		item.setInstance(Objects.requireNonNull(entity.getInstance()), entity.getPosition().add(0, up, 0));
 	}
-	
+
 	public static Component getName(Entity entity) {
 		HoverEvent<HoverEvent.ShowEntity> hoverEvent = HoverEvent.showEntity(entity.getEntityType().key(), entity.getUuid());
 		var customName = entity.get(DataComponents.CUSTOM_NAME);
@@ -37,7 +37,7 @@ public class EntityUtil {
 			return Component.text(name).hoverEvent(hoverEvent);
 		}
 	}
-	
+
 	public static void setLastDamage(LivingEntity livingEntity, Damage lastDamage) {
 		// Use reflection to set lastDamage field
 		try {

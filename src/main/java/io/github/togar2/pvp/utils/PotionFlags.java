@@ -14,7 +14,7 @@ public class PotionFlags {
 		}
 		return flags;
 	}
-	
+
 	private static final byte DEFAULT_FLAGS = create(false, true, true);
 	public static byte defaultFlags() {
 		return DEFAULT_FLAGS;

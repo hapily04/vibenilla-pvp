@@ -30,7 +30,7 @@ public class CombatPotionEffect {
 	private Map<Attribute, AttributeModifier> legacyAttributeModifiers;
 	private final PotionEffect potionEffect;
 	private final Function<Potion, Particle> particleSupplier;
-	
+
 	public CombatPotionEffect(PotionEffect potionEffect) {
 		this.potionEffect = potionEffect;
 		this.particleSupplier = potion -> {
@@ -38,26 +38,26 @@ public class CombatPotionEffect {
 			return Particle.ENTITY_EFFECT.withColor(new AlphaColor(alpha, new Color(potion.effect().registry().color())));
 		};
 	}
-	
+
 	public CombatPotionEffect(PotionEffect potionEffect, Function<Potion, Particle> particleSupplier) {
 		this.potionEffect = potionEffect;
 		this.particleSupplier = particleSupplier;
 	}
-	
+
 	public PotionEffect getPotionEffect() {
 		return potionEffect;
 	}
-	
+
 	public Particle getParticle(Potion potion) {
 		return particleSupplier.apply(potion);
 	}
-	
+
 	public CombatPotionEffect addAttributeModifier(Attribute attribute, Key id,
 	                                               double amount, AttributeOperation operation) {
 		attributeModifiers.put(attribute, new AttributeModifier(id, amount, operation));
 		return this;
 	}
-	
+
 	public CombatPotionEffect addLegacyAttributeModifier(Attribute attribute, Key id,
 	                                                     double amount, AttributeOperation operation) {
 		if (legacyAttributeModifiers == null)
@@ -65,7 +65,7 @@ public class CombatPotionEffect {
 		legacyAttributeModifiers.put(attribute, new AttributeModifier(id, amount, operation));
 		return this;
 	}
-	
+
 	public void applyUpdateEffect(LivingEntity entity, int amplifier,
 	                              ExhaustionFeature exhaustionFeature, FoodFeature foodFeature) {
 		if (potionEffect == PotionEffect.REGENERATION) {
@@ -82,7 +82,7 @@ public class CombatPotionEffect {
 			entity.damage(DamageType.WITHER, 1.0F);
 			return;
 		}
-		
+
 		if (entity instanceof Player player) {
 			if (potionEffect == PotionEffect.HUNGER) {
 				exhaustionFeature.applyHungerEffect(player, amplifier);
@@ -92,10 +92,10 @@ public class CombatPotionEffect {
 				return;
 			}
 		}
-		
+
 		if (potionEffect == PotionEffect.INSTANT_DAMAGE || potionEffect == PotionEffect.INSTANT_HEALTH) {
 			EntityGroup entityGroup = EntityGroup.ofEntity(entity);
-			
+
 			if (shouldHeal(entityGroup)) {
 				entity.setHealth(entity.getHealth() + (float) Math.max(4 << amplifier, 0));
 			} else {
@@ -103,16 +103,16 @@ public class CombatPotionEffect {
 			}
 		}
 	}
-	
+
 	public void applyInstantEffect(@Nullable Entity source, @Nullable Entity attacker, LivingEntity target,
 	                               int amplifier, double proximity, ExhaustionFeature exhaustionFeature, FoodFeature foodFeature) {
 		EntityGroup targetGroup = EntityGroup.ofEntity(target);
-		
+
 		if (potionEffect != PotionEffect.INSTANT_DAMAGE && potionEffect != PotionEffect.INSTANT_HEALTH) {
 			applyUpdateEffect(target, amplifier, exhaustionFeature, foodFeature);
 			return;
 		}
-		
+
 		if (shouldHeal(targetGroup)) {
 			int amount = (int) (proximity * (double) (4 << amplifier) + 0.5D);
 			target.setHealth(target.getHealth() + (float) amount);
@@ -125,15 +125,15 @@ public class CombatPotionEffect {
 			}
 		}
 	}
-	
+
 	private boolean shouldHeal(EntityGroup group) {
 		return (group.isUndead() && potionEffect == PotionEffect.INSTANT_DAMAGE)
 				|| (!group.isUndead() && potionEffect == PotionEffect.INSTANT_HEALTH);
 	}
-	
+
 	public boolean canApplyUpdateEffect(int duration, int amplifier) {
 		if (isInstant() || potionEffect == PotionEffect.SATURATION) return duration >= 1;
-		
+
 		int applyInterval;
 		if (potionEffect == PotionEffect.REGENERATION) {
 			applyInterval = 50 >> amplifier;
@@ -144,18 +144,18 @@ public class CombatPotionEffect {
 		} else {
 			return potionEffect == PotionEffect.HUNGER;
 		}
-		
+
 		if (applyInterval > 0) {
 			return duration % applyInterval == 0;
 		} else {
 			return true;
 		}
 	}
-	
+
 	public boolean isInstant() {
 		return potionEffect.registry().isInstantaneous();
 	}
-	
+
 	public void onApplied(LivingEntity entity, int amplifier, CombatVersion version) {
 		Map<Attribute, AttributeModifier> modifiers;
 		if (version.legacy() && legacyAttributeModifiers != null) {
@@ -163,14 +163,14 @@ public class CombatPotionEffect {
 		} else {
 			modifiers = attributeModifiers;
 		}
-		
+
 		modifiers.forEach((attribute, modifier) -> {
 			AttributeInstance instance = entity.getAttribute(attribute);
 			instance.removeModifier(modifier);
 			instance.addModifier(new AttributeModifier(modifier.id(), adjustModifierAmount(amplifier, modifier), modifier.operation()));
 		});
 	}
-	
+
 	public void onRemoved(LivingEntity entity, int amplifier, CombatVersion version) {
 		Map<Attribute, AttributeModifier> modifiers;
 		if (version.legacy() && legacyAttributeModifiers != null) {
@@ -178,11 +178,11 @@ public class CombatPotionEffect {
 		} else {
 			modifiers = attributeModifiers;
 		}
-		
+
 		modifiers.forEach((attribute, modifier) ->
 				entity.getAttribute(attribute).removeModifier(modifier));
 	}
-	
+
 	private double adjustModifierAmount(int amplifier, AttributeModifier modifier) {
 		return modifier.amount() * (amplifier + 1);
 	}

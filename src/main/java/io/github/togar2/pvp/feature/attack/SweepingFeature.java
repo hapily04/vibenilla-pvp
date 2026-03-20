@@ -15,22 +15,22 @@ public interface SweepingFeature extends CombatFeature {
 		public boolean shouldSweep(LivingEntity attacker, AttackValues.PreSweeping values) {
 			return false;
 		}
-		
+
 		@Override
 		public float getSweepingDamage(LivingEntity attacker, float damage) {
 			return 0;
 		}
-		
+
 		@Override
 		public Collection<LivingEntity> applySweeping(LivingEntity attacker, LivingEntity target, float damage) {
 			return List.of();
 		}
 	};
-	
+
 	boolean shouldSweep(LivingEntity attacker, AttackValues.PreSweeping values);
-	
+
 	float getSweepingDamage(LivingEntity attacker, float damage);
-	
+
 	/**
 	 * Should return a collection of the affected entities.
 	 */

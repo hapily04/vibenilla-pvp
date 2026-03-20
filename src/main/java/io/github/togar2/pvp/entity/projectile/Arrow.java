@@ -21,16 +21,16 @@ import java.util.function.UnaryOperator;
 
 public class Arrow extends AbstractArrow {
 	public static final ItemStack DEFAULT_ARROW = ItemStack.of(Material.ARROW);
-	
+
 	private final EffectFeature effectFeature;
-	
+
 	private ItemStack itemStack = DEFAULT_ARROW;
-	
+
 	public Arrow(@Nullable Entity shooter, EffectFeature effectFeature, EnchantmentFeature enchantmentFeature) {
 		super(shooter, EntityType.ARROW, enchantmentFeature);
 		this.effectFeature = effectFeature;
 	}
-	
+
 	@Override
 	public void update(long time) {
 		super.update(time);
@@ -40,47 +40,47 @@ public class Arrow extends AbstractArrow {
 			itemStack = DEFAULT_ARROW;
 		}
 	}
-	
+
 	@Override
 	protected ItemStack getPickupItem() {
 		return itemStack;
 	}
-	
+
 	public void setItemStack(ItemStack itemStack) {
 		this.itemStack = itemStack;
 		updateColor();
 	}
-	
+
 	@Override
 	protected void onHurt(LivingEntity entity) {
 		effectFeature.addArrowEffects(entity, this);
 	}
-	
+
 	private void updateColor() {
 		PotionContents potionContents = itemStack.get(DataComponents.POTION_CONTENTS);
 		if (potionContents == null || potionContents.equals(PotionContents.EMPTY)) {
 			setColor(-1);
 			return;
 		}
-		
+
 		setColor(effectFeature.getPotionColor(potionContents));
 	}
-	
+
 	private void setColor(int color) {
 		((ArrowMeta) getEntityMeta()).setColor(color);
 	}
-	
+
 	public @NotNull PotionContents getPotion() {
 		return itemStack.get(DataComponents.POTION_CONTENTS, PotionContents.EMPTY);
 	}
-	
+
 	public void setPotion(@NotNull PotionContents potion) {
 		if (itemStack.material() != Material.TIPPED_ARROW)
 			itemStack = ItemStack.of(Material.TIPPED_ARROW);
 		itemStack = itemStack.with(DataComponents.POTION_CONTENTS, potion);
 		updateColor();
 	}
-	
+
 	public void addArrowEffect(CustomPotionEffect effect) {
 		itemStack = itemStack.with(DataComponents.POTION_CONTENTS, (UnaryOperator<PotionContents>) potionContents -> {
 			List<CustomPotionEffect> list = new ArrayList<>(potionContents.customEffects());

@@ -9,7 +9,7 @@ import net.minestom.server.entity.damage.DamageType;
  */
 public interface TotemFeature extends CombatFeature {
 	TotemFeature NO_OP = (entity, type) -> false;
-	
+
 	/**
 	 * Returns whether the entity is protected. May also apply (visual) effects.
 	 *

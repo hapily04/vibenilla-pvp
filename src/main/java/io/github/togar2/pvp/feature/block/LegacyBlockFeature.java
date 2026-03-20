@@ -17,12 +17,12 @@ public interface LegacyBlockFeature extends BlockFeature {
 		@Override public boolean isDamageBlocked(LivingEntity entity, Damage damage) { return false; }
 		@Override public boolean applyBlock(LivingEntity entity, Damage damage) { return false; }
 	};
-	
+
 	boolean isBlocking(Player player);
-	
+
 	void block(Player player);
-	
+
 	void unblock(Player player);
-	
+
 	boolean canBlockWith(Player player, ItemStack stack);
 }

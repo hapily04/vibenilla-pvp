@@ -25,9 +25,9 @@ public class VanillaPlayerStateFeature implements PlayerStateFeature, Registrabl
 	public static final DefinedFeature<VanillaPlayerStateFeature> DEFINED = new DefinedFeature<>(
 			FeatureType.PLAYER_STATE, configuration -> new VanillaPlayerStateFeature()
 	);
-	
+
 	public static final Tag<Block> LAST_CLIMBED_BLOCK = Tag.Transient("lastClimbedBlock");
-	
+
 	@Override
 	public void init(EventNode<EntityInstanceEvent> node) {
 		node.addListener(PlayerTickEvent.class, event -> {
@@ -38,7 +38,7 @@ public class VanillaPlayerStateFeature implements PlayerStateFeature, Registrabl
 				player.scheduleNextTick(p -> p.removeTag(LAST_CLIMBED_BLOCK));
 			}
 		});
-		
+
 		node.addListener(PlayerMoveEvent.class, event -> {
 			Player player = event.getPlayer();
 			if (isClimbing(player)) {
@@ -46,20 +46,20 @@ public class VanillaPlayerStateFeature implements PlayerStateFeature, Registrabl
 			}
 		});
 	}
-	
+
 	@Override
 	public boolean isClimbing(LivingEntity entity) {
 		if (entity instanceof Player player && player.getGameMode() == GameMode.SPECTATOR) return false;
-		
+
 		var tag = MinecraftServer.process().blocks().getTag(Key.key("minecraft:climbable"));
 		assert tag != null;
-		
+
 		Block block = Objects.requireNonNull(entity.getInstance()).getBlock(entity.getPosition());
 		var key = block.asKey();
 		assert key != null;
 		return tag.contains(key);
 	}
-	
+
 	@Override
 	public @Nullable Block getLastClimbedBlock(LivingEntity entity) {
 		return entity.getTag(LAST_CLIMBED_BLOCK);

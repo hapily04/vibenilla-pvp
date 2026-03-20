@@ -8,7 +8,7 @@ class PotionColorUtils {
 	public static int getPotionColor(Collection<Potion> effects) {
 		int r = 0, g = 0, b = 0;
 		int totalAmplifier = 0;
-		
+
 		for (Potion potion : effects) {
 			if (potion.hasParticles()) {
 				int color = potion.effect().registry().color();
@@ -19,14 +19,14 @@ class PotionColorUtils {
 				totalAmplifier += amplifier;
 			}
 		}
-		
+
 		if (totalAmplifier == 0) {
 			return -1;
 		} else {
 			return rgba(255, r / totalAmplifier, g / totalAmplifier, b / totalAmplifier);
 		}
 	}
-	
+
 	public static int rgba(int a, int r, int g, int b) {
 		return (a << 24) | (r << 16) | (g << 8) | b;
 	}

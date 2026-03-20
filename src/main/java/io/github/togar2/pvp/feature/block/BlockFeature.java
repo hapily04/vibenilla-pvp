@@ -13,15 +13,15 @@ public interface BlockFeature extends CombatFeature {
 		public boolean isDamageBlocked(LivingEntity entity, Damage damage) {
 			return false;
 		}
-		
+
 		@Override
 		public boolean applyBlock(LivingEntity entity, Damage damage) {
 			return false;
 		}
 	};
-	
+
 	boolean isDamageBlocked(LivingEntity entity, Damage damage);
-	
+
 	/**
 	 * Applies the block to the {@link Damage} object.
 	 *

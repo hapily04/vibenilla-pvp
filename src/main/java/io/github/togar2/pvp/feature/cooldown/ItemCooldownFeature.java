@@ -13,12 +13,12 @@ public interface ItemCooldownFeature extends CombatFeature {
 		public boolean hasCooldown(Player player, Material material) {
 			return false;
 		}
-		
+
 		@Override
 		public void setCooldown(Player player, Material material, int ticks) {}
 	};
-	
+
 	boolean hasCooldown(Player player, Material material);
-	
+
 	void setCooldown(Player player, Material material, int ticks);
 }

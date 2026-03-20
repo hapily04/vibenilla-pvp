@@ -11,6 +11,6 @@ import net.minestom.server.world.Difficulty;
  */
 public interface DifficultyProvider extends CombatFeature {
 	DifficultyProvider DEFAULT = entity -> MinecraftServer.getDifficulty();
-	
+
 	Difficulty getValue(LivingEntity entity);
 }

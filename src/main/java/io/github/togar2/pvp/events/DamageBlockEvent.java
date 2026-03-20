@@ -10,14 +10,14 @@ import org.jetbrains.annotations.NotNull;
  * This event can be used to set the resulting damage.
  */
 public class DamageBlockEvent implements EntityInstanceEvent, CancellableEvent {
-	
+
 	private final LivingEntity entity;
 	private final float damage;
 	private float resultingDamage;
 	private boolean knockbackAttacker;
-	
+
 	private boolean cancelled;
-	
+
 	public DamageBlockEvent(@NotNull LivingEntity entity, float damage,
 	                        float resultingDamage, boolean knockbackAttacker) {
 		this.entity = entity;
@@ -25,17 +25,17 @@ public class DamageBlockEvent implements EntityInstanceEvent, CancellableEvent {
 		this.resultingDamage = resultingDamage;
 		this.knockbackAttacker = knockbackAttacker;
 	}
-	
+
 	@NotNull
 	@Override
 	public LivingEntity getEntity() {
 		return entity;
 	}
-	
+
 	public boolean knockbackAttacker() {
 		return knockbackAttacker;
 	}
-	
+
 	/**
 	 * This fixes a bug introduced in 1.14. Prior to 1.14, the attacker would receive
 	 * knockback when the victim was blocking. In 1.14 and above, this is no longer the case.
@@ -46,7 +46,7 @@ public class DamageBlockEvent implements EntityInstanceEvent, CancellableEvent {
 	public void setKnockbackAttacker(boolean knockbackAttacker) {
 		this.knockbackAttacker = knockbackAttacker;
 	}
-	
+
 	/**
 	 * Gets the original damage dealt.
 	 *
@@ -55,11 +55,11 @@ public class DamageBlockEvent implements EntityInstanceEvent, CancellableEvent {
 	public float getDamage() {
 		return damage;
 	}
-	
+
 	public float getResultingDamage() {
 		return resultingDamage;
 	}
-	
+
 	/**
 	 * Sets the resulting damage after the block.
 	 *
@@ -68,12 +68,12 @@ public class DamageBlockEvent implements EntityInstanceEvent, CancellableEvent {
 	public void setResultingDamage(float resultingDamage) {
 		this.resultingDamage = resultingDamage;
 	}
-	
+
 	@Override
 	public boolean isCancelled() {
 		return cancelled;
 	}
-	
+
 	@Override
 	public void setCancelled(boolean cancel) {
 		this.cancelled = cancel;

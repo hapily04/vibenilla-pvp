@@ -24,59 +24,59 @@ public interface EnchantmentFeature extends CombatFeature {
 		public int getEquipmentLevel(LivingEntity entity, RegistryKey<Enchantment> enchantment) {
 			return 0;
 		}
-		
+
 		@Override
 		public Map.Entry<EquipmentSlot, ItemStack> pickRandom(LivingEntity entity, RegistryKey<Enchantment> enchantment) {
 			return null;
 		}
-		
+
 		@Override
 		public int getProtectionAmount(LivingEntity entity, DamageType damageType) {
 			return 0;
 		}
-		
+
 		@Override
 		public float getAttackDamage(ItemStack stack, EntityGroup group) {
 			return 0;
 		}
-		
+
 		@Override
 		public double getExplosionKnockback(LivingEntity entity, double strength) {
 			return strength;
 		}
-		
+
 		@Override
 		public int getFireDuration(LivingEntity entity, int duration) {
 			return duration;
 		}
-		
+
 		@Override
 		public int getKnockback(LivingEntity entity) {
 			return 0;
 		}
-		
+
 		@Override
 		public int getSweeping(LivingEntity entity) {
 			return 0;
 		}
-		
+
 		@Override
 		public int getFireAspect(LivingEntity entity) {
 			return 0;
 		}
-		
+
 		@Override
 		public boolean shouldUnbreakingPreventDamage(ItemStack stack) {
 			return false;
 		}
-		
+
 		@Override
 		public void onUserDamaged(LivingEntity user, LivingEntity attacker) {}
-		
+
 		@Override
 		public void onTargetDamaged(LivingEntity user, Entity target) {}
 	};
-	
+
 	/**
 	 * Gets the highest level of en enchantment on an entity's equipment.
 	 *
@@ -85,7 +85,7 @@ public interface EnchantmentFeature extends CombatFeature {
 	 * @return the equipment level
 	 */
 	int getEquipmentLevel(LivingEntity entity, RegistryKey<Enchantment> enchantment);
-	
+
 	/**
 	 * Picks a random equipment piece which has the specified enchantment.
 	 *
@@ -94,23 +94,23 @@ public interface EnchantmentFeature extends CombatFeature {
 	 * @return a map entry containing both the equipment slot and the item stack of the equipment piece
 	 */
 	Map.Entry<EquipmentSlot, ItemStack> pickRandom(LivingEntity entity, RegistryKey<Enchantment> enchantment);
-	
+
 	int getProtectionAmount(LivingEntity entity, DamageType damageType);
-	
+
 	float getAttackDamage(ItemStack stack, EntityGroup group);
-	
+
 	double getExplosionKnockback(LivingEntity entity, double strength);
-	
+
 	int getFireDuration(LivingEntity entity, int duration);
-	
+
 	int getKnockback(LivingEntity entity);
-	
+
 	int getSweeping(LivingEntity entity);
-	
+
 	int getFireAspect(LivingEntity entity);
-	
+
 	boolean shouldUnbreakingPreventDamage(ItemStack stack);
-	
+
 	/**
 	 * Handles an entity being damaged by an attacker. Usually applies thorns.
 	 *
@@ -118,7 +118,7 @@ public interface EnchantmentFeature extends CombatFeature {
 	 * @param attacker the attacker
 	 */
 	void onUserDamaged(LivingEntity user, LivingEntity attacker);
-	
+
 	/**
 	 * Handles an entity damaging another entity.
 	 * Some enchantments could for example add extra effects to the target.

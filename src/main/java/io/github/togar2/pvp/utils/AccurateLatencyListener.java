@@ -10,9 +10,9 @@ import net.minestom.server.tag.Tag;
 
 public class AccurateLatencyListener {
 	private static final Component KICK_MESSAGE = Component.text("Bad Keep Alive packet", NamedTextColor.RED);
-	
+
 	private static final Tag<Long> SEND_TIME = Tag.Transient("keepalive_send_time");
-	
+
 	public static void listener(ClientKeepAlivePacket packet, Player player) {
 		final long packetId = packet.id();
 		if (packetId != player.getLastKeepAlive()) {
@@ -25,7 +25,7 @@ public class AccurateLatencyListener {
 		final int latency = (int) (System.currentTimeMillis() - sendTime);
 		player.refreshLatency(latency);
 	}
-	
+
 	public static void onSend(PlayerPacketOutEvent event) {
 		// This will get called right before writing the packet, so more accuracy
 		if (event.getPacket() instanceof KeepAlivePacket) {

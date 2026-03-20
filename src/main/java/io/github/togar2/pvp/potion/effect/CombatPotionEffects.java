@@ -11,17 +11,17 @@ import java.util.Map;
 
 public class CombatPotionEffects {
 	private static final Map<PotionEffect, CombatPotionEffect> POTION_EFFECTS = new HashMap<>();
-	
+
 	public static CombatPotionEffect get(PotionEffect potionEffect) {
 		return POTION_EFFECTS.get(potionEffect);
 	}
-	
+
 	public static void register(CombatPotionEffect... potionEffects) {
 		for (CombatPotionEffect potionEffect : potionEffects) {
 			POTION_EFFECTS.put(potionEffect.getPotionEffect(), potionEffect);
 		}
 	}
-	
+
 	public static void registerAll() {
 		register(
 				new CombatPotionEffect(PotionEffect.SPEED).addAttributeModifier(Attribute.MOVEMENT_SPEED, Key.key("minecraft:effect.speed"), 0.2, AttributeOperation.ADD_MULTIPLIED_TOTAL),

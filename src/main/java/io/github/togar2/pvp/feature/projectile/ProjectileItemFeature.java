@@ -14,16 +14,16 @@ public interface ProjectileItemFeature extends CombatFeature {
 		public @Nullable ProjectileItem getBowProjectile(Player player) {
 			return null;
 		}
-		
+
 		@Override
 		public @Nullable ProjectileItem getCrossbowProjectile(Player player) {
 			return null;
 		}
 	};
-	
+
 	@Nullable ProjectileItem getBowProjectile(Player player);
-	
+
 	@Nullable ProjectileItem getCrossbowProjectile(Player player);
-	
+
 	record ProjectileItem(int slot, ItemStack stack) {}
 }

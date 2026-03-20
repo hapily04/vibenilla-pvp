@@ -26,35 +26,35 @@ public class VanillaKnockbackFeature implements KnockbackFeature {
 			FeatureType.KNOCKBACK, VanillaKnockbackFeature::new,
 			FeatureType.VERSION
 	);
-	
+
 	private final FeatureConfiguration configuration;
-	
+
 	private CombatVersion version;
-	
+
 	public VanillaKnockbackFeature(FeatureConfiguration configuration) {
 		this.configuration = configuration;
 	}
-	
+
 	@Override
 	public void initDependencies() {
 		this.version = configuration.get(FeatureType.VERSION);
 	}
-	
+
 	@Override
 	public boolean applyDamageKnockback(Damage damage, LivingEntity target) {
 		Entity attacker = damage.getAttacker();
 		Entity source = damage.getSource();
-		
+
 		double dx = attacker.getPosition().x() - target.getPosition().x();
 		double dz = attacker.getPosition().z() - target.getPosition().z();
-		
+
 		// Randomize direction
 		ThreadLocalRandom random = ThreadLocalRandom.current();
 		while (dx * dx + dz * dz < 0.0001) {
 			dx = random.nextDouble(-1, 1) * 0.01;
 			dz = random.nextDouble(-1, 1) * 0.01;
 		}
-		
+
 		// Set the velocity
 		return applyKnockback(
 				target, attacker, source,
@@ -62,50 +62,50 @@ public class VanillaKnockbackFeature implements KnockbackFeature {
 				dx, dz, version.legacy()
 		);
 	}
-	
+
 	@Override
 	public boolean applyAttackKnockback(LivingEntity attacker, LivingEntity target, int knockback) {
 		if (knockback <= 0) return false;
-		
+
 		// If legacy, attacker velocity is reduced before the knockback
 		if (version.legacy() && attacker instanceof CombatPlayer custom)
 			custom.afterSprintAttack();
-		
+
 		double dx = Math.sin(Math.toRadians(attacker.getPosition().yaw()));
 		double dz = -Math.cos(Math.toRadians(attacker.getPosition().yaw()));
-		
+
 		if (!applyKnockback(
 				target, attacker, attacker,
 				EntityKnockbackEvent.KnockbackType.ATTACK, knockback,
 				dx, dz, version.legacy()
 		)) return false;
-		
+
 		// If not legacy, attacker velocity is reduced after the knockback
 		if (version.modern() && attacker instanceof CombatPlayer custom)
 			custom.afterSprintAttack();
-		
+
 		attacker.setSprinting(false);
 		return true;
 	}
-	
+
 	@Override
 	public boolean applySweepingKnockback(LivingEntity attacker, LivingEntity target) {
 		double dx = Math.sin(Math.toRadians(attacker.getPosition().yaw()));
 		double dz = -Math.cos(Math.toRadians(attacker.getPosition().yaw()));
-		
+
 		return applyKnockback(
 				target, attacker, null,
 				EntityKnockbackEvent.KnockbackType.SWEEPING, 0,
 				dx, dz, version.legacy()
 		);
 	}
-	
+
 	public record KnockbackValues(
 			Vec horizontalModifier,
 			double vertical, double verticalLimit,
 			EntityKnockbackEvent.AnimationType animationType
 	) {}
-	
+
 	protected @Nullable KnockbackValues prepareKnockback(LivingEntity target, Entity attacker, @Nullable Entity source,
 	                                                     EntityKnockbackEvent.KnockbackType type, int extraKnockback,
 	                                                     double dx, double dz, boolean legacy) {
@@ -117,9 +117,9 @@ public class VanillaKnockbackFeature implements KnockbackFeature {
 		EntityKnockbackEvent knockbackEvent = new EntityKnockbackEvent(target, source == null ? attacker : source, type, animationType);
 		EventDispatcher.call(knockbackEvent);
 		if (knockbackEvent.isCancelled()) return null;
-		
+
 		KnockbackSettings settings = knockbackEvent.getSettings();
-		
+
 		double kbResistance = target.getAttributeValue(Attribute.KNOCKBACK_RESISTANCE);
 		double horizontal, vertical;
 		if (extraKnockback <= 0) {
@@ -131,25 +131,25 @@ public class VanillaKnockbackFeature implements KnockbackFeature {
 			double baseVertical = legacy ?
 					settings.extraVertical() : // Legacy: defaults to 0.1
 					settings.vertical() + settings.extraVertical(); // Modern: defaults to 0.1 + 0.4 = 0.5
-			
+
 			horizontal = settings.extraHorizontal() * extraKnockback;
 			vertical = baseVertical * extraKnockback;
 		}
-		
+
 		horizontal *= (1 - kbResistance);
 		vertical *= (1 - kbResistance);
 		if (horizontal <= 0 && vertical <= 0) return null;
-		
+
 		Vec horizontalModifier = new Vec(dx, dz).normalize().mul(horizontal);
 		return new KnockbackValues(horizontalModifier, vertical, settings.verticalLimit(), knockbackEvent.getAnimationType());
 	}
-	
+
 	protected boolean applyKnockback(LivingEntity target, Entity attacker, @Nullable Entity source,
 	                                 EntityKnockbackEvent.KnockbackType type, int extraKnockback,
 	                                 double dx, double dz, boolean legacy) {
 		KnockbackValues values = prepareKnockback(target, attacker, source, type, extraKnockback, dx, dz, legacy);
 		if (values == null) return false;
-		
+
 		Vec velocity = target.getVelocity();
 		if (legacy && type == EntityKnockbackEvent.KnockbackType.ATTACK) {
 			// For legacy versions, extra knockback is added directly on top of the original velocity
@@ -166,17 +166,17 @@ public class VanillaKnockbackFeature implements KnockbackFeature {
 					velocity.z() / 2d - values.horizontalModifier().z()
 			));
 		}
-		
+
 		if (values.animationType() == EntityKnockbackEvent.AnimationType.DIRECTIONAL) {
 			// Send player a packet with its hurt direction
 			if (target instanceof Player player) {
 				sendDirectionalEvent(player, dx, dz);
 			}
 		}
-		
+
 		return true;
 	}
-	
+
 	protected void sendDirectionalEvent(Player player, double dx, double dz) {
 		float hurtDir = (float) (Math.toDegrees(Math.atan2(dz, dx)) - player.getPosition().yaw());
 		player.sendPacket(new HitAnimationPacket(player.getEntityId(), hurtDir));

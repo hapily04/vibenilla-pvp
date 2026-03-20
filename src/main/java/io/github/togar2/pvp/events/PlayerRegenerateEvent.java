@@ -10,24 +10,24 @@ import org.jetbrains.annotations.NotNull;
  * Called when a player naturally regenerates health.
  */
 public class PlayerRegenerateEvent implements PlayerEvent, EntityInstanceEvent, CancellableEvent {
-	
+
 	private final Player player;
 	private float amount;
 	private float exhaustion;
-	
+
 	private boolean cancelled;
-	
+
 	public PlayerRegenerateEvent(@NotNull Player player, float amount, float exhaustion) {
 		this.player = player;
 		this.amount = amount;
 		this.exhaustion = exhaustion;
 	}
-	
+
 	@Override
 	public @NotNull Player getPlayer() {
 		return player;
 	}
-	
+
 	/**
 	 * Returns the amount of health the player will regenerate.
 	 *
@@ -36,7 +36,7 @@ public class PlayerRegenerateEvent implements PlayerEvent, EntityInstanceEvent, 
 	public float getAmount() {
 		return amount;
 	}
-	
+
 	/**
 	 * Sets the amount of health the player will regenerate.
 	 *
@@ -45,7 +45,7 @@ public class PlayerRegenerateEvent implements PlayerEvent, EntityInstanceEvent, 
 	public void setAmount(float amount) {
 		this.amount = amount;
 	}
-	
+
 	/**
 	 * Returns the amount of exhaustion the regeneration will apply.
 	 *
@@ -54,7 +54,7 @@ public class PlayerRegenerateEvent implements PlayerEvent, EntityInstanceEvent, 
 	public float getExhaustion() {
 		return exhaustion;
 	}
-	
+
 	/**
 	 * Sets the amount of exhaustion the regeneration will apply.
 	 *
@@ -63,12 +63,12 @@ public class PlayerRegenerateEvent implements PlayerEvent, EntityInstanceEvent, 
 	public void setExhaustion(float exhaustion) {
 		this.exhaustion = exhaustion;
 	}
-	
+
 	@Override
 	public boolean isCancelled() {
 		return cancelled;
 	}
-	
+
 	@Override
 	public void setCancelled(boolean cancelled) {
 		this.cancelled = cancelled;

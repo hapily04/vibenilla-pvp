@@ -15,7 +15,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class TntEntity extends Entity {
 	private final Entity causingEntity;
-	
+
 	public TntEntity(@Nullable Entity causingEntity) {
 		super(EntityType.TNT);
 		this.causingEntity = causingEntity;
@@ -24,15 +24,15 @@ public class TntEntity extends Entity {
 		setVelocity(new Vec(-Math.sin(angle) * 0.02, 0.2f, -Math.cos(angle) * 0.02)
 				.mul(ServerFlag.SERVER_TICKS_PER_SECOND));
 	}
-	
+
 	public int getFuse() {
 		return ((PrimedTntMeta) getEntityMeta()).getFuseTime();
 	}
-	
+
 	public void setFuse(int fuse) {
 		((PrimedTntMeta) getEntityMeta()).setFuseTime(fuse);
 	}
-	
+
 	@Override
 	public void update(long time) {
 		if (onGround) velocity = velocity.mul(0.7, -0.5, 0.7);
@@ -42,7 +42,7 @@ public class TntEntity extends Entity {
 			Instance instance = this.instance;
 			Pos position = this.position;
 			BoundingBox boundingBox = this.boundingBox;
-			
+
 			remove();
 			if (instance.getExplosionSupplier() != null) instance.explode(
 					(float) position.x(),
@@ -56,7 +56,7 @@ public class TntEntity extends Entity {
 			);
 		}
 	}
-	
+
 	@Override
 	public double getEyeHeight() {
 		return 0.15;

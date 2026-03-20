@@ -17,29 +17,29 @@ public class FishingBobber extends CustomEntityProjectile {
 	private Entity hooked;
 	private State state = State.IN_AIR;
 	private Pos prevPos = Pos.ZERO;
-	
+
 	private final double customGravity;
-	
+
 	public FishingBobber(@Nullable Entity shooter, boolean legacy) {
 		super(shooter, EntityType.FISHING_BOBBER);
 		this.legacy = legacy;
 		setOwnerEntity(shooter);
-		
+
 		// Custom gravity logic: gravity is applied before movement
 		customGravity = legacy ? 0.04 : 0.03;
 		setAerodynamics(getAerodynamics().withGravity(0));
-		
+
 		// Minestom seems to like having wrong values in its registries
 		setAerodynamics(getAerodynamics().withHorizontalAirResistance(0.92).withVerticalAirResistance(0.92));
 	}
-	
+
 	@Override
 	public void tick(long time) {
 		prevPos = getPosition();
 		velocity = velocity.add(0, -customGravity * ServerFlag.SERVER_TICKS_PER_SECOND, 0);
 		super.tick(time);
 	}
-	
+
 	@Override
 	public void update(long time) {
 		if (!(getShooter() instanceof Player shooter)) {
@@ -47,7 +47,7 @@ public class FishingBobber extends CustomEntityProjectile {
 			return;
 		}
 		if (shouldStopFishing(shooter)) return;
-		
+
 		if (onGround) {
 			stuckTime++;
 			if (stuckTime >= 1200) {
@@ -57,7 +57,7 @@ public class FishingBobber extends CustomEntityProjectile {
 		} else {
 			stuckTime = 0;
 		}
-		
+
 		if (state == State.IN_AIR) {
 			if (hooked != null) {
 				velocity = Vec.ZERO;
@@ -79,17 +79,17 @@ public class FishingBobber extends CustomEntityProjectile {
 			}
 		}
 	}
-	
+
 	@Override
 	public boolean onHit(Entity entity) {
 		if (hooked != null) return false;
 		setHookedEntity(entity);
-		
+
 		if (legacy) {
 			if (entity instanceof Player player
 					&& (player == getShooter() || player.getGameMode() == GameMode.CREATIVE))
 				return false;
-			
+
 			Pos posNow = this.position;
 			this.position = prevPos;
 			if (((LivingEntity) entity).damage(new Damage(DamageType.GENERIC, null, null, null, 0))) {
@@ -97,19 +97,19 @@ public class FishingBobber extends CustomEntityProjectile {
 			}
 			this.position = posNow;
 		}
-		
+
 		return false;
 	}
-	
+
 	private void setHookedEntity(@Nullable Entity entity) {
 		this.hooked = entity;
 		((FishingHookMeta) getEntityMeta()).setHookedEntity(entity);
 	}
-	
+
 	private void setOwnerEntity(@Nullable Entity entity) {
 		((FishingHookMeta) getEntityMeta()).setOwnerEntity(entity);
 	}
-	
+
 	private boolean shouldStopFishing(Player player) {
 		boolean main = player.getItemInMainHand().material() == Material.FISHING_ROD;
 		boolean off = player.getItemInOffHand().material() == Material.FISHING_ROD;
@@ -119,14 +119,14 @@ public class FishingBobber extends CustomEntityProjectile {
 			remove();
 			return true;
 		}
-		
+
 		return false;
 	}
-	
+
 	public int retrieve() {
 		if (!(getShooter() instanceof Player shooter)) return 0;
 		if (shouldStopFishing(shooter)) return 0;
-		
+
 		int durability = 0;
 		if (hooked != null) {
 			if (!legacy) {
@@ -135,16 +135,16 @@ public class FishingBobber extends CustomEntityProjectile {
 			}
 			durability = hooked instanceof ItemEntity ? 3 : 5;
 		}
-		
+
 		remove();
-		
+
 		return durability;
 	}
-	
+
 	private void pullEntity(Entity entity) {
 		Entity shooter = getShooter();
 		if (shooter == null) return;
-		
+
 		Pos shooterPos = shooter.getPosition();
 		Pos pos = getPosition();
 		Vec velocity = new Vec(shooterPos.x() - pos.x(), shooterPos.y() - pos.y(),
@@ -152,36 +152,36 @@ public class FishingBobber extends CustomEntityProjectile {
 		velocity = velocity.mul(ServerFlag.SERVER_TICKS_PER_SECOND);
 		entity.setVelocity(entity.getVelocity().add(velocity));
 	}
-	
+
 	private Vec calculateLegacyKnockback(Vec currentVelocity, Pos entityPos) {
 		currentVelocity = currentVelocity.div(ServerFlag.SERVER_TICKS_PER_SECOND);
-		
+
 		Pos position = getPosition();
 		double dx = position.x() - entityPos.x();
 		double dz = position.z() - entityPos.z();
-		
+
 		while (dx * dx + dz * dz < 0.0001) {
 			dx = (Math.random() - Math.random()) * 0.01;
 			dz = (Math.random() - Math.random()) * 0.01;
 		}
-		
+
 		double distance = Math.sqrt(dx * dx + dz * dz);
-		
+
 		double x = currentVelocity.x() / 2;
 		double y = currentVelocity.y() / 2;
 		double z = currentVelocity.z() / 2;
-		
+
 		// Normalize to have similar knockback on every distance
 		x -= dx / distance * 0.4;
 		y += 0.4;
 		z -= dz / distance * 0.4;
-		
+
 		if (y > 0.4)
 			y = 0.4;
-		
+
 		return new Vec(x, y, z).mul(ServerFlag.SERVER_TICKS_PER_SECOND);
 	}
-	
+
 	@Override
 	public void remove() {
 		Entity shooter = getShooter();
@@ -190,10 +190,10 @@ public class FishingBobber extends CustomEntityProjectile {
 				shooter.removeTag(VanillaFishingRodFeature.FISHING_BOBBER);
 			}
 		}
-		
+
 		super.remove();
 	}
-	
+
 	private enum State {
 		IN_AIR,
 		HOOKED_ENTITY,

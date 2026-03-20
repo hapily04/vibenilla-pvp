@@ -11,26 +11,26 @@ public interface ExhaustionFeature extends CombatFeature {
 	ExhaustionFeature NO_OP = new ExhaustionFeature() {
 		@Override
 		public void addExhaustion(Player player, float exhaustion) {}
-		
+
 		@Override
 		public void addAttackExhaustion(Player player) {}
-		
+
 		@Override
 		public void addDamageExhaustion(Player player, DamageType type) {}
-		
+
 		@Override
 		public void applyHungerEffect(Player player, int amplifier) {}
 	};
-	
+
 	void addExhaustion(Player player, float exhaustion);
-	
+
 	/**
 	 * Applies the exhaustion from an attack to a player.
 	 *
 	 * @param player the player to apply the attack exhaustion to
 	 */
 	void addAttackExhaustion(Player player);
-	
+
 	/**
 	 * Applies the exhaustion from taking damage to a player.
 	 *
@@ -38,7 +38,7 @@ public interface ExhaustionFeature extends CombatFeature {
 	 * @param type the damage type
 	 */
 	void addDamageExhaustion(Player player, DamageType type);
-	
+
 	/**
 	 * Applies effect of the hunger potion effect to a player.
 	 * If a player has the effect, this will be called on a regular basis.

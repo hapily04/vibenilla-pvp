@@ -8,6 +8,6 @@ import net.minestom.server.entity.Player;
  */
 public interface TridentFeature extends CombatFeature {
 	TridentFeature NO_OP = (player, level) -> {};
-	
+
 	void applyRiptide(Player player, int level);
 }

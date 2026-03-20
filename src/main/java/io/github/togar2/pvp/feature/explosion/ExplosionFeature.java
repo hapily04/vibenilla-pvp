@@ -22,18 +22,18 @@ public interface ExplosionFeature extends CombatFeature {
 		public @Nullable ExplosionSupplier getExplosionSupplier() {
 			return null;
 		}
-		
+
 		@Override
 		public void primeExplosive(Instance instance, Point blockPosition, @NotNull IgnitionCause cause, int fuse) {}
 	};
-	
+
 	@Nullable ExplosionSupplier getExplosionSupplier();
-	
+
 	void primeExplosive(Instance instance, Point blockPosition, @NotNull IgnitionCause cause, int fuse);
-	
+
 	sealed interface IgnitionCause {
 		@Nullable Entity causingEntity();
-		
+
 		/**
 		 * Ignition cause when a player directly ignites an explosive.
 		 *
@@ -45,7 +45,7 @@ public interface ExplosionFeature extends CombatFeature {
 				return player;
 			}
 		}
-		
+
 		/**
 		 * Ignition cause when an explosion causes another explosive to ignite.
 		 *

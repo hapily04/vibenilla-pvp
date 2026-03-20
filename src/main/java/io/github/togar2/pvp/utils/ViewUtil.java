@@ -11,7 +11,7 @@ public class ViewUtil {
 		if (origin.getChunk() == null) return Audience.empty();
 		return origin.getChunk().getViewersAsAudience();
 	}
-	
+
 	// Only to be used for positioned sounds (PacketGroupingAudience has an overload for it, Audience does not)
 	public static PacketGroupingAudience packetGroup(Entity origin) {
 		if (origin.getChunk() == null) return PacketGroupingAudience.of(Collections.emptyList());

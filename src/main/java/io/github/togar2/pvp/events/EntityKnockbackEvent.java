@@ -20,15 +20,15 @@ import org.jetbrains.annotations.NotNull;
  * You can determine which type of knockback this is by using {@link #getKnockbackType()}.
  */
 public class EntityKnockbackEvent implements EntityInstanceEvent, CancellableEvent {
-	
+
 	private final Entity entity;
 	private final Entity attacker;
 	private final KnockbackType knockbackType;
 	private AnimationType animationType;
 	private KnockbackSettings settings = KnockbackSettings.DEFAULT;
-	
+
 	private boolean cancelled;
-	
+
 	public EntityKnockbackEvent(@NotNull Entity entity, @NotNull Entity attacker,
 	                            @NotNull KnockbackType knockbackType, @NotNull AnimationType animationType) {
 		this.entity = entity;
@@ -36,13 +36,13 @@ public class EntityKnockbackEvent implements EntityInstanceEvent, CancellableEve
 		this.knockbackType = knockbackType;
 		this.animationType = animationType;
 	}
-	
+
 	@NotNull
 	@Override
 	public Entity getEntity() {
 		return entity;
 	}
-	
+
 	/**
 	 * Gets the attacker of the entity. In case of a projectile,
 	 * this returns the projectile itself and not the owner.
@@ -53,7 +53,7 @@ public class EntityKnockbackEvent implements EntityInstanceEvent, CancellableEve
 	public Entity getAttacker() {
 		return attacker;
 	}
-	
+
 	/**
 	 * Gets the type of knockback. See the values of {@link KnockbackType} for more information.
 	 *
@@ -63,7 +63,7 @@ public class EntityKnockbackEvent implements EntityInstanceEvent, CancellableEve
 	public KnockbackType getKnockbackType() {
 		return knockbackType;
 	}
-	
+
 	/**
 	 * Gets the animation type, which determines how the client tilts the camera on damage.
 	 *
@@ -73,7 +73,7 @@ public class EntityKnockbackEvent implements EntityInstanceEvent, CancellableEve
 	public AnimationType getAnimationType() {
 		return animationType;
 	}
-	
+
 	/**
 	 * Sets the animation type, which determines how the client tilts the camera on damage.
 	 *
@@ -83,7 +83,7 @@ public class EntityKnockbackEvent implements EntityInstanceEvent, CancellableEve
 	public void setAnimationType(@NotNull AnimationType animationType) {
 		this.animationType = animationType;
 	}
-	
+
 	/**
 	 * Gets the settings of the knockback.
 	 *
@@ -92,7 +92,7 @@ public class EntityKnockbackEvent implements EntityInstanceEvent, CancellableEve
 	public KnockbackSettings getSettings() {
 		return settings;
 	}
-	
+
 	/**
 	 * Sets the settings of the knockback.
 	 *
@@ -101,17 +101,17 @@ public class EntityKnockbackEvent implements EntityInstanceEvent, CancellableEve
 	public void setSettings(KnockbackSettings settings) {
 		this.settings = settings;
 	}
-	
+
 	@Override
 	public boolean isCancelled() {
 		return cancelled;
 	}
-	
+
 	@Override
 	public void setCancelled(boolean cancel) {
 		this.cancelled = cancel;
 	}
-	
+
 	public enum KnockbackType {
 		/**
 		 * Default knockback from a damage source
@@ -126,7 +126,7 @@ public class EntityKnockbackEvent implements EntityInstanceEvent, CancellableEve
 		 */
 		SWEEPING
 	}
-	
+
 	/**
 	 * @see #DIRECTIONAL
 	 * @see #FIXED

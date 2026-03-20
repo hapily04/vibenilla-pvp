@@ -10,24 +10,24 @@ import org.jetbrains.annotations.NotNull;
  * Called when an item in an equipment slot gets damaged.
  */
 public class EquipmentDamageEvent implements EntityInstanceEvent, CancellableEvent {
-	
+
 	private final LivingEntity entity;
 	private final EquipmentSlot slot;
 	private int amount;
-	
+
 	private boolean cancelled;
-	
+
 	public EquipmentDamageEvent(@NotNull LivingEntity entity, @NotNull EquipmentSlot slot, int amount) {
 		this.entity = entity;
 		this.slot = slot;
 		this.amount = amount;
 	}
-	
+
 	@Override
 	public @NotNull LivingEntity getEntity() {
 		return entity;
 	}
-	
+
 	/**
 	 * Gets the equipment slot in which the item to be damaged is.
 	 *
@@ -36,7 +36,7 @@ public class EquipmentDamageEvent implements EntityInstanceEvent, CancellableEve
 	public EquipmentSlot getSlot() {
 		return slot;
 	}
-	
+
 	/**
 	 * Gets the amount of damage done to the item.
 	 *
@@ -45,7 +45,7 @@ public class EquipmentDamageEvent implements EntityInstanceEvent, CancellableEve
 	public int getAmount() {
 		return amount;
 	}
-	
+
 	/**
 	 * Sets the amount of damage done to the item.
 	 *
@@ -54,12 +54,12 @@ public class EquipmentDamageEvent implements EntityInstanceEvent, CancellableEve
 	public void setAmount(int amount) {
 		this.amount = amount;
 	}
-	
+
 	@Override
 	public boolean isCancelled() {
 		return cancelled;
 	}
-	
+
 	@Override
 	public void setCancelled(boolean cancel) {
 		this.cancelled = cancel;

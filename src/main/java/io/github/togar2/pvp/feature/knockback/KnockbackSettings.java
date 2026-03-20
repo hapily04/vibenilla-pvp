@@ -13,7 +13,7 @@ public record KnockbackSettings(double horizontal, double vertical,
                                 double verticalLimit,
                                 double extraHorizontal, double extraVertical) {
 	public static final KnockbackSettings DEFAULT = builder().build();
-	
+
 	public KnockbackSettings(double horizontal, double vertical, double verticalLimit,
 	                         double extraHorizontal, double extraVertical) {
 		double tps = ServerFlag.SERVER_TICKS_PER_SECOND;
@@ -23,41 +23,41 @@ public record KnockbackSettings(double horizontal, double vertical,
 		this.extraHorizontal = extraHorizontal * tps;
 		this.extraVertical = extraVertical * tps;
 	}
-	
+
 	public static Builder builder() {
 		return new Builder();
 	}
-	
+
 	public static class Builder {
 		private double horizontal = 0.4, vertical = 0.4;
 		private double verticalLimit = 0.4;
 		private double extraHorizontal = 0.5, extraVertical = 0.1;
-		
+
 		public Builder horizontal(double horizontal) {
 			this.horizontal = horizontal;
 			return this;
 		}
-		
+
 		public Builder vertical(double vertical) {
 			this.vertical = vertical;
 			return this;
 		}
-		
+
 		public Builder verticalLimit(double verticalLimit) {
 			this.verticalLimit = verticalLimit;
 			return this;
 		}
-		
+
 		public Builder extraHorizontal(double extraHorizontal) {
 			this.extraHorizontal = extraHorizontal;
 			return this;
 		}
-		
+
 		public Builder extraVertical(double extraVertical) {
 			this.extraVertical = extraVertical;
 			return this;
 		}
-		
+
 		public KnockbackSettings build() {
 			return new KnockbackSettings(horizontal, vertical, verticalLimit, extraHorizontal, extraVertical);
 		}

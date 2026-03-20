@@ -23,22 +23,22 @@ public class VanillaEquipmentFeature implements EquipmentFeature, RegistrableFea
 			FeatureType.EQUIPMENT, VanillaEquipmentFeature::new,
 			FeatureType.VERSION
 	);
-	
+
 	private final FeatureConfiguration configuration;
-	
+
 	//TODO this probably shouldn't work this way
 	// We probably want to store all the tools & armor separately per DataFeature
 	private CombatVersion version;
-	
+
 	public VanillaEquipmentFeature(FeatureConfiguration configuration) {
 		this.configuration = configuration;
 	}
-	
+
 	@Override
 	public void initDependencies() {
 		this.version = configuration.get(FeatureType.VERSION);
 	}
-	
+
 	@Override
 	public void init(EventNode<EntityInstanceEvent> node) {
 		node.addListener(EntityEquipEvent.class, this::onEquip);
@@ -48,10 +48,10 @@ public class VanillaEquipmentFeature implements EquipmentFeature, RegistrableFea
 			Tool.updateEquipmentAttributes(entity, entity.getEquipment(EquipmentSlot.MAIN_HAND), newItem, EquipmentSlot.MAIN_HAND, version);
 		});
 	}
-	
+
 	protected void onEquip(EntityEquipEvent event) {
 		if (!(event.getEntity() instanceof LivingEntity entity)) return;
-		
+
 		EquipmentSlot slot = event.getSlot();
 		if (slot.isArmor()) {
 			ArmorMaterial.updateEquipmentAttributes(entity, entity.getEquipment(slot), event.getEquippedItem(), slot, version);

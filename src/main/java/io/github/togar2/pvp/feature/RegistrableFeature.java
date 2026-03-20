@@ -14,7 +14,7 @@ import net.minestom.server.event.trait.EntityInstanceEvent;
 public interface RegistrableFeature extends CombatFeature {
 	EventFilter<EntityInstanceEvent, Entity> ENTITY_INSTANCE_FILTER = EventFilter
 			.from(EntityInstanceEvent.class, Entity.class, EntityEvent::getEntity);
-	
+
 	/**
 	 * Returns the priority that an event node created by this feature will have.
 	 *
@@ -23,14 +23,14 @@ public interface RegistrableFeature extends CombatFeature {
 	default int getPriority() {
 		return 0;
 	}
-	
+
 	/**
 	 * Initializes this feature by adding its listeners to the given event node.
 	 *
 	 * @param node the event node to add the listeners to
 	 */
 	void init(EventNode<EntityInstanceEvent> node);
-	
+
 	/**
 	 * Creates an event node with all the listeners of this feature attached.
 	 * This event node can on its turn be added to another node (e.g. the global one) to get the listeners working.

@@ -19,12 +19,12 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class DamageEnchantment extends CombatEnchantment {
 	private final Type type;
-	
+
 	public DamageEnchantment(RegistryKey<Enchantment> enchantment, Type type, EquipmentSlot... slotTypes) {
 		super(enchantment, Set.of(FeatureType.VERSION), slotTypes);
 		this.type = type;
 	}
-	
+
 	@Override
 	public float getAttackDamage(int level, EntityGroup group,
 	                             EnchantmentFeature feature, FeatureConfiguration configuration) {
@@ -37,7 +37,7 @@ public class DamageEnchantment extends CombatEnchantment {
 			return type == Type.ARTHROPODS && group == EntityGroup.ARTHROPOD ? (float) level * 2.5F : 0.0F;
 		}
 	}
-	
+
 	@Override
 	public void onTargetDamaged(LivingEntity user, Entity target, int level,
 	                            EnchantmentFeature feature, FeatureConfiguration configuration) {
@@ -48,7 +48,7 @@ public class DamageEnchantment extends CombatEnchantment {
 			}
 		}
 	}
-	
+
 	public enum Type {
 		ALL, UNDEAD, ARTHROPODS
 	}

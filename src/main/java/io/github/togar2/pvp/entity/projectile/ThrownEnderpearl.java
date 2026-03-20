@@ -19,18 +19,18 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class ThrownEnderpearl extends CustomEntityProjectile implements ItemHoldingProjectile {
 	private Pos prevPos = Pos.ZERO;
-	
+
 	private final FallFeature fallFeature;
-	
+
 	public ThrownEnderpearl(@Nullable Entity shooter, FallFeature fallFeature) {
 		super(shooter, EntityType.ENDER_PEARL);
 		this.fallFeature = fallFeature;
 	}
-	
+
 	private void teleportOwner() {
 		Pos position = prevPos;
 		ThreadLocalRandom random = ThreadLocalRandom.current();
-		
+
 		for (int i = 0; i < 32; i++) {
 			sendPacketToViewersAndSelf(new ParticlePacket(
 					Particle.PORTAL, false, false,
@@ -39,46 +39,46 @@ public class ThrownEnderpearl extends CustomEntityProjectile implements ItemHold
 					0, 1
 			));
 		}
-		
+
 		if (isRemoved()) return;
-		
+
 		Entity shooter = getShooter();
 		if (shooter != null) {
 			Pos shooterPos = shooter.getPosition();
 			position = position.withPitch(shooterPos.pitch()).withYaw(shooterPos.yaw());
 		}
-		
+
 		if (shooter instanceof Player player) {
 			if (player.isOnline() && player.getInstance() == getInstance()
 					&& player.getPlayerMeta().getBedInWhichSleepingPosition() == null) {
 				if (player.getVehicle() != null) {
 					player.getVehicle().removePassenger(player);
 				}
-				
+
 				player.teleport(position);
 				fallFeature.resetFallDistance(player);
-				
+
 				player.damage(DamageType.FALL, 5.0F);
 			}
 		} else if (shooter != null) {
 			shooter.teleport(position);
 		}
 	}
-	
+
 	@Override
 	public boolean onHit(Entity entity) {
 		((LivingEntity) entity).damage(new Damage(DamageType.THROWN, this, getShooter(), null, 0));
-		
+
 		teleportOwner();
 		return true;
 	}
-	
+
 	@Override
 	public boolean onStuck() {
 		teleportOwner();
 		return true;
 	}
-	
+
 	@Override
 	public void tick(long time) {
 		Entity shooter = getShooter();
@@ -89,7 +89,7 @@ public class ThrownEnderpearl extends CustomEntityProjectile implements ItemHold
 			super.tick(time);
 		}
 	}
-	
+
 	@Override
 	public void setItem(@NotNull ItemStack item) {
 		((ThrownEnderPearlMeta) getEntityMeta()).setItem(item);

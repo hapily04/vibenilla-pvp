@@ -28,47 +28,47 @@ public class VanillaDeathMessageFeature implements TrackingFeature, RegistrableF
 			VanillaDeathMessageFeature::initPlayer,
 			FeatureType.FALL, FeatureType.PLAYER_STATE
 	);
-	
+
 	public static final Tag<CombatManager> COMBAT_MANAGER = Tag.Transient("combatManager");
-	
+
 	private final FeatureConfiguration configuration;
-	
+
 	private FallFeature fallFeature;
 	private PlayerStateFeature playerStateFeature;
-	
+
 	public VanillaDeathMessageFeature(FeatureConfiguration configuration) {
 		this.configuration = configuration;
 	}
-	
+
 	@Override
 	public void initDependencies() {
 		this.fallFeature = configuration.get(FeatureType.FALL);
 		this.playerStateFeature = configuration.get(FeatureType.PLAYER_STATE);
 	}
-	
+
 	public static void initPlayer(Player player, boolean firstInit) {
 		if (firstInit) player.setTag(COMBAT_MANAGER, new CombatManager(player));
 	}
-	
+
 	@Override
 	public void init(EventNode<EntityInstanceEvent> node) {
 		node.addListener(PlayerSpawnEvent.class, event -> event.getPlayer().getTag(COMBAT_MANAGER).reset());
-		
+
 		node.addListener(PlayerTickEvent.class, event -> event.getPlayer().getTag(COMBAT_MANAGER).tick());
-		
+
 		node.addListener(PlayerDeathEvent.class, event -> {
 			Component message = getDeathMessage(event.getPlayer());
 			event.setChatMessage(message);
 			event.setDeathText(message);
 		});
 	}
-	
+
 	@Override
 	public void recordDamage(Player player, @Nullable Entity attacker, Damage damage) {
 		int id = attacker == null ? -1 : attacker.getEntityId();
 		player.getTag(COMBAT_MANAGER).recordDamage(id, damage, fallFeature, playerStateFeature);
 	}
-	
+
 	@Override
 	public @Nullable Component getDeathMessage(Player player) {
 		return player.getTag(COMBAT_MANAGER).getDeathMessage();

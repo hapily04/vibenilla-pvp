@@ -10,24 +10,24 @@ import java.util.Map;
 
 public class CombatPotionTypes {
 	private static final Map<PotionType, CombatPotionType> POTION_EFFECTS = new HashMap<>();
-	
+
 	public static CombatPotionType get(PotionType potionType) {
 		return POTION_EFFECTS.get(potionType);
 	}
-	
+
 	public static void register(CombatPotionType... potionTypes) {
 		for (CombatPotionType potionType : potionTypes) {
 			POTION_EFFECTS.put(potionType.getPotionType(), potionType);
 		}
 	}
-	
+
 	public static void registerAll() {
 		register(
 				new CombatPotionType(PotionType.WATER),
 				new CombatPotionType(PotionType.MUNDANE),
 				new CombatPotionType(PotionType.THICK),
 				new CombatPotionType(PotionType.AWKWARD),
-				
+
 				new CombatPotionType(PotionType.NIGHT_VISION, new Potion(PotionEffect.NIGHT_VISION, (byte) 0, 3600, PotionFlags.defaultFlags())),
 				new CombatPotionType(PotionType.LONG_NIGHT_VISION, new Potion(PotionEffect.NIGHT_VISION, (byte) 0, 9600, PotionFlags.defaultFlags())),
 				new CombatPotionType(PotionType.INVISIBILITY, new Potion(PotionEffect.INVISIBILITY, (byte) 0, 3600, PotionFlags.defaultFlags())),

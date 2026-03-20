@@ -17,7 +17,7 @@ public class ChorusFruitUtil {
 	private static boolean randomTeleport(Entity entity, Pos to) {
 		Instance instance = entity.getInstance();
 		assert instance != null;
-		
+
 		boolean success = false;
 		int lowestY = to.blockY();
 		if (lowestY == 0) lowestY++;
@@ -36,32 +36,32 @@ public class ChorusFruitUtil {
 				lowestY--;
 			}
 		}
-		
+
 		if (!success) return false;
-		
+
 		entity.teleport(to.withY(lowestY));
 		entity.triggerStatus((byte) 46);
-		
+
 		return true;
 	}
-	
+
 	public static void tryChorusTeleport(Entity entity, float diameter) {
 		ThreadLocalRandom random = ThreadLocalRandom.current();
 		Instance instance = entity.getInstance();
 		assert instance != null;
 		float radius = diameter / 2.0f;
-		
+
 		Pos prevPosition = entity.getPosition();
 		double prevX = prevPosition.x();
 		double prevY = prevPosition.y();
 		double prevZ = prevPosition.z();
-		
+
 		float pitch = prevPosition.pitch();
 		float yaw = prevPosition.yaw();
-		
+
 		DimensionType dimensionType = MinecraftServer.getDimensionTypeRegistry().get(instance.getDimensionType());
 		assert dimensionType != null;
-		
+
 		// Max 16 tries
 		for (int i = 0; i < 16; i++) {
 			double x = prevX + (random.nextDouble() - 0.5) * radius;
@@ -69,24 +69,24 @@ public class ChorusFruitUtil {
 					dimensionType.minY(), dimensionType.minY()
 							+ dimensionType.logicalHeight() - 1);
 			double z = prevZ + (random.nextDouble() - 0.5) * radius;
-			
+
 			if (entity.getVehicle() != null) {
 				entity.getVehicle().removePassenger(entity);
 			}
-			
+
 			if (randomTeleport(entity, new Pos(x, y, z, yaw, pitch))) {
 				ViewUtil.packetGroup(entity).playSound(Sound.sound(
 						SoundEvent.ITEM_CHORUS_FRUIT_TELEPORT, Sound.Source.PLAYER,
 						1.0f, 1.0f
 				), prevPosition);
-				
+
 				if (!entity.isSilent()) {
 					entity.getViewersAsAudience().playSound(Sound.sound(
 							SoundEvent.ITEM_CHORUS_FRUIT_TELEPORT, Sound.Source.PLAYER,
 							1.0f, 1.0f
 					), entity);
 				}
-				
+
 				break;
 			}
 		}

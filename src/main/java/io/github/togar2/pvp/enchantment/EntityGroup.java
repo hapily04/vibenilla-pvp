@@ -9,7 +9,7 @@ public enum EntityGroup {
 	ARTHROPOD,
 	ILLAGER,
 	AQUATIC;
-	
+
 	public static EntityGroup ofEntity(LivingEntity entity) {
 		EntityType entityType = entity.getEntityType();
 		if (entityType == EntityType.BEE || entityType == EntityType.CAVE_SPIDER || entityType == EntityType.ENDERMITE || entityType == EntityType.SILVERFISH || entityType == EntityType.SPIDER) {
@@ -21,10 +21,10 @@ public enum EntityGroup {
 		} else if (EntityType.EVOKER == entityType || EntityType.ILLUSIONER == entityType || EntityType.PILLAGER == entityType || EntityType.VINDICATOR == entityType) {
 			return EntityGroup.ILLAGER;
 		}
-		
+
 		return EntityGroup.DEFAULT;
 	}
-	
+
 	public boolean isUndead() {
 		return this == UNDEAD;
 	}

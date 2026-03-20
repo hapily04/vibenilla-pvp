@@ -12,14 +12,14 @@ import org.jetbrains.annotations.NotNull;
  * You can get the cause by using {@link ExplosivePrimeEvent#getCause()}
  */
 public class ExplosivePrimeEvent implements InstanceEvent, CancellableEvent {
-	
+
 	private final Instance instance;
 	private final Point blockPosition;
 	private final ExplosionFeature.IgnitionCause cause;
-	
+
 	private int fuse;
 	private boolean cancelled;
-	
+
 	public ExplosivePrimeEvent(@NotNull Instance instance, @NotNull Point blockPosition,
 	                           @NotNull ExplosionFeature.IgnitionCause cause, int fuse) {
 		this.instance = instance;
@@ -27,16 +27,16 @@ public class ExplosivePrimeEvent implements InstanceEvent, CancellableEvent {
 		this.cause = cause;
 		this.fuse = fuse;
 	}
-	
+
 	@Override
 	public @NotNull Instance getInstance() {
 		return instance;
 	}
-	
+
 	public @NotNull Point getBlockPosition() {
 		return blockPosition;
 	}
-	
+
 	/**
 	 * Gets the cause. Can be {@link ExplosionFeature.IgnitionCause.ByPlayer} or {@link ExplosionFeature.IgnitionCause.Explosion}.
 	 *
@@ -45,7 +45,7 @@ public class ExplosivePrimeEvent implements InstanceEvent, CancellableEvent {
 	public ExplosionFeature.IgnitionCause getCause() {
 		return cause;
 	}
-	
+
 	/**
 	 * Gets the fuse in ticks.
 	 *
@@ -54,7 +54,7 @@ public class ExplosivePrimeEvent implements InstanceEvent, CancellableEvent {
 	public int getFuse() {
 		return fuse;
 	}
-	
+
 	/**
 	 * Sets the fuse in ticks.
 	 *
@@ -63,12 +63,12 @@ public class ExplosivePrimeEvent implements InstanceEvent, CancellableEvent {
 	public void setFuse(int fuse) {
 		this.fuse = fuse;
 	}
-	
+
 	@Override
 	public boolean isCancelled() {
 		return cancelled;
 	}
-	
+
 	@Override
 	public void setCancelled(boolean cancel) {
 		this.cancelled = cancel;
