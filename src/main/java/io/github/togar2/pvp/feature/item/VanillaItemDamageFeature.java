@@ -10,7 +10,9 @@ import io.github.togar2.pvp.feature.enchantment.EnchantmentFeature;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.component.DataComponents;
 import net.minestom.server.entity.EquipmentSlot;
+import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.LivingEntity;
+import net.minestom.server.entity.Player;
 import net.minestom.server.entity.damage.DamageType;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.item.ItemStack;
@@ -76,10 +78,22 @@ public class VanillaItemDamageFeature implements ItemDamageFeature {
 
 	@Override
 	public void damageEquipment(LivingEntity entity, EquipmentSlot slot, int amount) {
-		EquipmentDamageEvent equipmentDamageEvent = new EquipmentDamageEvent(entity, slot, amount);
-		EventDispatcher.callCancellable(equipmentDamageEvent, () ->
-				entity.setEquipment(slot, this.damage(entity.getEquipment(slot), amount, entity,
-						e -> triggerEquipmentBreak(e, slot))));
+        // CREDIT: https://github.com/TogAr2/MinestomPvP/pull/80
+        if (entity instanceof Player player) {
+            var canDamageEquipment = player.getGameMode() == GameMode.SURVIVAL || player.getGameMode() != GameMode.ADVENTURE;
+
+            if (!canDamageEquipment) {
+//                return;
+            }
+        }
+
+		EquipmentDamageEvent event = new EquipmentDamageEvent(entity, slot, amount);
+
+		EventDispatcher.callCancellable(event, () -> {
+            Consumer<LivingEntity> breakCallback = _ -> triggerEquipmentBreak(entity, slot);
+            var newEquipment = this.damage(entity.getEquipment(slot), amount, entity, breakCallback);
+            entity.setEquipment(slot, newEquipment);
+        });
 	}
 
 	@Override
@@ -94,8 +108,9 @@ public class VanillaItemDamageFeature implements ItemDamageFeature {
 		for (EquipmentSlot slot : slots) {
 			ItemStack stack = entity.getEquipment(slot);
 			DamageTypeInfo info = DamageTypeInfo.of(MinecraftServer.getDamageTypeRegistry().getKey(damageType));
-			if (!(info.fire() && stack.material().key().value().toLowerCase().contains("netherite"))
-					&& ArmorMaterial.fromMaterial(stack.material()) != null) {
+            var isNetherite = stack.material().key().value().toLowerCase().contains("netherite");
+
+			if (!(info.fire() && isNetherite) && ArmorMaterial.fromMaterial(stack.material()) != null) {
                 this.damageEquipment(entity, slot, (int) damage);
 			}
 		}
