@@ -83,7 +83,7 @@ public class VanillaItemDamageFeature implements ItemDamageFeature {
             var canDamageEquipment = player.getGameMode() == GameMode.SURVIVAL || player.getGameMode() != GameMode.ADVENTURE;
 
             if (!canDamageEquipment) {
-//                return;
+                return;
             }
         }
 
