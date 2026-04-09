@@ -56,6 +56,9 @@ public class VanillaSpearFeature implements SpearFeature, RegistrableFeature {
 	);
 
 	public static final Tag<Long> SPEAR_USE_START = Tag.Long("spearUseStart");
+	private static final Tag<Double> LAST_POS_X = Tag.Double("spearLastPosX");
+	private static final Tag<Double> LAST_POS_Y = Tag.Double("spearLastPosY");
+	private static final Tag<Double> LAST_POS_Z = Tag.Double("spearLastPosZ");
 
 	private static final long SPEAR_USE_TIME = 72000L;
 	private static final int CONTACT_COOLDOWN_TICKS = 10;
@@ -80,47 +83,50 @@ public class VanillaSpearFeature implements SpearFeature, RegistrableFeature {
 	private static final Map<Tool, SpearProperties> SPEAR_PROPERTIES = new EnumMap<>(Tool.class);
 
 	static {
+		// Values from Items.java: spear(material, attackDuration, damageMultiplier, delay,
+		//   dismountTime, dismountThreshold, knockbackTime, knockbackThreshold, damageTime, damageThreshold)
+		// Times are in seconds and converted to ticks via × 20
 		SPEAR_PROPERTIES.put(Tool.WOODEN_SPEAR, new SpearProperties(
-				0.7F, 15,
-				100, 14.0F,
-				200, 5.1F,
-				300, 4.6F
+				0.7F, (int) (0.75F * 20),
+				(int) (5.0F * 20), 14.0F,
+				(int) (10.0F * 20), 5.1F,
+				(int) (15.0F * 20), 4.6F
 		));
 		SPEAR_PROPERTIES.put(Tool.STONE_SPEAR, new SpearProperties(
-				0.82F, 14,
-				90, 13.0F,
-				180, 5.1F,
-				275, 4.6F
+				0.82F, (int) (0.7F * 20),
+				(int) (4.5F * 20), 13.0F,
+				(int) (9.0F * 20), 5.1F,
+				(int) (13.75F * 20), 4.6F
 		));
 		SPEAR_PROPERTIES.put(Tool.COPPER_SPEAR, new SpearProperties(
-				0.82F, 13,
-				80, 12.0F,
-				165, 5.1F,
-				250, 4.6F
+				0.82F, (int) (0.65F * 20),
+				(int) (4.0F * 20), 12.0F,
+				(int) (8.25F * 20), 5.1F,
+				(int) (12.5F * 20), 4.6F
 		));
 		SPEAR_PROPERTIES.put(Tool.IRON_SPEAR, new SpearProperties(
-				0.95F, 12,
-				50, 11.0F,
-				135, 5.1F,
-				225, 4.6F
+				0.95F, (int) (0.6F * 20),
+				(int) (2.5F * 20), 11.0F,
+				(int) (6.75F * 20), 5.1F,
+				(int) (11.25F * 20), 4.6F
 		));
 		SPEAR_PROPERTIES.put(Tool.GOLDEN_SPEAR, new SpearProperties(
-				0.7F, 14,
-				70, 13.0F,
-				170, 5.1F,
-				275, 4.6F
+				0.7F, (int) (0.7F * 20),
+				(int) (3.5F * 20), 13.0F,
+				(int) (8.5F * 20), 5.1F,
+				(int) (13.75F * 20), 4.6F
 		));
 		SPEAR_PROPERTIES.put(Tool.DIAMOND_SPEAR, new SpearProperties(
-				1.075F, 10,
-				60, 10.0F,
-				130, 5.1F,
-				200, 4.6F
+				1.075F, (int) (0.5F * 20),
+				(int) (3.0F * 20), 10.0F,
+				(int) (6.5F * 20), 5.1F,
+				(int) (10.0F * 20), 4.6F
 		));
 		SPEAR_PROPERTIES.put(Tool.NETHERITE_SPEAR, new SpearProperties(
-				1.2F, 8,
-				50, 9.0F,
-				110, 5.1F,
-				175, 4.6F
+				1.2F, (int) (0.4F * 20),
+				(int) (2.5F * 20), 9.0F,
+				(int) (5.5F * 20), 5.1F,
+				(int) (8.75F * 20), 4.6F
 		));
 	}
 
@@ -171,6 +177,24 @@ public class VanillaSpearFeature implements SpearFeature, RegistrableFeature {
 
 		node.addListener(PlayerTickEvent.class, event -> {
 			Player player = event.getPlayer();
+
+			var currentPos = player.getPosition();
+			Vec knownMotion;
+
+			if (player.hasTag(LAST_POS_X)) {
+				knownMotion = new Vec(
+						(currentPos.x() - player.getTag(LAST_POS_X)) * 20,
+						(currentPos.y() - player.getTag(LAST_POS_Y)) * 20,
+						(currentPos.z() - player.getTag(LAST_POS_Z)) * 20
+				);
+			} else {
+				knownMotion = Vec.ZERO;
+			}
+
+			player.setTag(LAST_POS_X, currentPos.x());
+			player.setTag(LAST_POS_Y, currentPos.y());
+			player.setTag(LAST_POS_Z, currentPos.z());
+
 			if (player.getItemUseHand() == null) return;
 
 			ItemStack usingStack = player.getItemInHand(player.getItemUseHand());
@@ -186,7 +210,7 @@ public class VanillaSpearFeature implements SpearFeature, RegistrableFeature {
 			long ticksUsed = player.getAliveTicks() - startTickObject;
 			if (ticksUsed < properties.delayTicks()) return;
 
-			this.performKineticStab(player, tool, properties, (int) (ticksUsed - properties.delayTicks()), player.getItemUseHand());
+			this.performKineticStab(player, tool, properties, (int) (ticksUsed - properties.delayTicks()), player.getItemUseHand(), knownMotion);
 		});
 
 		node.addListener(PlayerCancelItemUseEvent.class, event -> {
@@ -267,12 +291,10 @@ public class VanillaSpearFeature implements SpearFeature, RegistrableFeature {
 		), attacker);
 	}
 
-	private void performKineticStab(Player attacker, Tool tool, SpearProperties properties, int ticksUsed, PlayerHand hand) {
+	private void performKineticStab(Player attacker, Tool tool, SpearProperties properties, int ticksUsed, PlayerHand hand, Vec attackerKnownMotion) {
 		Vec attackerLook = attacker.getPosition().direction();
-		double attackerSpeedProjection = attackerLook.dot(this.getKnownMotion(attacker));
-		float actionFactor = 1.0F;
+		double attackerSpeedProjection = attackerLook.dot(attackerKnownMotion);
 
-		ItemStack weapon = attacker.getItemInHand(hand);
 		List<LivingEntity> entities = this.findEntitiesAlongRay(attacker);
 		boolean affected = false;
 
@@ -290,17 +312,16 @@ public class VanillaSpearFeature implements SpearFeature, RegistrableFeature {
 			double relativeSpeed = Math.max(0.0, attackerSpeedProjection - targetSpeedProjection);
 
 			boolean dealsDismount = this.testCondition(ticksUsed, attackerSpeedProjection, relativeSpeed,
-					actionFactor, properties.dismountMaxTicks(), properties.dismountMinSpeed(), 0.0F);
+					properties.dismountMaxTicks(), properties.dismountMinSpeed(), 0.0F);
 			boolean dealsKnockback = this.testCondition(ticksUsed, attackerSpeedProjection, relativeSpeed,
-					actionFactor, properties.knockbackMaxTicks(), properties.knockbackMinSpeed(), 0.0F);
+					properties.knockbackMaxTicks(), properties.knockbackMinSpeed(), 0.0F);
 			boolean dealsDamage = this.testCondition(ticksUsed, attackerSpeedProjection, relativeSpeed,
-					actionFactor, properties.damageMaxTicks(), 0.0F, properties.damageMinRelativeSpeed());
+					properties.damageMaxTicks(), 0.0F, properties.damageMinRelativeSpeed());
 
 			if (!dealsDismount && !dealsKnockback && !dealsDamage) continue;
 
-			float baseMobDamage = (float) attacker.getAttributeValue(Attribute.ATTACK_DAMAGE);
-			float magicalDamage = this.enchantmentFeature.getAttackDamage(weapon, EntityGroup.ofEntity(target));
-			float damageDealt = baseMobDamage + magicalDamage + (float) Math.floor(relativeSpeed * properties.damageMultiplier());
+			float baseMobDamage = (float) attacker.getAttribute(Attribute.ATTACK_DAMAGE).getBaseValue();
+			float damageDealt = baseMobDamage + (float) Math.floor(relativeSpeed * properties.damageMultiplier());
 
 			boolean stabAffected = this.applyStabAttack(attacker, target, damageDealt, dealsDamage, dealsKnockback, dealsDismount);
 			if (stabAffected) {
@@ -351,13 +372,19 @@ public class VanillaSpearFeature implements SpearFeature, RegistrableFeature {
 	}
 
 	private boolean testCondition(int ticksUsed, double attackerSpeed, double relativeSpeed,
-	                              float actionFactor, int maxDurationTicks, float minSpeed, float minRelativeSpeed) {
+	                              int maxDurationTicks, float minSpeed, float minRelativeSpeed) {
 		return ticksUsed <= maxDurationTicks
-				&& attackerSpeed >= minSpeed * actionFactor
-				&& relativeSpeed >= minRelativeSpeed * actionFactor;
+				&& attackerSpeed >= (double) minSpeed
+				&& relativeSpeed >= (double) minRelativeSpeed;
 	}
 
 	private Vec getKnownMotion(Entity entity) {
+		var vehicle = entity.getVehicle();
+
+		if (vehicle != null) {
+			return vehicle.getVelocity();
+		}
+
 		return entity.getVelocity();
 	}
 
