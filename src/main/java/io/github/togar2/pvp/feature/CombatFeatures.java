@@ -3,6 +3,8 @@ package io.github.togar2.pvp.feature;
 import io.github.togar2.pvp.feature.armor.VanillaArmorFeature;
 import io.github.togar2.pvp.feature.attack.VanillaAttackFeature;
 import io.github.togar2.pvp.feature.attack.VanillaCriticalFeature;
+import io.github.togar2.pvp.feature.attack.VanillaSmashAttackFeature;
+import io.github.togar2.pvp.feature.attack.VanillaSpearFeature;
 import io.github.togar2.pvp.feature.attack.VanillaSweepingFeature;
 import io.github.togar2.pvp.feature.attributes.VanillaEquipmentFeature;
 import io.github.togar2.pvp.feature.block.LegacyVanillaBlockFeature;
@@ -61,6 +63,14 @@ public class CombatFeatures {
 	 * @see VanillaSweepingFeature
 	 */
 	public static final DefinedFeature<VanillaSweepingFeature> VANILLA_SWEEPING = VanillaSweepingFeature.DEFINED;
+	/**
+	 * @see VanillaSmashAttackFeature
+	 */
+	public static final DefinedFeature<VanillaSmashAttackFeature> VANILLA_SMASH_ATTACK = VanillaSmashAttackFeature.DEFINED;
+	/**
+	 * @see VanillaSpearFeature
+	 */
+	public static final DefinedFeature<VanillaSpearFeature> VANILLA_SPEAR = VanillaSpearFeature.DEFINED;
 	/**
 	 * @see VanillaEquipmentFeature
 	 */
@@ -186,13 +196,13 @@ public class CombatFeatures {
 
 	private static final List<DefinedFeature<?>> VANILLA = List.of(
 			VANILLA_ARMOR, VANILLA_ATTACK, VANILLA_CRITICAL, VANILLA_SWEEPING,
-			VANILLA_EQUIPMENT, VANILLA_BLOCK, VANILLA_ATTACK_COOLDOWN, VANILLA_ITEM_COOLDOWN,
-			VANILLA_DAMAGE, VANILLA_EFFECT, VANILLA_ENCHANTMENT, VANILLA_EXPLOSION,
-			VANILLA_EXPLOSIVE, VANILLA_FALL, VANILLA_EXHAUSTION, VANILLA_FOOD,
-			VANILLA_REGENERATION, VANILLA_ITEM_DAMAGE, VANILLA_KNOCKBACK, VANILLA_POTION,
-			VANILLA_BOW, VANILLA_CROSSBOW, VANILLA_FISHING_ROD, VANILLA_MISC_PROJECTILE,
-			VANILLA_PROJECTILE_ITEM, VANILLA_TRIDENT, VANILLA_SPECTATE, VANILLA_PLAYER_STATE,
-			VANILLA_TOTEM, VANILLA_DEATH_MESSAGE, VANILLA_ENVIRONMENT_DAMAGE
+			VANILLA_SMASH_ATTACK, VANILLA_SPEAR, VANILLA_EQUIPMENT, VANILLA_BLOCK,
+			VANILLA_ATTACK_COOLDOWN, VANILLA_ITEM_COOLDOWN, VANILLA_DAMAGE, VANILLA_EFFECT,
+			VANILLA_ENCHANTMENT, VANILLA_EXPLOSION, VANILLA_EXPLOSIVE, VANILLA_FALL,
+			VANILLA_EXHAUSTION, VANILLA_FOOD, VANILLA_REGENERATION, VANILLA_ITEM_DAMAGE,
+			VANILLA_KNOCKBACK, VANILLA_POTION, VANILLA_BOW, VANILLA_CROSSBOW, VANILLA_FISHING_ROD,
+			VANILLA_MISC_PROJECTILE, VANILLA_PROJECTILE_ITEM, VANILLA_TRIDENT, VANILLA_SPECTATE,
+			VANILLA_PLAYER_STATE, VANILLA_TOTEM, VANILLA_DEATH_MESSAGE, VANILLA_ENVIRONMENT_DAMAGE
 	);
 
 	private static final CombatFeatureSet MODERN_VANILLA = getVanilla(CombatVersion.MODERN, DifficultyProvider.DEFAULT).build();

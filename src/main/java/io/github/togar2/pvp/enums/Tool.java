@@ -55,11 +55,23 @@ public enum Tool {
 
 	// We don't know the legacy attack damage for tridents, since they didn't exist
 	// 5.0 seems to be balanced
-	TRIDENT(null, 8.0F, 5.0F, -2.9F);
+	TRIDENT(null, 8.0F, 5.0F, -2.9F),
+
+	MACE(null, 5.0F, 5.0F, -3.4F, false, false, true),
+
+	WOODEN_SPEAR(ToolMaterial.WOOD, 0.0F, 0.0F, -2.4615385F, false, false, false, true),
+	STONE_SPEAR(ToolMaterial.STONE, 0.0F, 0.0F, -2.6666667F, false, false, false, true),
+	COPPER_SPEAR(ToolMaterial.COPPER, 0.0F, 0.0F, -2.8235295F, false, false, false, true),
+	IRON_SPEAR(ToolMaterial.IRON, 0.0F, 0.0F, -2.9473684F, false, false, false, true),
+	GOLDEN_SPEAR(ToolMaterial.GOLD, 0.0F, 0.0F, -2.9473684F, false, false, false, true),
+	DIAMOND_SPEAR(ToolMaterial.DIAMOND, 0.0F, 0.0F, -3.047619F, false, false, false, true),
+	NETHERITE_SPEAR(ToolMaterial.NETHERITE, 0.0F, 0.0F, -3.1304348F, false, false, false, true);
 
 	private final Material material;
 	private boolean isAxe = false;
 	private boolean isSword = false;
+	private boolean isMace = false;
+	private boolean isSpear = false;
 
 	private final Map<Attribute, AttributeModifier> attributeModifiers = new HashMap<>();
 	private final Map<Attribute, AttributeModifier> legacyAttributeModifiers = new HashMap<>();
@@ -79,6 +91,18 @@ public enum Tool {
 		this(toolMaterial, attackDamage, legacyAttackDamage, attackSpeed);
 		this.isAxe = isAxe;
 		this.isSword = isSword;
+	}
+
+	Tool(@Nullable ToolMaterial toolMaterial, float attackDamage, float legacyAttackDamage, float attackSpeed,
+	     boolean isAxe, boolean isSword, boolean isMace) {
+		this(toolMaterial, attackDamage, legacyAttackDamage, attackSpeed, isAxe, isSword);
+		this.isMace = isMace;
+	}
+
+	Tool(@Nullable ToolMaterial toolMaterial, float attackDamage, float legacyAttackDamage, float attackSpeed,
+	     boolean isAxe, boolean isSword, boolean isMace, boolean isSpear) {
+		this(toolMaterial, attackDamage, legacyAttackDamage, attackSpeed, isAxe, isSword, isMace);
+		this.isSpear = isSpear;
 	}
 
 	public static void updateEquipmentAttributes(LivingEntity entity, ItemStack oldStack, ItemStack newStack,
@@ -113,6 +137,14 @@ public enum Tool {
 
 	public boolean isSword() {
 		return this.isSword;
+	}
+
+	public boolean isMace() {
+		return this.isMace;
+	}
+
+	public boolean isSpear() {
+		return this.isSpear;
 	}
 
 	public static Tool fromMaterial(Material material) {

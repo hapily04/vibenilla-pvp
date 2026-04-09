@@ -8,6 +8,7 @@ import java.util.Map;
 public enum ToolMaterial {
 	WOOD(0, 2.0F, 0.0F, Material.WOODEN_SWORD, Material.WOODEN_SHOVEL, Material.WOODEN_PICKAXE, Material.WOODEN_AXE, Material.WOODEN_HOE),
 	STONE(1, 4.0F, 1.0F, Material.STONE_SWORD, Material.STONE_SHOVEL, Material.STONE_PICKAXE, Material.STONE_AXE, Material.STONE_HOE),
+	COPPER(1, 5.0F, 1.0F),
 	IRON(2, 6.0F, 2.0F, Material.IRON_SWORD, Material.IRON_SHOVEL, Material.IRON_PICKAXE, Material.IRON_AXE, Material.IRON_HOE),
 	DIAMOND(3, 8.0F, 3.0F, Material.DIAMOND_SWORD, Material.DIAMOND_SHOVEL, Material.DIAMOND_PICKAXE, Material.DIAMOND_AXE, Material.DIAMOND_HOE),
 	GOLD(0, 12.0F, 0.0F, Material.GOLDEN_SWORD, Material.GOLDEN_SHOVEL, Material.GOLDEN_PICKAXE, Material.GOLDEN_AXE, Material.GOLDEN_HOE),

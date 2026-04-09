@@ -1,4 +1,5 @@
 world/
+*.md
 
 .gradle
 build/

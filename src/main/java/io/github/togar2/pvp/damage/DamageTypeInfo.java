@@ -66,6 +66,8 @@ public record DamageTypeInfo(boolean damagesHelmet, boolean bypassesArmor, boole
             this.put(DamageType.MOB_PROJECTILE, new DamageTypeInfo().scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
             this.put(DamageType.PLAYER_ATTACK, new DamageTypeInfo().scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
             this.put(DamageType.TRIDENT, new DamageTypeInfo().scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
+            this.put(DamageType.MACE_SMASH, new DamageTypeInfo().scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
+            this.put(DamageType.SPEAR, new DamageTypeInfo().scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
             this.put(DamageType.FIREWORKS, new DamageTypeInfo().scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
             this.put(DamageType.SONIC_BOOM, new DamageTypeInfo().bypassesArmor(true).scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
             this.put(DamageType.OUTSIDE_BORDER, new DamageTypeInfo().bypassesArmor(true));

@@ -86,6 +86,10 @@ public class CombatEnchantments {
 				new CombatEnchantment(Enchantment.MULTISHOT, EquipmentSlot.MAIN_HAND),
 				new CombatEnchantment(Enchantment.QUICK_CHARGE, EquipmentSlot.MAIN_HAND),
 				new CombatEnchantment(Enchantment.PIERCING, EquipmentSlot.MAIN_HAND),
+				new CombatEnchantment(Enchantment.LUNGE, EquipmentSlot.MAIN_HAND),
+				new CombatEnchantment(Enchantment.DENSITY, EquipmentSlot.MAIN_HAND),
+				new CombatEnchantment(Enchantment.BREACH, EquipmentSlot.MAIN_HAND),
+				new CombatEnchantment(Enchantment.WIND_BURST, EquipmentSlot.MAIN_HAND),
 				new CombatEnchantment(Enchantment.MENDING, EquipmentSlot.values()),
 				new CombatEnchantment(Enchantment.VANISHING_CURSE, EquipmentSlot.values())
 		);

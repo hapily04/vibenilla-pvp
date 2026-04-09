@@ -46,7 +46,8 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 	public static final DefinedFeature<VanillaAttackFeature> DEFINED = new DefinedFeature<>(
 		FeatureType.ATTACK, VanillaAttackFeature::new,
 		FeatureType.ATTACK_COOLDOWN, FeatureType.EXHAUSTION, FeatureType.ITEM_DAMAGE,
-		FeatureType.ENCHANTMENT, FeatureType.CRITICAL, FeatureType.SWEEPING, FeatureType.KNOCKBACK, FeatureType.VERSION
+		FeatureType.ENCHANTMENT, FeatureType.CRITICAL, FeatureType.SWEEPING, FeatureType.KNOCKBACK,
+		FeatureType.SMASH_ATTACK, FeatureType.VERSION
 	);
 
 	private static final double ATTACK_RANGE_MARGIN = 3.0;
@@ -61,6 +62,7 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 	private CriticalFeature criticalFeature;
 	private SweepingFeature sweepingFeature;
 	private KnockbackFeature knockbackFeature;
+	private SmashAttackFeature smashAttackFeature;
 
 	private CombatVersion version;
 
@@ -77,6 +79,7 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 		this.criticalFeature = this.configuration.get(FeatureType.CRITICAL);
 		this.sweepingFeature = this.configuration.get(FeatureType.SWEEPING);
 		this.knockbackFeature = this.configuration.get(FeatureType.KNOCKBACK);
+		this.smashAttackFeature = this.configuration.get(FeatureType.SMASH_ATTACK);
 		this.version = this.configuration.get(FeatureType.VERSION);
 	}
 
@@ -100,12 +103,16 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 		AttackValues.Final attack = this.prepareAttack(attacker, target);
 		if (attack == null) return false; // Event canceled
 
+		boolean smashAttack = target instanceof LivingEntity
+				&& this.smashAttackFeature.canSmashAttack(attacker);
+
 		float originalHealth = 0;
 		boolean damageSucceeded = false;
 		if (target instanceof LivingEntity livingTarget) {
 			originalHealth = livingTarget.getHealth();
 			damageSucceeded = livingTarget.damage(new Damage(
-				attacker instanceof Player ? DamageType.PLAYER_ATTACK : DamageType.MOB_ATTACK,
+				smashAttack ? DamageType.MACE_SMASH :
+						(attacker instanceof Player ? DamageType.PLAYER_ATTACK : DamageType.MOB_ATTACK),
 				attacker, attacker,
 				null, attack.damage()
 			));
@@ -132,6 +139,8 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 			affectedEntities = this.sweepingFeature.applySweeping(attacker, living, attack.damage());
 			affectedEntities.add(living);
 		}
+
+		if (smashAttack) this.smashAttackFeature.applySmashAttack(attacker, living);
 
 		if (target instanceof CombatPlayer custom)
 			custom.sendImmediateVelocityUpdate();
@@ -190,7 +199,7 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 		// Damage item
 		Tool tool = Tool.fromMaterial(attacker.getItemInMainHand().material());
 		if (tool != null) this.itemDamageFeature.damageEquipment(attacker, EquipmentSlot.MAIN_HAND,
-			(tool.isSword() || tool == Tool.TRIDENT) ? 1 : 2);
+			(tool.isSword() || tool.isMace() || tool.isSpear() || tool == Tool.TRIDENT) ? 1 : 2);
 
 		// Damage indicator particles
 		float damageDone = originalHealth - living.getHealth();
@@ -227,6 +236,10 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 		// Apply cooldownProgress to damage
 		damage *= (float) (0.2 + cooldownProgress * cooldownProgress * 0.8);
 		magicalDamage *= (float) cooldownProgress;
+
+		if (target instanceof LivingEntity livingTarget) {
+			damage += this.smashAttackFeature.getDamageBonus(attacker, livingTarget);
+		}
 
 		// Calculate attacks
 		boolean strongAttack = cooldownProgress > 0.9;

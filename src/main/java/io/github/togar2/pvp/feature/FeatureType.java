@@ -3,6 +3,8 @@ package io.github.togar2.pvp.feature;
 import io.github.togar2.pvp.feature.armor.ArmorFeature;
 import io.github.togar2.pvp.feature.attack.AttackFeature;
 import io.github.togar2.pvp.feature.attack.CriticalFeature;
+import io.github.togar2.pvp.feature.attack.SmashAttackFeature;
+import io.github.togar2.pvp.feature.attack.SpearFeature;
 import io.github.togar2.pvp.feature.attack.SweepingFeature;
 import io.github.togar2.pvp.feature.attributes.EquipmentFeature;
 import io.github.togar2.pvp.feature.block.BlockFeature;
@@ -43,6 +45,8 @@ public record FeatureType<F extends CombatFeature>(String name, F defaultFeature
 	public static final FeatureType<AttackFeature> ATTACK = of("ATTACK", AttackFeature.NO_OP);
 	public static final FeatureType<CriticalFeature> CRITICAL = of("CRITICAL", CriticalFeature.NO_OP);
 	public static final FeatureType<SweepingFeature> SWEEPING = of("SWEEPING", SweepingFeature.NO_OP);
+	public static final FeatureType<SmashAttackFeature> SMASH_ATTACK = of("SMASH_ATTACK", SmashAttackFeature.NO_OP);
+	public static final FeatureType<SpearFeature> SPEAR = of("SPEAR", SpearFeature.NO_OP);
 	public static final FeatureType<EquipmentFeature> EQUIPMENT = of("EQUIPMENT_DATA", EquipmentFeature.NO_OP);
 	public static final FeatureType<BlockFeature> BLOCK = of("BLOCK", BlockFeature.NO_OP);
 	public static final FeatureType<LegacyBlockFeature> LEGACY_BLOCK = of("LEGACY_BLOCK", LegacyBlockFeature.NO_OP);
