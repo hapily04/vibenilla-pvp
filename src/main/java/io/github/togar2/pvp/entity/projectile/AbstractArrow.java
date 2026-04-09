@@ -3,8 +3,10 @@ package io.github.togar2.pvp.entity.projectile;
 import io.github.togar2.pvp.events.PickupEntityEvent;
 import io.github.togar2.pvp.feature.enchantment.EnchantmentFeature;
 import io.github.togar2.pvp.utils.EntityUtil;
+import io.github.togar2.pvp.utils.FluidUtil;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.ServerFlag;
+import net.minestom.server.coordinate.CoordConversion;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.*;
@@ -103,9 +105,36 @@ public abstract class AbstractArrow extends CustomEntityProjectile {
                     });
         }
 
-		//TODO water (also for other projectiles?)
+		if (this.isOnFire()) {
+			var currentInstance = this.getInstance();
+
+			if (currentInstance != null && (FluidUtil.isTouchingWater(this) || this.isInRain())) {
+				this.fireTicksLeft = 0;
+				this.entityMeta.setOnFire(false);
+			}
+		}
 
 		tickRemoval();
+	}
+
+	private boolean isInRain() {
+		var currentInstance = this.getInstance();
+
+		if (currentInstance == null) return false;
+		if (!currentInstance.getWeather().isRaining()) return false;
+		if (!currentInstance.getCachedDimensionType().hasSkylight()
+				|| currentInstance.getCachedDimensionType().hasCeiling()) return false;
+
+		var currentChunk = currentInstance.getChunkAt(this.getPosition());
+
+		if (currentChunk == null) return false;
+
+		var position = this.getPosition();
+		int blockX = position.blockX();
+		int blockZ = position.blockZ();
+		int blockY = CoordConversion.globalToBlock(position.y() + this.getBoundingBox().maxY());
+
+		return currentChunk.motionBlockingHeightmap().getHeight(blockX, blockZ) < blockY;
 	}
 
 	public void setFireTicksLeft(int fireTicksLeft) {

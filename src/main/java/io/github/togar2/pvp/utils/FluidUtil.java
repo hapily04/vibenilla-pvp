@@ -1,6 +1,7 @@
 package io.github.togar2.pvp.utils;
 
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
@@ -29,17 +30,17 @@ public class FluidUtil {
 		};
 	}
 
-	public static boolean isTouchingWater(Player player, Block block, int blockY) {
-		if (!block.compare(Block.WATER)) return false;
-		if (player.getPosition().y() + player.getBoundingBox().height() < blockY) return false;
-		if (player.getPosition().y() > (blockY + getHeight(block))) return false;
+	public static boolean isTouchingWater(Entity entity, Block block, int blockY) {
+		if (!block.compare(Block.WATER) && !block.compare(Block.BUBBLE_COLUMN)) return false;
+		if (entity.getPosition().y() + entity.getBoundingBox().height() < blockY) return false;
+		if (entity.getPosition().y() > (blockY + getHeight(block))) return false;
 		return true;
 	}
 
-    record PairXZ(int x, int z) {}
+	record PairXZ(int x, int z) {}
 
-	public static boolean isTouchingWater(Player player) {
-		Pos position = player.getPosition();
+	public static boolean isTouchingWater(Entity entity) {
+		Pos position = entity.getPosition();
 		double x = position.x();
 		int blockX = position.blockX();
 		double z = position.z();
@@ -73,21 +74,25 @@ public class FluidUtil {
 			points.add(new PairXZ(blockX, blockZ - 1));
 		}
 
-		Instance instance = player.getInstance();
+		Instance instance = entity.getInstance();
 		assert instance != null;
 
 		for (PairXZ pair : points) {
 			Block block = instance.getBlock(pair.x(), blockY, pair.z());
-			if (isTouchingWater(player, block, blockY)) return true;
+			if (isTouchingWater(entity, block, blockY)) return true;
 			block = instance.getBlock(pair.x(), blockY + 1, pair.z());
-			if (isTouchingWater(player, block, blockY + 1)) return true;
+			if (isTouchingWater(entity, block, blockY + 1)) return true;
 
-			if (y - blockY >= 2 - player.getBoundingBox().height()) {
+			if (y - blockY >= 2 - entity.getBoundingBox().height()) {
 				block = instance.getBlock(pair.x(), blockY + 2, pair.z());
-				if (isTouchingWater(player, block, blockY + 2)) return true;
+				if (isTouchingWater(entity, block, blockY + 2)) return true;
 			}
 		}
 
 		return false;
+	}
+
+	public static boolean isTouchingWater(Player player) {
+		return isTouchingWater((Entity) player);
 	}
 }

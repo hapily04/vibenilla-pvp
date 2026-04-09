@@ -4,7 +4,11 @@ import io.github.togar2.pvp.feature.FeatureType;
 import io.github.togar2.pvp.feature.RegistrableFeature;
 import io.github.togar2.pvp.feature.config.DefinedFeature;
 import io.github.togar2.pvp.feature.config.FeatureConfiguration;
+import io.github.togar2.pvp.utils.FluidUtil;
+import io.github.togar2.pvp.utils.ViewUtil;
+import net.kyori.adventure.sound.Sound;
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.coordinate.CoordConversion;
 import net.minestom.server.entity.EquipmentSlot;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.LivingEntity;
@@ -15,7 +19,9 @@ import net.minestom.server.event.EventNode;
 import net.minestom.server.event.entity.EntityTickEvent;
 import net.minestom.server.event.player.PlayerTickEvent;
 import net.minestom.server.event.trait.EntityInstanceEvent;
+import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
+import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.item.Material;
 import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.tag.Tag;
@@ -69,6 +75,7 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 	}
 
 	private void handlePlayerTick(Player player) {
+		this.handleExtinguishing(player);
 		this.handleFireDamage(player);
 		this.handleLavaDamage(player);
 		this.handleVoidDamage(player);
@@ -78,8 +85,22 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 	}
 
 	private void handleEntityTick(LivingEntity entity) {
+		this.handleExtinguishing(entity);
 		this.handleFireDamage(entity);
 		this.handleVoidDamage(entity);
+	}
+
+	private void handleExtinguishing(LivingEntity entity) {
+		if (!entity.isOnFire()) return;
+
+		var instance = entity.getInstance();
+
+		if (instance == null) return;
+
+		if (this.isInPowderSnow(instance, entity) || this.isTouchingWater(entity)
+				|| this.isInRain(instance, entity) || this.isInWaterCauldron(instance, entity)) {
+			this.extinguish(entity);
+		}
 	}
 
 	private void handleFireDamage(LivingEntity entity) {
@@ -224,13 +245,8 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 		if (instance == null) return;
 
 		int freezeTicks = player.hasTag(FREEZE_TICKS) ? player.getTag(FREEZE_TICKS) : 0;
-		var feetBlock = instance.getBlock(player.getPosition());
-		boolean inPowderSnow = feetBlock.compare(Block.POWDER_SNOW);
+		boolean inPowderSnow = this.isInPowderSnow(instance, player);
 		boolean canFreeze = this.canFreeze(player);
-
-		if (inPowderSnow && player.isOnFire()) {
-			player.setFireTicks(0);
-		}
 
 		if (inPowderSnow && canFreeze) {
 			freezeTicks = Math.min(freezeTicks + 1, FREEZE_MAX_TICKS);
@@ -260,6 +276,20 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 		return true;
 	}
 
+	private void extinguish(LivingEntity entity) {
+		var instance = entity.getInstance();
+
+		if (instance == null) return;
+
+		this.lowerWaterCauldron(instance, entity);
+		entity.setFireTicks(0);
+
+		ViewUtil.viewersAndSelf(entity).playSound(Sound.sound(
+				SoundEvent.ENTITY_GENERIC_EXTINGUISH_FIRE, Sound.Source.NEUTRAL,
+				0.7F, 1.0F
+		), entity);
+	}
+
 	private boolean isInLava(LivingEntity entity) {
 		var instance = entity.getInstance();
 
@@ -269,6 +299,76 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 		var block = instance.getBlock(position);
 
 		return block.compare(Block.LAVA);
+	}
+
+	private boolean isTouchingWater(LivingEntity entity) {
+		return FluidUtil.isTouchingWater(entity);
+	}
+
+	private boolean isInPowderSnow(Instance instance, LivingEntity entity) {
+		return instance.getBlock(entity.getPosition()).compare(Block.POWDER_SNOW);
+	}
+
+	private boolean isInRain(Instance instance, LivingEntity entity) {
+		if (!instance.getWeather().isRaining()) return false;
+		if (!instance.getCachedDimensionType().hasSkylight() || instance.getCachedDimensionType().hasCeiling()) return false;
+
+		var position = entity.getPosition();
+		var boundingBox = entity.getBoundingBox();
+
+		if (this.isRainingAt(instance, position.blockX(), position.blockY(), position.blockZ())) return true;
+
+		int topBlockY = CoordConversion.globalToBlock(position.y() + boundingBox.maxY());
+
+		return this.isRainingAt(instance, position.blockX(), topBlockY, position.blockZ());
+	}
+
+	private boolean isRainingAt(Instance instance, int blockX, int blockY, int blockZ) {
+		var chunk = instance.getChunkAt(blockX, blockZ);
+
+		if (chunk == null) return false;
+
+		var highestBlockY = chunk.motionBlockingHeightmap().getHeight(blockX, blockZ);
+
+		return highestBlockY < blockY;
+	}
+
+	private boolean isInWaterCauldron(Instance instance, LivingEntity entity) {
+		var position = entity.getPosition();
+		var block = instance.getBlock(position);
+
+		if (!block.compare(Block.WATER_CAULDRON)) return false;
+
+		var levelProperty = block.getProperty("level");
+
+		if (levelProperty == null) return false;
+
+		int level = Integer.parseInt(levelProperty);
+		double contentHeight = position.blockY() + (6.0 + level * 3.0) / 16.0;
+		double feetY = position.y() + entity.getBoundingBox().minY();
+
+		return feetY <= contentHeight;
+	}
+
+	private boolean lowerWaterCauldron(Instance instance, LivingEntity entity) {
+		var position = entity.getPosition();
+		var block = instance.getBlock(position);
+
+		if (!block.compare(Block.WATER_CAULDRON)) return false;
+
+		var levelProperty = block.getProperty("level");
+
+		if (levelProperty == null) return false;
+
+		int level = Integer.parseInt(levelProperty);
+
+		if (level <= 1) {
+			instance.setBlock(position, Block.CAULDRON);
+		} else {
+			instance.setBlock(position, block.withProperty("level", String.valueOf(level - 1)));
+		}
+
+		return true;
 	}
 
 	private boolean isEyeInWater(Player player) {

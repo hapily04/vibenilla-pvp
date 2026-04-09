@@ -11,6 +11,8 @@ import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.AsyncPlayerConfigurationEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
+import net.minestom.server.item.ItemStack;
+import net.minestom.server.item.Material;
 import net.minestom.server.registry.RegistryKey;
 import net.minestom.server.world.DimensionType;
 import net.minestom.server.world.attribute.EnvironmentAttribute;
@@ -27,7 +29,13 @@ void main() {
                 event.setSpawningInstance(instance);
                 event.getPlayer().setRespawnPoint(spawnPosition);
             })
-            .addListener(PlayerSpawnEvent.class, event -> event.getPlayer().setGameMode(GameMode.CREATIVE));
+            .addListener(PlayerSpawnEvent.class, event -> {
+                var player = event.getPlayer();
+                player.setGameMode(GameMode.CREATIVE);
+                player.getInventory().addItemStack(ItemStack.of(Material.WOODEN_SPEAR));
+                player.getInventory().addItemStack(ItemStack.of(Material.DIAMOND_SPEAR));
+                player.getInventory().addItemStack(ItemStack.of(Material.MACE));
+            });
 
     MinecraftServer.getCommandManager().register(new Command("gamemode") {{
         var argument = ArgumentType.Enum("mode", GameMode.class).setFormat(ArgumentEnum.Format.LOWER_CASED);

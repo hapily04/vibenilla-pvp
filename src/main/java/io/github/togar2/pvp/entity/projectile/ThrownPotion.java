@@ -6,16 +6,17 @@ import net.minestom.server.collision.BoundingBox;
 import net.minestom.server.component.DataComponents;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.*;
+import net.minestom.server.instance.block.Block;
 import net.minestom.server.entity.metadata.item.LingeringPotionMeta;
 import net.minestom.server.entity.metadata.item.SplashPotionMeta;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.component.PotionContents;
 import net.minestom.server.potion.Potion;
+import net.minestom.server.potion.PotionType;
 import net.minestom.server.worldevent.WorldEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -45,16 +46,20 @@ public class ThrownPotion extends CustomEntityProjectile implements ItemHoldingP
 	}
 
 	public void splash(@Nullable Entity entity) {
-		ItemStack item = this.getItem();
+		var item = this.getItem();
 
-		PotionContents potionContents = item.get(DataComponents.POTION_CONTENTS);
-		List<Potion> potions = this.effectFeature.getAllPotions(potionContents);
+		var potionContents = item.get(DataComponents.POTION_CONTENTS, PotionContents.EMPTY);
+		var potions = this.effectFeature.getAllPotions(potionContents);
+		boolean waterPotion = potionContents.potion() == PotionType.WATER && potionContents.customEffects().isEmpty();
 
-		if (!potions.isEmpty()) {
+		if (waterPotion) {
+			this.applyWaterSplash(entity);
+			this.dowseFireBlocks();
+		} else if (!potions.isEmpty()) {
 			if (this.lingering) {
 				//TODO lingering
 			} else {
-                this.applySplash(potionContents, entity);
+				this.applySplash(potionContents, entity);
 			}
 		}
 
@@ -76,26 +81,87 @@ public class ThrownPotion extends CustomEntityProjectile implements ItemHoldingP
 		);
 	}
 
-	private void applySplash(PotionContents potionContents, @Nullable Entity hitEntity) {
-		BoundingBox boundingBox = this.getBoundingBox().expand(8.0, 4.0, 8.0);
-		List<LivingEntity> entities = Objects.requireNonNull(this.getInstance()).getEntities().stream()
+	private void applyWaterSplash(@Nullable Entity hitEntity) {
+		var boundingBox = this.getBoundingBox().expand(8.0, 4.0, 8.0);
+		var entities = Objects.requireNonNull(this.getInstance()).getEntities().stream()
 				.filter(entity -> boundingBox.intersectEntity(this.getPosition().add(0, -2, 0), entity))
 				.filter(entity -> entity instanceof LivingEntity
 						&& !(entity instanceof Player player && player.getGameMode() == GameMode.SPECTATOR))
-				.map(entity -> (LivingEntity) entity).collect(Collectors.toList());
+				.map(entity -> (LivingEntity) entity)
+				.collect(Collectors.toList());
 
-		if (hitEntity instanceof LivingEntity && !entities.contains(hitEntity))
+		if (hitEntity instanceof LivingEntity livingEntity && !entities.contains(livingEntity)) {
+			entities.add(livingEntity);
+		}
+
+		for (var entity : entities) {
+			if (!entity.isOnFire() || entity.isDead()) continue;
+			if (this.getDistanceSquared(entity) >= 16.0) continue;
+
+			entity.setFireTicks(0);
+		}
+	}
+
+	private void applySplash(PotionContents potionContents, @Nullable Entity hitEntity) {
+		var boundingBox = this.getBoundingBox().expand(8.0, 4.0, 8.0);
+		var entities = Objects.requireNonNull(this.getInstance()).getEntities().stream()
+				.filter(entity -> boundingBox.intersectEntity(this.getPosition().add(0, -2, 0), entity))
+				.filter(entity -> entity instanceof LivingEntity
+						&& !(entity instanceof Player player && player.getGameMode() == GameMode.SPECTATOR))
+				.map(entity -> (LivingEntity) entity)
+				.collect(Collectors.toList());
+
+		if (hitEntity instanceof LivingEntity && !entities.contains(hitEntity)) {
 			entities.add((LivingEntity) hitEntity);
+		}
+
 		if (entities.isEmpty()) return;
 
-		for (LivingEntity entity : entities) {
+		for (var entity : entities) {
 			if (entity.getEntityType() == EntityType.ARMOR_STAND) continue;
 
 			double distanceSquared = this.getDistanceSquared(entity);
 			if (distanceSquared >= 16.0) continue;
 
 			double proximity = entity == hitEntity ? 1.0 : (1.0 - Math.sqrt(distanceSquared) / 4.0);
-            this.effectFeature.addSplashPotionEffects(entity, potionContents, proximity, this, this.getShooter());
+			this.effectFeature.addSplashPotionEffects(entity, potionContents, proximity, this, this.getShooter());
+		}
+	}
+
+	private void dowseFireBlocks() {
+		var instance = this.getInstance();
+
+		if (instance == null) return;
+
+		var impactPosition = this.getPosition();
+
+		this.dowseFire(impactPosition);
+		this.dowseFire(impactPosition.add(1, 0, 0));
+		this.dowseFire(impactPosition.add(-1, 0, 0));
+		this.dowseFire(impactPosition.add(0, 0, 1));
+		this.dowseFire(impactPosition.add(0, 0, -1));
+		this.dowseFire(impactPosition.add(0, 1, 0));
+	}
+
+	private void dowseFire(Pos position) {
+		var instance = this.getInstance();
+
+		if (instance == null) return;
+
+		var block = instance.getBlock(position);
+
+		if (block.compare(Block.FIRE) || block.compare(Block.SOUL_FIRE)) {
+			instance.setBlock(position, Block.AIR);
+			return;
+		}
+
+		var litProperty = block.getProperty("lit");
+
+		if (!"true".equals(litProperty)) return;
+
+		if (block.compare(Block.CAMPFIRE) || block.compare(Block.SOUL_CAMPFIRE)
+				|| block.key().value().contains("candle")) {
+			instance.setBlock(position, block.withProperty("lit", "false"));
 		}
 	}
 
