@@ -12,6 +12,7 @@ import io.github.togar2.pvp.feature.cooldown.ItemCooldownFeature;
 import io.github.togar2.pvp.feature.damage.DamageFeature;
 import io.github.togar2.pvp.feature.effect.EffectFeature;
 import io.github.togar2.pvp.feature.enchantment.EnchantmentFeature;
+import io.github.togar2.pvp.feature.environment.EnvironmentDamageFeature;
 import io.github.togar2.pvp.feature.explosion.ExplosionFeature;
 import io.github.togar2.pvp.feature.explosion.ExplosiveFeature;
 import io.github.togar2.pvp.feature.fall.FallFeature;
@@ -70,6 +71,7 @@ public record FeatureType<F extends CombatFeature>(String name, F defaultFeature
 	public static final FeatureType<PlayerStateFeature> PLAYER_STATE = of("PLAYER_STATE", PlayerStateFeature.NO_OP);
 	public static final FeatureType<TotemFeature> TOTEM = of("TOTEM", TotemFeature.NO_OP);
 	public static final FeatureType<TrackingFeature> TRACKING = of("TRACKING", TrackingFeature.NO_OP);
+	public static final FeatureType<EnvironmentDamageFeature> ENVIRONMENT_DAMAGE = of("ENVIRONMENT_DAMAGE", EnvironmentDamageFeature.NO_OP);
 
 	public static <F extends CombatFeature> FeatureType<F> of(String name, F noopFeature) {
 		return new FeatureType<>(name, noopFeature);

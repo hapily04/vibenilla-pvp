@@ -69,6 +69,9 @@ public record DamageTypeInfo(boolean damagesHelmet, boolean bypassesArmor, boole
             this.put(DamageType.FIREWORKS, new DamageTypeInfo().scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
             this.put(DamageType.SONIC_BOOM, new DamageTypeInfo().bypassesArmor(true).scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
             this.put(DamageType.OUTSIDE_BORDER, new DamageTypeInfo().bypassesArmor(true));
+            this.put(DamageType.CAMPFIRE, new DamageTypeInfo().fire(true));
+            this.put(DamageType.CACTUS, new DamageTypeInfo());
+            this.put(DamageType.SWEET_BERRY_BUSH, new DamageTypeInfo());
 		}
 	};
 

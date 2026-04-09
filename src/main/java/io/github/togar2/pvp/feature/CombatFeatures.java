@@ -15,6 +15,7 @@ import io.github.togar2.pvp.feature.cooldown.VanillaItemCooldownFeature;
 import io.github.togar2.pvp.feature.damage.VanillaDamageFeature;
 import io.github.togar2.pvp.feature.effect.VanillaEffectFeature;
 import io.github.togar2.pvp.feature.enchantment.VanillaEnchantmentFeature;
+import io.github.togar2.pvp.feature.environment.VanillaEnvironmentDamageFeature;
 import io.github.togar2.pvp.feature.explosion.VanillaExplosionFeature;
 import io.github.togar2.pvp.feature.explosion.VanillaExplosiveFeature;
 import io.github.togar2.pvp.feature.fall.VanillaFallFeature;
@@ -164,6 +165,10 @@ public class CombatFeatures {
 	 * @see VanillaDeathMessageFeature
 	 */
 	public static final DefinedFeature<VanillaDeathMessageFeature> VANILLA_DEATH_MESSAGE = VanillaDeathMessageFeature.DEFINED;
+	/**
+	 * @see VanillaEnvironmentDamageFeature
+	 */
+	public static final DefinedFeature<VanillaEnvironmentDamageFeature> VANILLA_ENVIRONMENT_DAMAGE = VanillaEnvironmentDamageFeature.DEFINED;
 
 	/**
 	 * @see LegacyVanillaBlockFeature
@@ -187,7 +192,7 @@ public class CombatFeatures {
 			VANILLA_REGENERATION, VANILLA_ITEM_DAMAGE, VANILLA_KNOCKBACK, VANILLA_POTION,
 			VANILLA_BOW, VANILLA_CROSSBOW, VANILLA_FISHING_ROD, VANILLA_MISC_PROJECTILE,
 			VANILLA_PROJECTILE_ITEM, VANILLA_TRIDENT, VANILLA_SPECTATE, VANILLA_PLAYER_STATE,
-			VANILLA_TOTEM, VANILLA_DEATH_MESSAGE
+			VANILLA_TOTEM, VANILLA_DEATH_MESSAGE, VANILLA_ENVIRONMENT_DAMAGE
 	);
 
 	private static final CombatFeatureSet MODERN_VANILLA = getVanilla(CombatVersion.MODERN, DifficultyProvider.DEFAULT).build();
