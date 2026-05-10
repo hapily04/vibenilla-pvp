@@ -295,7 +295,7 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 
 	protected float scaleWithDifficulty(Player player, float amount) {
 		return switch (this.difficultyProvider.getValue(player)) {
-			case PEACEFUL -> -1;
+			case PEACEFUL -> 0.0F;
 			case EASY -> Math.min(amount / 2.0f + 1.0f, amount);
 			case HARD -> amount * 3.0f / 2.0f;
 			default -> amount;
