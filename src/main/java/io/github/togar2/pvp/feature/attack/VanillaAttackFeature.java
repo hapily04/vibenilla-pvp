@@ -186,14 +186,12 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 
 		for (LivingEntity affectedEntity : affectedEntities) {
 			// Thorns
-            this.enchantmentFeature.onUserDamaged(affectedEntity, attacker);
-            this.enchantmentFeature.onTargetDamaged(attacker, affectedEntity);
+			this.enchantmentFeature.onUserDamaged(affectedEntity, attacker);
+			this.enchantmentFeature.onTargetDamaged(attacker, affectedEntity);
 
 			if (attack.fireAspect() > 0) {
-				for (LivingEntity entity : affectedEntities) {
-					var fireTicks = attack.fireAspect() * 4 * ServerFlag.SERVER_TICKS_PER_SECOND;
-					entity.setFireTicks(this.enchantmentFeature.getFireDuration(entity, fireTicks));
-				}
+				var fireTicks = attack.fireAspect() * 4 * ServerFlag.SERVER_TICKS_PER_SECOND;
+				affectedEntity.setFireTicks(this.enchantmentFeature.getFireDuration(affectedEntity, fireTicks));
 			}
 		}
 
