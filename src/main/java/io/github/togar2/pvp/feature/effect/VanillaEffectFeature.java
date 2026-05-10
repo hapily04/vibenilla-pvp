@@ -107,14 +107,20 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 
 		node.addListener(EntityPotionAddEvent.class, event -> {
 			if (!(event.getEntity() instanceof LivingEntity entity)) return;
-			Map<PotionEffect, Integer> potionMap = this.getDurationLeftMap(entity);
-			boolean infinite = event.getPotion().duration() == Potion.INFINITE_DURATION;
-			potionMap.put(event.getPotion().effect(), infinite ? Integer.MAX_VALUE : event.getPotion().duration());
+			var potion = event.getPotion();
 
-			CombatPotionEffect combatPotionEffect = CombatPotionEffects.get(event.getPotion().effect());
-			combatPotionEffect.onApplied(entity, event.getPotion().amplifier(), this.version);
+			entity.scheduler().scheduleNextProcess(() -> {
+				if (!this.hasActivePotion(entity, potion)) return;
 
-            this.updatePotionVisibility(entity);
+				var potionMap = this.getDurationLeftMap(entity);
+				var infinite = potion.duration() == Potion.INFINITE_DURATION;
+				potionMap.put(potion.effect(), infinite ? Integer.MAX_VALUE : potion.duration());
+
+				var combatPotionEffect = CombatPotionEffects.get(potion.effect());
+				combatPotionEffect.onApplied(entity, potion.amplifier(), this.version);
+
+				this.updatePotionVisibility(entity);
+			});
 		});
 
 		node.addListener(EntityPotionRemoveEvent.class, event -> {
@@ -138,6 +144,11 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 			entity.setTag(DURATION_LEFT, potionMap);
 		}
 		return potionMap;
+	}
+
+	private boolean hasActivePotion(LivingEntity entity, Potion potion) {
+		return entity.getActiveEffects().stream()
+				.anyMatch(timedPotion -> timedPotion.potion() == potion);
 	}
 
 	@Override
