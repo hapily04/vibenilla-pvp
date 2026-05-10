@@ -177,10 +177,22 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 	}
 
 	protected int getFallDamage(LivingEntity entity, double fallDistance, double damageModifier) {
+		if (this.isFallDamageImmune(entity)) return 0;
+
 		double safeFallDistance = entity.getAttributeValue(Attribute.SAFE_FALL_DISTANCE);
 		return (int) Math.floor((fallDistance + 1.0E-6 - safeFallDistance)
 				* damageModifier
 				* entity.getAttributeValue(Attribute.FALL_DAMAGE_MULTIPLIER));
+	}
+
+	private boolean isFallDamageImmune(LivingEntity entity) {
+		var entityTypeTag = MinecraftServer.process().entityType().getTag(Key.key("minecraft:fall_damage_immune"));
+
+		if (entityTypeTag == null) return false;
+
+		var key = entity.getEntityType().asKey();
+
+		return key != null && entityTypeTag.contains(key);
 	}
 
 	@Override
