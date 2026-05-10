@@ -13,12 +13,13 @@ import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.entity.damage.DamageType;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.event.entity.EntityVelocityEvent;
-import net.minestom.server.instance.Chunk;
+import net.minestom.server.instance.block.Block;
 import net.minestom.server.network.player.GameProfile;
 import net.minestom.server.network.player.PlayerConnection;
 import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.potion.TimedPotion;
 import net.minestom.server.sound.SoundEvent;
+import net.minestom.server.utils.chunk.ChunkCache;
 import net.minestom.server.utils.chunk.ChunkUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -78,10 +79,11 @@ public class CombatPlayerImpl extends Player implements CombatPlayer {
 			aerodynamics = aerodynamics.withGravity(0.01);
 
 		// Do movementTick() calculations for the given amount of ticks
-		PhysicsResult prevPhysicsResult = this.previousPhysicsResult;
-		for (int i = 0; i < ticks; i++) {
-			PhysicsResult physicsResult = PhysicsUtils.simulateMovement(position, velocity, this.boundingBox,
-                    this.instance.getWorldBorder(), this.instance, aerodynamics, this.hasNoGravity(), this.hasPhysics, this.onGround, this.isFlying(), prevPhysicsResult);
+		var prevPhysicsResult = this.previousPhysicsResult;
+		for (var tick = 0; tick < ticks; tick++) {
+			var blockGetter = new ChunkCache(this.instance, this.currentChunk, Block.STONE);
+			var physicsResult = PhysicsUtils.simulateMovement(position, velocity, this.boundingBox,
+                    this.instance.getWorldBorder(), blockGetter, aerodynamics, this.hasNoGravity(), this.hasPhysics, this.onGround, this.isFlying(), prevPhysicsResult);
 			prevPhysicsResult = physicsResult;
 
 			if (physicsResult.isOnGround()) return true;
@@ -114,11 +116,12 @@ public class CombatPlayerImpl extends Player implements CombatPlayer {
 		if (this.velocity.y() < 0 && this.hasEffect(PotionEffect.SLOW_FALLING))
 			aerodynamics = aerodynamics.withGravity(0.01);
 
-		PhysicsResult physicsResult = PhysicsUtils.simulateMovement(this.position, this.velocity.div(tps), this.boundingBox,
-                this.instance.getWorldBorder(), this.instance, aerodynamics, this.hasNoGravity(), this.hasPhysics, this.onGround, this.isFlying(), this.previousPhysicsResult);
+		var blockGetter = new ChunkCache(this.instance, this.currentChunk, Block.STONE);
+		var physicsResult = PhysicsUtils.simulateMovement(this.position, this.velocity.div(tps), this.boundingBox,
+                this.instance.getWorldBorder(), blockGetter, aerodynamics, this.hasNoGravity(), this.hasPhysics, this.onGround, this.isFlying(), this.previousPhysicsResult);
 		this.previousPhysicsResult = physicsResult;
 
-		Chunk finalChunk = ChunkUtils.retrieve(this.instance, this.currentChunk, physicsResult.newPosition());
+		var finalChunk = ChunkUtils.retrieve(this.instance, this.currentChunk, physicsResult.newPosition());
 		if (!ChunkUtils.isLoaded(finalChunk)) return;
 
 		this.horizontalCollision = physicsResult.collisionX() || physicsResult.collisionZ();
