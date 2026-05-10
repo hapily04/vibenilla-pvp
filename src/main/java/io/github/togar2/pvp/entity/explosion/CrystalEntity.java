@@ -26,6 +26,11 @@ public class CrystalEntity extends LivingEntity {
 	}
 
 	@Override
+	protected boolean shouldSendAttributes() {
+		return false;
+	}
+
+	@Override
 	public void update(long time) {
 		if (this.fire && !this.instance.getBlock(this.position).compare(Block.FIRE))
             this.instance.setBlock(this.position, Block.FIRE);
