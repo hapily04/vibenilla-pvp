@@ -4,6 +4,7 @@ import io.github.togar2.pvp.damage.DamageTypeInfo;
 import io.github.togar2.pvp.enchantment.CombatEnchantment;
 import io.github.togar2.pvp.feature.config.FeatureConfiguration;
 import io.github.togar2.pvp.feature.enchantment.EnchantmentFeature;
+import net.kyori.adventure.key.Key;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.EquipmentSlot;
 import net.minestom.server.entity.damage.DamageType;
@@ -22,7 +23,7 @@ public class ProtectionEnchantment extends CombatEnchantment {
 	public int getProtectionAmount(int level, DamageType damageType,
 	                               EnchantmentFeature feature, FeatureConfiguration configuration) {
 		DamageTypeInfo damageTypeInfo = DamageTypeInfo.of(MinecraftServer.getDamageTypeRegistry().getKey(damageType));
-		if (damageTypeInfo.outOfWorld()) {
+		if (this.bypassesInvulnerability(damageType)) {
 			return 0;
 		} else if (this.type == Type.ALL) {
 			return level;
@@ -36,6 +37,13 @@ public class ProtectionEnchantment extends CombatEnchantment {
 			return this.type == Type.PROJECTILE && damageTypeInfo.projectile() ? level * 2 : 0;
 		}
 	}
+
+    private boolean bypassesInvulnerability(DamageType damageType) {
+        var bypassesInvulnerability = MinecraftServer.process().damageType().getTag(Key.key("minecraft:bypasses_invulnerability"));
+
+        return bypassesInvulnerability != null
+                && bypassesInvulnerability.contains(MinecraftServer.getDamageTypeRegistry().getKey(damageType));
+    }
 
 	public enum Type {
 		ALL, FIRE, FALL, EXPLOSION, PROJECTILE
