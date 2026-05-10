@@ -1,6 +1,7 @@
 package io.github.togar2.pvp.feature.attack;
 
 import io.github.togar2.pvp.enchantment.EntityGroup;
+import io.github.togar2.pvp.entity.explosion.CrystalEntity;
 import io.github.togar2.pvp.events.FinalAttackEvent;
 import io.github.togar2.pvp.events.PrepareAttackEvent;
 import io.github.togar2.pvp.feature.FeatureType;
@@ -125,7 +126,13 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 
 		float originalHealth = 0;
 		boolean damageSucceeded = false;
-		if (target instanceof LivingEntity livingTarget) {
+		if (target instanceof CrystalEntity crystal) {
+			damageSucceeded = crystal.damage(new Damage(
+					attacker instanceof Player ? DamageType.PLAYER_ATTACK : DamageType.MOB_ATTACK,
+					attacker, attacker,
+					null, attack.damage()
+			));
+		} else if (target instanceof LivingEntity livingTarget) {
 			originalHealth = livingTarget.getHealth();
 			damageSucceeded = livingTarget.damage(new Damage(
 				smashAttack ? DamageType.MACE_SMASH :
@@ -145,6 +152,8 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 			}
 			return false;
 		}
+
+		if (target instanceof CrystalEntity) return true;
 
 		// Target is always living now, because the damage would not have succeeded if it wasn't
 		LivingEntity living = (LivingEntity) target;
