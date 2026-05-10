@@ -178,15 +178,23 @@ public class VanillaBlockFeature implements BlockFeature {
 			}
 		}
 
+		if (blocksAttacks != null && blocksAttacks.blockSound() != null && blockedDamage > 0) {
+			entity.getViewersAsAudience().playSound(Sound.sound(
+					blocksAttacks.blockSound(),
+					entity instanceof Player ? Sound.Source.PLAYER : Sound.Source.HOSTILE,
+					1.0F, 0.8F + ThreadLocalRandom.current().nextFloat() * 0.4F
+			), entity);
+		}
+
 		// Take shield hit (knockback and disabling)
 		DamageTypeInfo info = DamageTypeInfo.of(damage.getType());
 		if (!info.projectile() && damage.getAttacker() instanceof LivingEntity attacker)
-            this.takeShieldHit(entity, attacker, damageBlockEvent.knockbackAttacker());
+            this.takeShieldHit(entity, attacker, blocksAttacks, damageBlockEvent.knockbackAttacker());
 
 		return resultingDamage == 0;
 	}
 
-	protected void takeShieldHit(LivingEntity entity, LivingEntity attacker, boolean applyKnockback) {
+	protected void takeShieldHit(LivingEntity entity, LivingEntity attacker, @Nullable BlocksAttacks blocksAttacks, boolean applyKnockback) {
 		if (applyKnockback) {
 			Pos entityPos = entity.getPosition();
 			Pos attackerPos = attacker.getPosition();
@@ -202,16 +210,25 @@ public class VanillaBlockFeature implements BlockFeature {
 
 		var weapon = attacker.getItemInMainHand().get(DataComponents.WEAPON);
 		if (weapon != null && weapon.disableBlockingForSeconds() > 0.0F) {
-			this.disableShield(
-					player,
-					Math.round(weapon.disableBlockingForSeconds() * ServerFlag.SERVER_TICKS_PER_SECOND)
-			);
+			var disableScale = blocksAttacks == null ? 1.0F : blocksAttacks.disableCooldownScale();
+			var cooldownTicks = Math.round(weapon.disableBlockingForSeconds() * disableScale * ServerFlag.SERVER_TICKS_PER_SECOND);
+
+			if (cooldownTicks > 0) {
+				this.disableShield(player, blocksAttacks, cooldownTicks);
+			}
 		}
 	}
 
-	protected void disableShield(Player player, int cooldownTicks) {
+	protected void disableShield(Player player, @Nullable BlocksAttacks blocksAttacks, int cooldownTicks) {
 		var hand = player.getPlayerMeta().getActiveHand();
 		this.itemCooldownFeature.setCooldown(player, player.getItemInHand(hand), cooldownTicks);
+
+		if (blocksAttacks != null && blocksAttacks.disableSound() != null) {
+			player.getViewersAsAudience().playSound(Sound.sound(
+					blocksAttacks.disableSound(), Sound.Source.PLAYER,
+					0.8F, 0.8F + ThreadLocalRandom.current().nextFloat() * 0.4F
+			), player);
+		}
 
 		// Shield disable status
 		player.triggerStatus((byte) 30);
