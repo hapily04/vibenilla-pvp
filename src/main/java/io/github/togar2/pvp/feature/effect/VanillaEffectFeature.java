@@ -64,6 +64,7 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 	);
 
 	public static final Tag<Map<PotionEffect, Integer>> DURATION_LEFT = Tag.Transient("effectDurationLeft");
+	public static final Tag<Set<PotionEffect>> REPLACING_EFFECTS = Tag.Transient("replacingEffects");
 	public static final int DEFAULT_POTION_COLOR = 0xff385dc6;
 	private static final double WIND_CHARGED_MIN_POWER = 3.0;
 	private static final double WIND_CHARGED_RANDOM_POWER = 2.0;
@@ -161,8 +162,16 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 				return;
 			}
 
+			if (entity.hasEffect(potion.effect())) {
+				this.getReplacingEffects(entity).add(potion.effect());
+			}
+
 			entity.scheduler().scheduleNextProcess(() -> {
-				if (!this.hasActivePotion(entity, potion)) return;
+				this.getReplacingEffects(entity).remove(potion.effect());
+
+				if (!this.hasActivePotion(entity, potion)) {
+					return;
+				}
 
 				var potionMap = this.getDurationLeftMap(entity);
 				var infinite = potion.duration() == Potion.INFINITE_DURATION;
@@ -177,6 +186,10 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 
 		node.addListener(EntityPotionRemoveEvent.class, event -> {
 			if (!(event.getEntity() instanceof LivingEntity entity)) return;
+
+			if (this.getReplacingEffects(entity).contains(event.getPotion().effect())) {
+				return;
+			}
 
 			CombatPotionEffect combatPotionEffect = CombatPotionEffects.get(event.getPotion().effect());
 			combatPotionEffect.onRemoved(entity, event.getPotion().amplifier(), this.version);
@@ -196,6 +209,15 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 			entity.setTag(DURATION_LEFT, potionMap);
 		}
 		return potionMap;
+	}
+
+	private Set<PotionEffect> getReplacingEffects(Entity entity) {
+		var replacingEffects = entity.getTag(REPLACING_EFFECTS);
+		if (replacingEffects == null) {
+			replacingEffects = ConcurrentHashMap.newKeySet();
+			entity.setTag(REPLACING_EFFECTS, replacingEffects);
+		}
+		return replacingEffects;
 	}
 
 	private boolean hasActivePotion(LivingEntity entity, Potion potion) {
