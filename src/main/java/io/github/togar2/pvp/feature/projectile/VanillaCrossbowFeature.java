@@ -380,9 +380,9 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 		var yaw = Math.toRadians(position.yaw());
 
 		return new Vec(
-				Math.sin(yaw) * Math.sin(pitch),
+				-Math.sin(yaw) * Math.sin(pitch),
 				Math.cos(pitch),
-				-Math.cos(yaw) * Math.sin(pitch)
+				Math.cos(yaw) * Math.sin(pitch)
 		);
 	}
 
