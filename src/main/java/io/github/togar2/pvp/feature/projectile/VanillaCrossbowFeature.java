@@ -287,10 +287,12 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 			return ItemStack.AIR;
 		}
 
+		var loadedProjectile = projectileItem.withAmount(1);
+
 		if (multiShot) {
-			stack = this.setCrossbowProjectiles(stack, projectileItem, projectileItem, projectileItem);
+			stack = this.setCrossbowProjectiles(stack, loadedProjectile, loadedProjectile, loadedProjectile);
 		} else {
-			stack = this.setCrossbowProjectile(stack, projectileItem);
+			stack = this.setCrossbowProjectile(stack, loadedProjectile);
 		}
 
 		if (player.getGameMode() != GameMode.CREATIVE && projectileSlot >= 0) {
