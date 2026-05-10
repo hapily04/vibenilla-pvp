@@ -65,6 +65,8 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 
 	public static final Tag<Map<PotionEffect, Integer>> DURATION_LEFT = Tag.Transient("effectDurationLeft");
 	public static final Tag<Set<PotionEffect>> REPLACING_EFFECTS = Tag.Transient("replacingEffects");
+	public static final Tag<Set<PotionEffect>> INTERNAL_EFFECT_UPDATES = Tag.Transient("internalEffectUpdates");
+	public static final Tag<Map<PotionEffect, HiddenPotion>> HIDDEN_EFFECTS = Tag.Transient("hiddenEffects");
 	public static final int DEFAULT_POTION_COLOR = 0xff385dc6;
 	private static final double WIND_CHARGED_MIN_POWER = 3.0;
 	private static final double WIND_CHARGED_RANDOM_POWER = 2.0;
@@ -143,11 +145,12 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 				}
 			}
 
+			this.tickHiddenPotions(entity);
+
 			if (entity instanceof Player player && player.hasEffect(PotionEffect.ABSORPTION) && player.getAdditionalHearts() <= 0) {
 				player.removeEffect(PotionEffect.ABSORPTION);
 			}
 
-			//TODO keep track of underlying potions with longer duration
 			if (potionMap.size() != entity.getActiveEffects().size()) {
 				potionMap.keySet().removeIf(effect -> !entity.hasEffect(effect));
 			}
@@ -162,7 +165,14 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 				return;
 			}
 
-			if (entity.hasEffect(potion.effect())) {
+			var internalUpdate = this.getInternalEffectUpdates(entity).contains(potion.effect());
+			var currentPotion = entity.getEffect(potion.effect());
+			if (!internalUpdate && currentPotion != null && this.updatePotionStack(entity, currentPotion, potion)) {
+				event.setCancelled(true);
+				return;
+			}
+
+			if (currentPotion != null) {
 				this.getReplacingEffects(entity).add(potion.effect());
 			}
 
@@ -193,6 +203,7 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 
 			CombatPotionEffect combatPotionEffect = CombatPotionEffects.get(event.getPotion().effect());
 			combatPotionEffect.onRemoved(entity, event.getPotion().amplifier(), this.version);
+			this.promoteHiddenPotion(entity, event.getPotion().effect());
 
 			//Delay update 1 tick because we need to have the removing effect removed
 			MinecraftServer.getSchedulerManager()
@@ -220,9 +231,182 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 		return replacingEffects;
 	}
 
+	private Set<PotionEffect> getInternalEffectUpdates(Entity entity) {
+		var internalEffectUpdates = entity.getTag(INTERNAL_EFFECT_UPDATES);
+		if (internalEffectUpdates == null) {
+			internalEffectUpdates = ConcurrentHashMap.newKeySet();
+			entity.setTag(INTERNAL_EFFECT_UPDATES, internalEffectUpdates);
+		}
+		return internalEffectUpdates;
+	}
+
+	private Map<PotionEffect, HiddenPotion> getHiddenEffects(Entity entity) {
+		var hiddenEffects = entity.getTag(HIDDEN_EFFECTS);
+		if (hiddenEffects == null) {
+			hiddenEffects = new ConcurrentHashMap<PotionEffect, HiddenPotion>();
+			entity.setTag(HIDDEN_EFFECTS, hiddenEffects);
+		}
+		return hiddenEffects;
+	}
+
 	private boolean hasActivePotion(LivingEntity entity, Potion potion) {
 		return entity.getActiveEffects().stream()
 				.anyMatch(timedPotion -> timedPotion.potion() == potion);
+	}
+
+	private boolean updatePotionStack(LivingEntity entity, TimedPotion currentTimedPotion, Potion potion) {
+		var currentPotion = currentTimedPotion.potion();
+		var currentDuration = this.getRemainingDuration(entity, currentTimedPotion);
+		var activePotion = new Potion(currentPotion.effect(), currentPotion.amplifier(), currentDuration, currentPotion.flags());
+		var hiddenEffects = this.getHiddenEffects(entity);
+		var hiddenPotion = hiddenEffects.get(potion.effect());
+		var activeChanged = false;
+
+		if (potion.amplifier() > activePotion.amplifier()) {
+			if (this.isShorterDurationThan(potion, activePotion)) {
+				hiddenPotion = new HiddenPotion(activePotion, hiddenPotion);
+				hiddenEffects.put(potion.effect(), hiddenPotion);
+			}
+
+			return false;
+		}
+
+		if (this.isShorterDurationThan(activePotion, potion)) {
+			if (potion.amplifier() == activePotion.amplifier()) {
+				activePotion = new Potion(potion.effect(), potion.amplifier(), potion.duration(), potion.flags());
+				activeChanged = true;
+			} else {
+				hiddenPotion = this.updateHiddenPotion(hiddenPotion, potion);
+				hiddenEffects.put(potion.effect(), hiddenPotion);
+			}
+		}
+
+		var mergedFlags = this.mergePotionFlags(activePotion, potion, activeChanged);
+		if (mergedFlags != activePotion.flags()) {
+			activePotion = new Potion(activePotion.effect(), activePotion.amplifier(), activePotion.duration(), mergedFlags);
+			activeChanged = true;
+		}
+
+		if (activeChanged) {
+			this.replaceActivePotion(entity, activePotion);
+		}
+
+		return true;
+	}
+
+	private HiddenPotion updateHiddenPotion(@Nullable HiddenPotion hiddenPotion, Potion potion) {
+		if (hiddenPotion == null) {
+			return new HiddenPotion(potion, null);
+		}
+
+		var currentPotion = hiddenPotion.potion();
+		var nextHiddenPotion = hiddenPotion.hiddenPotion();
+
+		if (potion.amplifier() > currentPotion.amplifier()) {
+			if (this.isShorterDurationThan(potion, currentPotion)) {
+				nextHiddenPotion = new HiddenPotion(currentPotion, nextHiddenPotion);
+			}
+
+			return new HiddenPotion(potion, nextHiddenPotion);
+		}
+
+		if (this.isShorterDurationThan(currentPotion, potion)) {
+			if (potion.amplifier() == currentPotion.amplifier()) {
+				currentPotion = potion;
+			} else {
+				nextHiddenPotion = this.updateHiddenPotion(nextHiddenPotion, potion);
+			}
+		}
+
+		return new HiddenPotion(
+				new Potion(currentPotion.effect(), currentPotion.amplifier(), currentPotion.duration(), this.mergePotionFlags(currentPotion, potion, false)),
+				nextHiddenPotion
+		);
+	}
+
+	private byte mergePotionFlags(Potion currentPotion, Potion potion, boolean activeChanged) {
+		var flags = currentPotion.flags();
+		var ambient = (potion.flags() & Potion.AMBIENT_FLAG) == Potion.AMBIENT_FLAG;
+		var currentAmbient = (flags & Potion.AMBIENT_FLAG) == Potion.AMBIENT_FLAG;
+		if (activeChanged || !ambient && currentAmbient) {
+			flags = (byte) (ambient ? flags | Potion.AMBIENT_FLAG : flags & ~Potion.AMBIENT_FLAG);
+		}
+
+		flags = (byte) ((flags & ~(Potion.PARTICLES_FLAG | Potion.ICON_FLAG | Potion.BLEND_FLAG))
+				| (potion.flags() & (Potion.PARTICLES_FLAG | Potion.ICON_FLAG | Potion.BLEND_FLAG)));
+		return flags;
+	}
+
+	private boolean isShorterDurationThan(Potion potion, Potion otherPotion) {
+		return potion.duration() != Potion.INFINITE_DURATION
+				&& (potion.duration() < otherPotion.duration() || otherPotion.duration() == Potion.INFINITE_DURATION);
+	}
+
+	private int getRemainingDuration(LivingEntity entity, TimedPotion timedPotion) {
+		if (timedPotion.potion().duration() == Potion.INFINITE_DURATION) {
+			return Potion.INFINITE_DURATION;
+		}
+
+		var durationLeft = this.getDurationLeftMap(entity).get(timedPotion.potion().effect());
+		if (durationLeft != null) {
+			return durationLeft;
+		}
+
+		var elapsedTicks = (int) (entity.getAliveTicks() - timedPotion.startingTicks());
+		return Math.max(timedPotion.potion().duration() - elapsedTicks, 0);
+	}
+
+	private void tickHiddenPotions(LivingEntity entity) {
+		var hiddenEffects = entity.getTag(HIDDEN_EFFECTS);
+		if (hiddenEffects == null || hiddenEffects.isEmpty()) {
+			return;
+		}
+
+		hiddenEffects.replaceAll((effect, hiddenPotion) -> this.tickHiddenPotion(hiddenPotion));
+	}
+
+	private HiddenPotion tickHiddenPotion(HiddenPotion hiddenPotion) {
+		var potion = hiddenPotion.potion();
+		var duration = potion.duration();
+		if (duration != Potion.INFINITE_DURATION && duration > 0) {
+			potion = new Potion(potion.effect(), potion.amplifier(), duration - 1, potion.flags());
+		}
+
+		var nextHiddenPotion = hiddenPotion.hiddenPotion() == null ? null : this.tickHiddenPotion(hiddenPotion.hiddenPotion());
+		return new HiddenPotion(potion, nextHiddenPotion);
+	}
+
+	private void replaceActivePotion(LivingEntity entity, Potion potion) {
+		var replacingEffects = this.getReplacingEffects(entity);
+		var internalEffectUpdates = this.getInternalEffectUpdates(entity);
+		replacingEffects.add(potion.effect());
+		internalEffectUpdates.add(potion.effect());
+
+		entity.scheduler().scheduleNextProcess(() -> {
+			entity.addEffect(potion);
+			entity.scheduler().scheduleNextProcess(() -> {
+				replacingEffects.remove(potion.effect());
+				internalEffectUpdates.remove(potion.effect());
+			});
+		});
+	}
+
+	private void promoteHiddenPotion(LivingEntity entity, PotionEffect potionEffect) {
+		var hiddenEffects = entity.getTag(HIDDEN_EFFECTS);
+		if (hiddenEffects == null) {
+			return;
+		}
+
+		var hiddenPotion = hiddenEffects.remove(potionEffect);
+		if (hiddenPotion == null || hiddenPotion.potion().duration() == 0) {
+			return;
+		}
+
+		if (hiddenPotion.hiddenPotion() != null) {
+			hiddenEffects.put(potionEffect, hiddenPotion.hiddenPotion());
+		}
+
+		this.replaceActivePotion(entity, hiddenPotion.potion());
 	}
 
 	private boolean isImmuneToPotion(LivingEntity entity, PotionEffect potionEffect) {
@@ -230,6 +414,9 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 
 		return (entityType == EntityType.SILVERFISH && potionEffect == PotionEffect.INFESTED)
 				|| (entityType == EntityType.SLIME && potionEffect == PotionEffect.OOZING);
+	}
+
+	private record HiddenPotion(Potion potion, @Nullable HiddenPotion hiddenPotion) {
 	}
 
 	private void applyWindChargedBurst(LivingEntity entity) {
