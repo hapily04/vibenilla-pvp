@@ -5,6 +5,7 @@ import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 
 import net.minestom.server.component.DataComponents;
+import net.minestom.server.event.item.PlayerCancelItemUseEvent;
 import net.minestom.server.event.item.PlayerFinishItemUseEvent;
 import org.jetbrains.annotations.Nullable;
 
@@ -148,26 +149,35 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 		});
 
 		node.addListener(PlayerFinishItemUseEvent.class, event -> {
-			Player player = event.getPlayer();
-			ItemStack stack = event.getItemStack();
+			var player = event.getPlayer();
+			var stack = event.getItemStack();
 			if (stack.material() != Material.CROSSBOW) return;
 
-			int quickCharge = stack.get(DataComponents.ENCHANTMENTS).level(Enchantment.QUICK_CHARGE);
-
-			if (quickCharge < 6) {
-				long useTicks = player.getCurrentItemUseTime();
-				double power = this.getCrossbowPowerForTime(useTicks, stack);
-				if (!(power >= 1.0F) || this.isCrossbowCharged(stack))
-					return;
-			}
-
-			stack = this.loadCrossbowProjectiles(player, stack);
-			if (stack == null) return;
-
-			this.playCrossbowLoadingEndSound(player);
-
-			player.setItemInHand(event.getHand(), stack);
+			this.loadCrossbowOnRelease(player, event.getHand(), stack, player.getCurrentItemUseTime());
 		});
+
+		node.addListener(PlayerCancelItemUseEvent.class, event -> {
+			var stack = event.getItemStack();
+			if (stack.material() != Material.CROSSBOW) return;
+
+			this.loadCrossbowOnRelease(event.getPlayer(), event.getHand(), stack, event.getUseDuration());
+		});
+	}
+
+	protected void loadCrossbowOnRelease(Player player, PlayerHand hand, ItemStack stack, long useTicks) {
+		var quickCharge = stack.get(DataComponents.ENCHANTMENTS).level(Enchantment.QUICK_CHARGE);
+
+		if (quickCharge < 6) {
+			var power = this.getCrossbowPowerForTime(useTicks, stack);
+			if (!(power >= 1.0F) || this.isCrossbowCharged(stack)) return;
+		}
+
+		stack = this.loadCrossbowProjectiles(player, stack);
+		if (stack == null) return;
+
+		this.playCrossbowLoadingEndSound(player);
+
+		player.setItemInHand(hand, stack);
 	}
 
 	protected void playCrossbowLoadingEndSound(Player player) {
