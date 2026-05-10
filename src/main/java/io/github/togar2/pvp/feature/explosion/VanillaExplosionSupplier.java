@@ -245,7 +245,7 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 				for (Player player : instance.getPlayers()) {
 					if (player.getPosition().distanceSquared(centerPoint) >= 4096.0) continue;
 
-					var knockbackVec = this.playerKnockback.getOrDefault(player, Vec.ZERO);
+					var knockbackVec = this.playerKnockback.get(player);
 					player.sendPacket(
 							new ExplosionPacket(
 									new Vec(centerX, centerY, centerZ),
