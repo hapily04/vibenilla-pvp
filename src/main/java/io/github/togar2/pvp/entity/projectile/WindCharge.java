@@ -49,7 +49,7 @@ public final class WindCharge extends CustomEntityProjectile {
 		var position = this.getPosition();
 
 		if (this.collisionDirection != null) {
-			position = position.add(this.collisionDirection.mul(0.25));
+			position = position.sub(this.collisionDirection.mul(0.25));
 		}
 
 		this.explode(position);
