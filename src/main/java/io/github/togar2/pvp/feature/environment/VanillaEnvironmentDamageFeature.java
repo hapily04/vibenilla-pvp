@@ -324,7 +324,17 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 		var position = entity.getPosition();
 		var block = instance.getBlock(position);
 
-		return block.compare(Block.LAVA);
+		return block.compare(Block.LAVA) || this.isInLavaCauldron(block, entity);
+	}
+
+	private boolean isInLavaCauldron(Block block, LivingEntity entity) {
+		if (!block.compare(Block.LAVA_CAULDRON)) return false;
+
+		var position = entity.getPosition();
+		var contentHeight = position.blockY() + 0.9375;
+		var feetY = position.y() + entity.getBoundingBox().minY();
+
+		return feetY <= contentHeight;
 	}
 
 	private boolean isTouchingWater(LivingEntity entity) {
