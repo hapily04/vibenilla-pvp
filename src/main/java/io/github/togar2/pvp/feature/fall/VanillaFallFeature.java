@@ -245,6 +245,10 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 			entity.removeTag(EXTRA_FALL_PARTICLES);
 		}
 
+		if (block.compare(Block.POWDER_SNOW) && fallDistance >= 4.0) {
+			this.playPowderSnowFallSound(entity, fallDistance);
+		}
+
 		double safeFallDistance = entity.getAttributeValue(Attribute.SAFE_FALL_DISTANCE);
 		if (adjustedFallDistance > safeFallDistance) {
 			if (!block.isAir()) {
@@ -279,7 +283,19 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 				bigFall ?
 						SoundEvent.ENTITY_PLAYER_BIG_FALL :
 						SoundEvent.ENTITY_PLAYER_SMALL_FALL,
-				entity instanceof  Player ? Sound.Source.PLAYER : Sound.Source.HOSTILE,
+				entity instanceof Player ? Sound.Source.PLAYER : Sound.Source.HOSTILE,
+				1.0f, 1.0f
+		), entity);
+	}
+
+	private void playPowderSnowFallSound(LivingEntity entity, double fallDistance) {
+		boolean bigFall = fallDistance >= 7.0;
+
+		entity.getViewersAsAudience().playSound(Sound.sound(
+				bigFall ?
+						SoundEvent.ENTITY_PLAYER_BIG_FALL :
+						SoundEvent.ENTITY_PLAYER_SMALL_FALL,
+				entity instanceof Player ? Sound.Source.PLAYER : Sound.Source.HOSTILE,
 				1.0f, 1.0f
 		), entity);
 	}
@@ -364,6 +380,7 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 
 	private double getDamageModifier(Block block) {
 		if (this.isPointedDripstoneStalagmiteTip(block)) return 2.0;
+		if (block.compare(Block.POWDER_SNOW)) return 0.0;
 		if (block.compare(Block.SLIME_BLOCK)) return 0.0;
 		if (block.compare(Block.HAY_BLOCK) || block.compare(Block.HONEY_BLOCK)) return 0.2;
 
