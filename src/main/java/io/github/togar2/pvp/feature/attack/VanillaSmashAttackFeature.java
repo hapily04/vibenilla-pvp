@@ -161,7 +161,7 @@ public class VanillaSmashAttackFeature implements SmashAttackFeature {
 	private void applyWindBurstKnockback(LivingEntity attacker, Pos attackerPosition, float power, int tps, Entity nearbyEntity) {
 		if (nearbyEntity == attacker) return;
 		if (!(nearbyEntity instanceof LivingEntity nearbyLiving)) return;
-		if (nearbyEntity.getEntityType() == EntityType.ARMOR_STAND) return;
+		if (this.isMarkerArmorStand(nearbyEntity)) return;
 
 		Vec direction = nearbyEntity.getPosition().asVec().sub(attackerPosition.asVec());
 		double directionLength = direction.length();
@@ -217,9 +217,7 @@ public class VanillaSmashAttackFeature implements SmashAttackFeature {
 	private void applySmashKnockbackToEntity(LivingEntity attacker, LivingEntity target, boolean heavySmash, int tps, Entity nearbyEntity) {
 		if (nearbyEntity == attacker || nearbyEntity == target) return;
 		if (!(nearbyEntity instanceof LivingEntity nearbyLiving)) return;
-		if (nearbyEntity.getEntityType() == EntityType.ARMOR_STAND
-				&& nearbyEntity.getEntityMeta() instanceof ArmorStandMeta armorStandMeta
-				&& armorStandMeta.isMarker()) return;
+		if (this.isMarkerArmorStand(nearbyEntity)) return;
 		if (nearbyEntity instanceof Player nearbyPlayer && nearbyPlayer.getGameMode() == GameMode.SPECTATOR) return;
 		if (nearbyEntity instanceof Player nearbyPlayer && nearbyPlayer.getGameMode() == GameMode.CREATIVE && nearbyPlayer.isFlying()) return;
 		if (target.getPosition().distanceSquared(nearbyEntity.getPosition()) > SMASH_ATTACK_KNOCKBACK_RADIUS * SMASH_ATTACK_KNOCKBACK_RADIUS) return;
@@ -243,5 +241,11 @@ public class VanillaSmashAttackFeature implements SmashAttackFeature {
 				SMASH_ATTACK_VERTICAL_KNOCKBACK * tps,
 				nearbyVelocity.z() + knockbackVector.z() * tps
 		));
+	}
+
+	private boolean isMarkerArmorStand(Entity entity) {
+		return entity.getEntityType() == EntityType.ARMOR_STAND
+				&& entity.getEntityMeta() instanceof ArmorStandMeta armorStandMeta
+				&& armorStandMeta.isMarker();
 	}
 }

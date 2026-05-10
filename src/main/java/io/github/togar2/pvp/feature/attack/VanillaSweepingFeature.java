@@ -16,6 +16,7 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.entity.damage.Damage;
 import net.minestom.server.entity.damage.DamageType;
+import net.minestom.server.entity.metadata.other.ArmorStandMeta;
 import net.minestom.server.network.packet.server.play.ParticlePacket;
 import net.minestom.server.particle.Particle;
 
@@ -108,7 +109,7 @@ public class VanillaSweepingFeature implements SweepingFeature {
 	                                           BoundingBox boundingBox, Entity nearbyEntity) {
 		if (nearbyEntity == target || nearbyEntity == attacker) return null;
 		if (!(nearbyEntity instanceof LivingEntity living)) return null;
-		if (nearbyEntity.getEntityType() == EntityType.ARMOR_STAND) return null;
+		if (this.isMarkerArmorStand(nearbyEntity)) return null;
 		if (!boundingBox.intersectEntity(target.getPosition(), nearbyEntity)) return null;
 		if (attacker.getPosition().distanceSquared(nearbyEntity.getPosition()) >= 9.0) return null;
 
@@ -126,5 +127,11 @@ public class VanillaSweepingFeature implements SweepingFeature {
 		this.knockbackFeature.applySweepingKnockback(attacker, living);
 
 		return living;
+	}
+
+	private boolean isMarkerArmorStand(Entity entity) {
+		return entity.getEntityType() == EntityType.ARMOR_STAND
+				&& entity.getEntityMeta() instanceof ArmorStandMeta armorStandMeta
+				&& armorStandMeta.isMarker();
 	}
 }
