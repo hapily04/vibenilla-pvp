@@ -3,7 +3,6 @@ package io.github.togar2.pvp.feature.block;
 import java.util.concurrent.ThreadLocalRandom;
 
 import io.github.togar2.pvp.damage.DamageTypeInfo;
-import io.github.togar2.pvp.enums.Tool;
 import io.github.togar2.pvp.events.DamageBlockEvent;
 import io.github.togar2.pvp.feature.FeatureType;
 import io.github.togar2.pvp.feature.config.DefinedFeature;
@@ -14,6 +13,8 @@ import io.github.togar2.pvp.utils.CombatVersion;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.MinecraftServer;
+import net.minestom.server.ServerFlag;
+import net.minestom.server.component.DataComponents;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Entity;
@@ -142,16 +143,22 @@ public class VanillaBlockFeature implements BlockFeature {
 			);
 		}
 
-		if (!(entity instanceof Player)) return;
-		Tool tool = Tool.fromMaterial(attacker.getItemInMainHand().material());
-		if (tool != null && tool.isAxe()) {
-            this.disableShield((Player) entity);
+		if (!(entity instanceof Player player)) {
+			return;
+		}
+
+		var weapon = attacker.getItemInMainHand().get(DataComponents.WEAPON);
+		if (weapon != null && weapon.disableBlockingForSeconds() > 0.0F) {
+			this.disableShield(
+					player,
+					Math.round(weapon.disableBlockingForSeconds() * ServerFlag.SERVER_TICKS_PER_SECOND)
+			);
 		}
 	}
 
-	protected void disableShield(Player player) {
-		PlayerHand hand = player.getPlayerMeta().getActiveHand();
-        this.itemCooldownFeature.setCooldown(player, player.getItemInHand(hand), 100);
+	protected void disableShield(Player player, int cooldownTicks) {
+		var hand = player.getPlayerMeta().getActiveHand();
+		this.itemCooldownFeature.setCooldown(player, player.getItemInHand(hand), cooldownTicks);
 
 		// Shield disable status
 		player.triggerStatus((byte) 30);
