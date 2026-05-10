@@ -4,6 +4,7 @@ import io.github.togar2.pvp.feature.FeatureType;
 import io.github.togar2.pvp.feature.RegistrableFeature;
 import io.github.togar2.pvp.feature.config.DefinedFeature;
 import io.github.togar2.pvp.feature.config.FeatureConfiguration;
+import io.github.togar2.pvp.feature.item.ItemDamageFeature;
 import io.github.togar2.pvp.feature.state.PlayerStateFeature;
 import io.github.togar2.pvp.utils.FluidUtil;
 import net.kyori.adventure.key.Key;
@@ -20,8 +21,9 @@ import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.entity.damage.DamageType;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.entity.EntityTickEvent;
-import net.minestom.server.event.player.PlayerStartFlyingWithElytraEvent;
 import net.minestom.server.event.player.PlayerMoveEvent;
+import net.minestom.server.event.player.PlayerStartFlyingWithElytraEvent;
+import net.minestom.server.event.player.PlayerTickEvent;
 import net.minestom.server.event.trait.EntityInstanceEvent;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
@@ -33,6 +35,9 @@ import net.minestom.server.registry.Registries;
 import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.tag.Tag;
 
+import java.util.ArrayList;
+import java.util.concurrent.ThreadLocalRandom;
+
 /**
  * Vanilla implementation of {@link FallFeature}
  */
@@ -40,15 +45,17 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 	public static final DefinedFeature<VanillaFallFeature> DEFINED = new DefinedFeature<>(
 			FeatureType.FALL, VanillaFallFeature::new,
 			VanillaFallFeature::initPlayer,
-			FeatureType.PLAYER_STATE
+			FeatureType.PLAYER_STATE, FeatureType.ITEM_DAMAGE
 	);
 
 	public static final Tag<Double> FALL_DISTANCE = Tag.Transient("fallDistance");
 	public static final Tag<Boolean> EXTRA_FALL_PARTICLES = Tag.Transient("extraFallParticles");
+	public static final Tag<Integer> FALL_FLYING_TICKS = Tag.Integer("fallFlyingTicks");
 
 	private final FeatureConfiguration configuration;
 
 	private PlayerStateFeature playerStateFeature;
+	private ItemDamageFeature itemDamageFeature;
 
 	public VanillaFallFeature(FeatureConfiguration configuration) {
 		this.configuration = configuration;
@@ -57,10 +64,12 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 	@Override
 	public void initDependencies() {
 		this.playerStateFeature = this.configuration.get(FeatureType.PLAYER_STATE);
+		this.itemDamageFeature = this.configuration.get(FeatureType.ITEM_DAMAGE);
 	}
 
 	public static void initPlayer(Player player, boolean firstInit) {
 		player.setTag(FALL_DISTANCE, 0.0);
+		player.setTag(FALL_FLYING_TICKS, 0);
 	}
 
 	@Override
@@ -72,6 +81,8 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 				player.setFlyingWithElytra(false);
 			}
 		});
+
+		node.addListener(PlayerTickEvent.class, event -> this.updateFallFlying(event.getPlayer()));
 
 		// For living non-player entities, handle fall damage every tick
 		node.addListener(EntityTickEvent.class, event -> {
@@ -112,6 +123,23 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 		return false;
 	}
 
+	private boolean canContinueGliding(Player player) {
+		if (player.isFlying()
+				|| player.isOnGround()
+				|| player.getVehicle() != null
+				|| player.hasEffect(PotionEffect.LEVITATION)) {
+			return false;
+		}
+
+		for (var slot : EquipmentSlot.values()) {
+			if (this.canGlideUsing(player.getEquipment(slot), slot)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	private boolean canGlideUsing(ItemStack stack, EquipmentSlot slot) {
 		var equippable = stack.get(DataComponents.EQUIPPABLE);
 
@@ -119,6 +147,40 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 				&& equippable != null
 				&& slot == equippable.slot()
 				&& !this.nextDamageWillBreak(stack);
+	}
+
+	private void updateFallFlying(Player player) {
+		if (!player.isFlyingWithElytra()) {
+			player.setTag(FALL_FLYING_TICKS, 0);
+			return;
+		}
+
+		if (!this.canContinueGliding(player)) {
+			player.setFlyingWithElytra(false);
+			player.setTag(FALL_FLYING_TICKS, 0);
+			return;
+		}
+
+		var fallFlyingTicks = player.getTag(FALL_FLYING_TICKS) + 1;
+		player.setTag(FALL_FLYING_TICKS, fallFlyingTicks);
+
+		if (fallFlyingTicks % 20 != 0) {
+			return;
+		}
+
+		var gliderSlots = new ArrayList<EquipmentSlot>();
+		for (var slot : EquipmentSlot.values()) {
+			if (this.canGlideUsing(player.getEquipment(slot), slot)) {
+				gliderSlots.add(slot);
+			}
+		}
+
+		if (gliderSlots.isEmpty()) {
+			return;
+		}
+
+		var slot = gliderSlots.get(ThreadLocalRandom.current().nextInt(gliderSlots.size()));
+		this.itemDamageFeature.damageEquipment(player, slot, 1);
 	}
 
 	private boolean nextDamageWillBreak(ItemStack stack) {
