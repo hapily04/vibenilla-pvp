@@ -1,5 +1,6 @@
 package io.github.togar2.pvp.utils;
 
+import net.minestom.server.coordinate.CoordConversion;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.Player;
@@ -94,5 +95,31 @@ public class FluidUtil {
 
 	public static boolean isTouchingWater(Player player) {
 		return isTouchingWater((Entity) player);
+	}
+
+	public static boolean isInRain(Entity entity) {
+		var instance = entity.getInstance();
+
+		if (instance == null) return false;
+		if (!instance.getWeather().isRaining()) return false;
+		if (!instance.getCachedDimensionType().hasSkylight() || instance.getCachedDimensionType().hasCeiling()) return false;
+
+		var position = entity.getPosition();
+
+		if (isRainingAt(instance, position.blockX(), position.blockY(), position.blockZ())) return true;
+
+		var topBlockY = CoordConversion.globalToBlock(position.y() + entity.getBoundingBox().maxY());
+
+		return isRainingAt(instance, position.blockX(), topBlockY, position.blockZ());
+	}
+
+	public static boolean isRainingAt(Instance instance, int blockX, int blockY, int blockZ) {
+		var chunk = instance.getChunkAt(blockX, blockZ);
+
+		if (chunk == null) return false;
+
+		var highestBlockY = chunk.motionBlockingHeightmap().getHeight(blockX, blockZ);
+
+		return highestBlockY < blockY;
 	}
 }

@@ -69,7 +69,7 @@ public class VanillaTridentFeature implements TridentFeature, RegistrableFeature
 			if (ticks < 10) return;
 
 			int riptide = stack.get(DataComponents.ENCHANTMENTS).level(Enchantment.RIPTIDE);
-			if (riptide > 0 && !FluidUtil.isTouchingWater(player)) return;
+			if (riptide > 0 && !this.isInWaterOrRain(player)) return;
 
             this.itemDamageFeature.damageEquipment(player, event.getHand() == PlayerHand.MAIN ?
 					EquipmentSlot.MAIN_HAND : EquipmentSlot.OFF_HAND, 1);
@@ -140,6 +140,10 @@ public class VanillaTridentFeature implements TridentFeature, RegistrableFeature
 				l * (n / length)
 		).mul(ServerFlag.SERVER_TICKS_PER_SECOND)));
 
+		if (player.isOnGround()) {
+			player.refreshPosition(player.getPosition().add(0.0, 1.1999999, 0.0));
+		}
+
 		SoundEvent soundEvent = level >= 3 ? SoundEvent.ITEM_TRIDENT_RIPTIDE_3 :
 				(level == 2 ? SoundEvent.ITEM_TRIDENT_RIPTIDE_2 : SoundEvent.ITEM_TRIDENT_RIPTIDE_1);
 		ViewUtil.viewersAndSelf(player).playSound(Sound.sound(
@@ -148,5 +152,9 @@ public class VanillaTridentFeature implements TridentFeature, RegistrableFeature
 		), player);
 
 		player.scheduleNextTick(entity -> player.refreshActiveHand(false, false, true));
+	}
+
+	private boolean isInWaterOrRain(Player player) {
+		return FluidUtil.isTouchingWater(player) || FluidUtil.isInRain(player);
 	}
 }
