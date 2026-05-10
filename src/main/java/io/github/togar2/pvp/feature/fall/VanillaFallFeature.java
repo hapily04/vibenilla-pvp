@@ -32,6 +32,7 @@ import net.minestom.server.network.packet.server.play.ParticlePacket;
 import net.minestom.server.particle.Particle;
 import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.registry.Registries;
+import net.minestom.server.registry.RegistryKey;
 import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.tag.Tag;
 
@@ -228,6 +229,7 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 		Block block = entity.getInstance().getBlock(landingPos);
 		var adjustedFallDistance = this.adjustFallDistance(block, fallDistance);
 		var damageModifier = this.getDamageModifier(block);
+		var damageType = this.getDamageType(block);
 
 		if (entity.hasTag(EXTRA_FALL_PARTICLES) && entity.getTag(EXTRA_FALL_PARTICLES) && fallDistance > 0.0) {
 			Vec position = landingPos.asVec().apply(Vec.Operator.FLOOR).add(0.5, 1, 0.5);
@@ -266,7 +268,7 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 		int damage = this.getFallDamage(entity, adjustedFallDistance, damageModifier);
 		if (damage > 0) {
             this.playFallSound(entity, damage);
-			entity.damage(DamageType.FALL, damage);
+			entity.damage(damageType, damage);
 		}
 	}
 
@@ -355,19 +357,33 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 
 	private double adjustFallDistance(Block block, double fallDistance) {
 		if (this.isBed(block)) return fallDistance * 0.5;
+		if (this.isPointedDripstoneStalagmiteTip(block)) return fallDistance + 2.5;
 
 		return fallDistance;
 	}
 
 	private double getDamageModifier(Block block) {
+		if (this.isPointedDripstoneStalagmiteTip(block)) return 2.0;
 		if (block.compare(Block.SLIME_BLOCK)) return 0.0;
 		if (block.compare(Block.HAY_BLOCK) || block.compare(Block.HONEY_BLOCK)) return 0.2;
 
 		return 1.0;
 	}
 
+	private RegistryKey<DamageType> getDamageType(Block block) {
+		if (this.isPointedDripstoneStalagmiteTip(block)) return DamageType.STALAGMITE;
+
+		return DamageType.FALL;
+	}
+
 	private boolean isBed(Block block) {
 		return block.key().value().endsWith("_bed");
+	}
+
+	private boolean isPointedDripstoneStalagmiteTip(Block block) {
+		return block.compare(Block.POINTED_DRIPSTONE)
+				&& "up".equals(block.getProperty("vertical_direction"))
+				&& "tip".equals(block.getProperty("thickness"));
 	}
 
 	private boolean isTouchingLava(LivingEntity entity, Pos position) {
