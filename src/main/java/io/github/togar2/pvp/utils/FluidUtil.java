@@ -32,10 +32,14 @@ public class FluidUtil {
 	}
 
 	public static boolean isTouchingWater(Entity entity, Block block, int blockY) {
+		return isTouchingWater(entity, entity.getPosition(), block, blockY);
+	}
+
+	public static boolean isTouchingWater(Entity entity, Pos position, Block block, int blockY) {
 		if (!block.compare(Block.WATER) && !block.compare(Block.BUBBLE_COLUMN)
 				&& !"true".equals(block.getProperty("waterlogged"))) return false;
-		if (entity.getPosition().y() + entity.getBoundingBox().height() < blockY) return false;
-		if (entity.getPosition().y() > (blockY + getHeight(block))) return false;
+		if (position.y() + entity.getBoundingBox().height() < blockY) return false;
+		if (position.y() > (blockY + getHeight(block))) return false;
 		return true;
 	}
 
@@ -84,13 +88,13 @@ public class FluidUtil {
 
 		for (PairXZ pair : points) {
 			Block block = instance.getBlock(pair.x(), blockY, pair.z());
-			if (isTouchingWater(entity, block, blockY)) return true;
+			if (isTouchingWater(entity, position, block, blockY)) return true;
 			block = instance.getBlock(pair.x(), blockY + 1, pair.z());
-			if (isTouchingWater(entity, block, blockY + 1)) return true;
+			if (isTouchingWater(entity, position, block, blockY + 1)) return true;
 
 			if (y - blockY >= 2 - entity.getBoundingBox().height()) {
 				block = instance.getBlock(pair.x(), blockY + 2, pair.z());
-				if (isTouchingWater(entity, block, blockY + 2)) return true;
+				if (isTouchingWater(entity, position, block, blockY + 2)) return true;
 			}
 		}
 
