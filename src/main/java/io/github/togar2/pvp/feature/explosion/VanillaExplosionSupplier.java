@@ -7,7 +7,6 @@ import net.kyori.adventure.nbt.CompoundBinaryTag;
 import net.minestom.server.ServerFlag;
 import net.minestom.server.collision.BoundingBox;
 import net.minestom.server.collision.CollisionUtils;
-import net.minestom.server.coordinate.BlockVec;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Entity;
@@ -18,7 +17,6 @@ import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.entity.damage.Damage;
 import net.minestom.server.entity.damage.DamageType;
 import net.minestom.server.event.EventDispatcher;
-import net.minestom.server.instance.Chunk;
 import net.minestom.server.instance.Explosion;
 import net.minestom.server.instance.ExplosionSupplier;
 import net.minestom.server.instance.Instance;
@@ -234,24 +232,21 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 					records[i * 3 + 2] = z;
 				}
 
-				Chunk chunk = instance.getChunkAt(this.getCenterX(), this.getCenterZ());
-				if (chunk != null) {
-					for (Player player : chunk.getViewers()) {
-						Vec knockbackVec = this.playerKnockback.getOrDefault(player, Vec.ZERO);
-						player.sendPacket(
-                                new ExplosionPacket(
-                                        new BlockVec(centerX, centerY, centerZ),
-                                        this.getStrength(),
-                                        blocks.size(),
-								        knockbackVec,
-                                        Particle.EXPLOSION,
-                                        SoundEvent.ENTITY_GENERIC_EXPLODE,
-                                        VanillaExplosionSupplier.this.PARTICLES
-                                )
-                        );
-					}
+				for (Player player : instance.getPlayers()) {
+					var knockbackVec = this.playerKnockback.getOrDefault(player, Vec.ZERO);
+					player.sendPacket(
+							new ExplosionPacket(
+									new Vec(centerX, centerY, centerZ),
+									this.getStrength(),
+									blocks.size(),
+									knockbackVec,
+									Particle.EXPLOSION,
+									SoundEvent.ENTITY_GENERIC_EXPLODE,
+									VanillaExplosionSupplier.this.PARTICLES
+							)
+					);
 				}
-                this.playerKnockback.clear();
+				this.playerKnockback.clear();
 
 				if (additionalData != null && additionalData.keySet().contains("fire")) {
 					if (additionalData.getBoolean("fire")) {
