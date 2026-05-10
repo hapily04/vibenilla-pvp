@@ -131,11 +131,11 @@ public class CustomEntityProjectile extends Entity {
 		dy += random.nextGaussian() * spread;
 		dz += random.nextGaussian() * spread;
 
-		final double mul = ServerFlag.SERVER_TICKS_PER_SECOND * power;
-		this.velocity = new Vec(dx * mul, dy * mul, dz * mul);
+        final double mul = ServerFlag.SERVER_TICKS_PER_SECOND * power;
+        this.velocity = new Vec(dx * mul, dy * mul, dz * mul);
         this.setView(
-				(float) Math.toDegrees(Math.atan2(dx, dz)),
-				(float) Math.toDegrees(Math.atan2(dy, Math.sqrt(dx * dx + dz * dz)))
+				(float) Math.toDegrees(Math.atan2(-dx, dz)),
+				(float) Math.toDegrees(Math.atan2(-dy, Math.sqrt(dx * dx + dz * dz)))
 		);
 	}
 
@@ -291,9 +291,9 @@ public class CustomEntityProjectile extends Entity {
 			float pitch = this.position.pitch();
 
 			if (!this.noClip) {
-				yaw = (float) Math.toDegrees(Math.atan2(diff.x(), diff.z()));
+				yaw = (float) Math.toDegrees(Math.atan2(-diff.x(), diff.z()));
 				pitch = (float) Math.toDegrees(
-						Math.atan2(diff.y(), Math.sqrt(diff.x() * diff.x() + diff.z() * diff.z())));
+						Math.atan2(-diff.y(), Math.sqrt(diff.x() * diff.x() + diff.z() * diff.z())));
 
 				// Vanilla really likes to use variables from the render code
 				// on the server side in a way that does not make sense at all
