@@ -69,12 +69,14 @@ public class VanillaBlockFeature implements BlockFeature {
 	public boolean isDamageBlocked(LivingEntity entity, Damage damage) {
 		if (damage.getAmount() <= 0) return false;
 
-		if (this.bypassesShield(damage) || this.isPiercing(damage)) return false;
+		if (this.isPiercing(damage)) return false;
 		if (!(entity.getEntityMeta() instanceof LivingEntityMeta meta) || !meta.isHandActive()) return false;
 
 		var blockingStack = entity.getItemInHand(meta.getActiveHand());
 		var blocksAttacks = blockingStack.get(DataComponents.BLOCKS_ATTACKS);
 		if (blocksAttacks == null) return false;
+
+		if (this.isBypassedBy(blocksAttacks, damage)) return false;
 
 		if (entity instanceof Player blockingPlayer) {
 			var blockDelayTicks = Math.round(blocksAttacks.blockDelaySeconds() * ServerFlag.SERVER_TICKS_PER_SECOND);
@@ -99,11 +101,15 @@ public class VanillaBlockFeature implements BlockFeature {
 		return false;
 	}
 
-    private boolean bypassesShield(Damage damage) {
-        var bypassesShield = MinecraftServer.process().damageType().getTag(Key.key("minecraft:bypasses_shield"));
+	private boolean isBypassedBy(BlocksAttacks blocksAttacks, Damage damage) {
+		var bypassedBy = blocksAttacks.bypassedBy();
 
-        return bypassesShield != null && bypassesShield.contains(damage.getType());
-    }
+		if (bypassedBy == null) return false;
+
+		var tag = MinecraftServer.process().damageType().getTag(bypassedBy.key());
+
+		return tag != null && tag.contains(damage.getType());
+	}
 
 	private float resolveBlockedDamage(BlocksAttacks blocksAttacks, Damage damage, float amount) {
 		var damageTypeKey = damage.getType();
