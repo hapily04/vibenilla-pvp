@@ -88,6 +88,7 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 				if (this.projectileItemFeature.getCrossbowProjectile(player) == null) {
 					event.setCancelled(true);
 				} else {
+					event.setItemUseTime(this.getCrossbowUseDuration(stack));
 					player.setTag(START_SOUND_PLAYED, false);
 					player.setTag(MID_LOAD_SOUND_PLAYED, false);
 				}
@@ -108,7 +109,7 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 			int quickCharge = stack.get(DataComponents.ENCHANTMENTS).level(Enchantment.QUICK_CHARGE);
 
 			long useTicks = player.getCurrentItemUseTime();
-			double progress = (this.getCrossbowUseDuration(stack) - useTicks) / (double) this.getCrossbowChargeDuration(stack);
+			double progress = useTicks / (double) this.getCrossbowChargeDuration(stack);
 
 			Boolean startSoundPlayed = player.getTag(START_SOUND_PLAYED);
 			Boolean midLoadSoundPlayed = player.getTag(MID_LOAD_SOUND_PLAYED);
