@@ -14,6 +14,7 @@ import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventNode;
+import net.minestom.server.event.player.PlayerUseItemOnBlockEvent;
 import net.minestom.server.event.player.PlayerUseItemEvent;
 import net.minestom.server.event.trait.EntityInstanceEvent;
 import net.minestom.server.item.ItemStack;
@@ -49,6 +50,13 @@ public class VanillaMiscProjectileFeature implements MiscProjectileFeature, Regi
 
 	@Override
 	public void init(EventNode<EntityInstanceEvent> node) {
+		node.addListener(PlayerUseItemOnBlockEvent.class, event -> {
+			if (event.getItemStack().material() != Material.FIREWORK_ROCKET) return;
+			if (event.getPlayer().isFlyingWithElytra()) return;
+
+			this.useFireworkRocketOnBlock(event);
+		});
+
 		node.addListener(PlayerUseItemEvent.class, event -> {
 			if (event.getItemStack().material() == Material.FIREWORK_ROCKET
 					&& event.getPlayer().isFlyingWithElytra()) {
@@ -113,6 +121,21 @@ public class VanillaMiscProjectileFeature implements MiscProjectileFeature, Regi
 		var rocket = new FireworkRocket(player, stack);
 
 		rocket.setInstance(Objects.requireNonNull(player.getInstance()), player.getPosition());
+
+		if (player.getGameMode() != GameMode.CREATIVE) {
+			player.setItemInHand(event.getHand(), stack.withAmount(stack.amount() - 1));
+		}
+	}
+
+	private void useFireworkRocketOnBlock(PlayerUseItemOnBlockEvent event) {
+		var player = event.getPlayer();
+		var stack = event.getItemStack();
+		var direction = event.getBlockFace().toDirection();
+		var clickPosition = event.getPosition().add(event.getCursorPosition());
+		var rocketPosition = clickPosition.add(direction.mul(0.15));
+		var rocket = new FireworkRocket(player, stack, false);
+
+		rocket.setInstance(Objects.requireNonNull(player.getInstance()), rocketPosition);
 
 		if (player.getGameMode() != GameMode.CREATIVE) {
 			player.setItemInHand(event.getHand(), stack.withAmount(stack.amount() - 1));
