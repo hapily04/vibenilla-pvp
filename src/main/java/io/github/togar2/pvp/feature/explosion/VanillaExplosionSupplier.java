@@ -130,6 +130,10 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 						.filter(entity -> entity != sourceEntity)
 						.filter(entity -> this.intersectsEntity(minX, minY, minZ, maxX, maxY, maxZ, entity))
 						.toList());
+				entities.addAll(instance.getPlayers().stream()
+						.filter(player -> player != sourceEntity)
+						.filter(player -> this.intersectsEntity(minX, minY, minZ, maxX, maxY, maxZ, player))
+						.toList());
 
 				boolean anchor = false;
 				if (additionalData != null && additionalData.keySet().contains("anchor")) {
@@ -280,8 +284,14 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 				if (additionalData == null || !additionalData.keySet().contains(key)) return null;
 
 				UUID uuid = UUID.fromString(additionalData.getString(key));
-				return instance.getEntities().stream()
-						.filter(entity -> entity.getUuid().equals(uuid))
+				var entity = instance.getEntities().stream()
+						.filter(candidate -> candidate.getUuid().equals(uuid))
+						.findAny().orElse(null);
+
+				if (entity != null) return entity;
+
+				return instance.getPlayers().stream()
+						.filter(player -> player.getUuid().equals(uuid))
 						.findAny().orElse(null);
 			}
 
