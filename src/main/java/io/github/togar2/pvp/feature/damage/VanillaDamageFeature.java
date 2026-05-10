@@ -200,7 +200,7 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 				));
 			}
 
-			if (!fullyBlocked && damage.getType() != DamageType.DROWN) {
+			if (!fullyBlocked && !this.isNoKnockbackDamage(damage)) {
 				appliedKnockback = true;
 
 				if (attacker != null && !typeInfo.explosive()) {
@@ -285,6 +285,12 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 			event.setCancelled(true);
 			damageManually(entity, amount);
 		}
+	}
+
+	private boolean isNoKnockbackDamage(Damage damage) {
+		var noKnockback = MinecraftServer.process().damageType().getTag(Key.key("minecraft:no_knockback"));
+
+		return noKnockback != null && noKnockback.contains(damage.getType());
 	}
 
 	protected float scaleWithDifficulty(Player player, float amount) {
