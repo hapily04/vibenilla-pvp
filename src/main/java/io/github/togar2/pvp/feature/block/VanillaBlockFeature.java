@@ -26,7 +26,6 @@ import net.minestom.server.entity.damage.Damage;
 import net.minestom.server.entity.metadata.LivingEntityMeta;
 import net.minestom.server.entity.metadata.projectile.AbstractArrowMeta;
 import net.minestom.server.event.EventDispatcher;
-import net.minestom.server.item.Material;
 import net.minestom.server.sound.SoundEvent;
 
 /**
@@ -68,23 +67,31 @@ public class VanillaBlockFeature implements BlockFeature {
 	public boolean isDamageBlocked(LivingEntity entity, Damage damage) {
 		if (damage.getAmount() <= 0) return false;
 
-		if (!this.bypassesShield(damage) && !this.isPiercing(damage)
-				&& entity.getEntityMeta() instanceof LivingEntityMeta meta
-				&& meta.isHandActive() && entity.getItemInHand(meta.getActiveHand()).material() == Material.SHIELD) {
-			if (this.version.legacy()) return true;
+		if (this.bypassesShield(damage) || this.isPiercing(damage)) return false;
+		if (!(entity.getEntityMeta() instanceof LivingEntityMeta meta) || !meta.isHandActive()) return false;
 
-			if (damage.getSource() != null) {
-				Pos attackerPos = damage.getSource().getPosition();
-				Pos entityPos = entity.getPosition();
+		var blockingStack = entity.getItemInHand(meta.getActiveHand());
+		var blocksAttacks = blockingStack.get(DataComponents.BLOCKS_ATTACKS);
+		if (blocksAttacks == null) return false;
 
-				Vec attackerPosVector = attackerPos.asVec();
-				Vec entityRotation = entityPos.direction();
-				Vec attackerDirection = entityPos.asVec().sub(attackerPosVector).normalize();
-				attackerDirection = attackerDirection.withY(0);
+		if (entity instanceof Player blockingPlayer) {
+			var blockDelayTicks = Math.round(blocksAttacks.blockDelaySeconds() * ServerFlag.SERVER_TICKS_PER_SECOND);
+			if (blockingPlayer.getCurrentItemUseTime() < blockDelayTicks) return false;
+		}
 
-				// Dot product is lower than zero when the angle between the vectors is >90 degrees
-				return attackerDirection.dot(entityRotation) < 0.0;
-			}
+		if (this.version.legacy()) return true;
+
+		if (damage.getSource() != null) {
+			Pos attackerPos = damage.getSource().getPosition();
+			Pos entityPos = entity.getPosition();
+
+			Vec attackerPosVector = attackerPos.asVec();
+			Vec entityRotation = entityPos.direction();
+			Vec attackerDirection = entityPos.asVec().sub(attackerPosVector).normalize();
+			attackerDirection = attackerDirection.withY(0);
+
+			// Dot product is lower than zero when the angle between the vectors is >90 degrees
+			return attackerDirection.dot(entityRotation) < 0.0;
 		}
 
 		return false;
