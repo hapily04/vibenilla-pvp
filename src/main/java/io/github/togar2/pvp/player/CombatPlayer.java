@@ -57,6 +57,10 @@ public interface CombatPlayer {
 
     void sendImmediateVelocityUpdate();
 
+    default boolean hasHorizontalCollision() {
+        return false;
+    }
+
     static void init(EventNode<Event> node) {
         node.addListener(PlayerMoveEvent.class, event -> {
             Player player = event.getPlayer();

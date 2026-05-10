@@ -132,7 +132,9 @@ public class VanillaTridentFeature implements TridentFeature, RegistrableFeature
 							}
 						});
 
-				//TODO detect player bouncing against wall
+				if (player instanceof CombatPlayer combatPlayer && combatPlayer.hasHorizontalCollision()) {
+					stopRiptide.set(true);
+				}
 
 				if (stopRiptide.get())
 					event.getPlayer().refreshActiveHand(false, false, false);

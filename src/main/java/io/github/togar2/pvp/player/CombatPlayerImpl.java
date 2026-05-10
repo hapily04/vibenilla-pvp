@@ -26,6 +26,7 @@ import java.util.function.Function;
 
 public class CombatPlayerImpl extends Player implements CombatPlayer {
 	private boolean velocityUpdate = false;
+	private boolean horizontalCollision = false;
 	private PhysicsResult previousPhysicsResult = null;
 
 	public CombatPlayerImpl(@NotNull PlayerConnection playerConnection, GameProfile profile) {
@@ -57,6 +58,11 @@ public class CombatPlayerImpl extends Player implements CombatPlayer {
             this.velocityUpdate = false;
             this.sendPacketToViewersAndSelf(this.getVelocityPacket());
 		}
+	}
+
+	@Override
+	public boolean hasHorizontalCollision() {
+		return this.horizontalCollision;
 	}
 
 	public boolean isOnGroundAfterTicks(int ticks) {
@@ -98,6 +104,7 @@ public class CombatPlayerImpl extends Player implements CombatPlayer {
 	@Override
 	protected void movementTick() {
 		this.gravityTickCount = this.onGround ? 0 : this.gravityTickCount + 1;
+		this.horizontalCollision = false;
 		if (this.vehicle != null) return;
 
 		final double tps = ServerFlag.SERVER_TICKS_PER_SECOND;
@@ -114,6 +121,7 @@ public class CombatPlayerImpl extends Player implements CombatPlayer {
 		Chunk finalChunk = ChunkUtils.retrieve(this.instance, this.currentChunk, physicsResult.newPosition());
 		if (!ChunkUtils.isLoaded(finalChunk)) return;
 
+		this.horizontalCollision = physicsResult.collisionX() || physicsResult.collisionZ();
 		var oldHorizontalSpeed = this.velocity.div(tps).withY(0.0).length();
 		var newHorizontalSpeed = physicsResult.newVelocity().withY(0.0).length();
         this.velocity = physicsResult.newVelocity().mul(tps);
