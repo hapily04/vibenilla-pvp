@@ -177,14 +177,16 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 
 						var exposure = getExposure(centerPoint, entity);
 						var impactStrength = (1.0D - distanceStrength) * exposure;
-						damageObj.setAmount((float) ((impactStrength * impactStrength + impactStrength)
-								/ 2.0D * 7.0D * strength + 1.0D));
+						var damageAmount = (float) ((impactStrength * impactStrength + impactStrength)
+								/ 2.0D * 7.0D * strength + 1.0D);
 
 						var knockback = impactStrength;
 						if (entity instanceof LivingEntity living) {
+							var entityDamage = new Damage(damageObj.getType(), damageObj.getSource(),
+									damageObj.getAttacker(), damageObj.getSourcePosition(), damageAmount);
 							knockback = VanillaExplosionSupplier.this.enchantmentFeature.getExplosionKnockback(living, impactStrength);
 							knockback *= 1.0 - living.getAttributeValue(Attribute.EXPLOSION_KNOCKBACK_RESISTANCE);
-							living.damage(damageObj);
+							living.damage(entityDamage);
 						}
 
 						var knockbackVec = new Vec(
