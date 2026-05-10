@@ -4,6 +4,7 @@ import io.github.togar2.pvp.feature.FeatureType;
 import io.github.togar2.pvp.feature.RegistrableFeature;
 import io.github.togar2.pvp.feature.config.DefinedFeature;
 import io.github.togar2.pvp.feature.config.FeatureConfiguration;
+import io.github.togar2.pvp.feature.enchantment.EnchantmentFeature;
 import io.github.togar2.pvp.utils.FluidUtil;
 import io.github.togar2.pvp.utils.ViewUtil;
 import net.kyori.adventure.key.Key;
@@ -37,7 +38,8 @@ import java.util.Set;
 public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageFeature, RegistrableFeature {
 	public static final DefinedFeature<VanillaEnvironmentDamageFeature> DEFINED = new DefinedFeature<>(
 			FeatureType.ENVIRONMENT_DAMAGE, VanillaEnvironmentDamageFeature::new,
-			VanillaEnvironmentDamageFeature::initPlayer
+			VanillaEnvironmentDamageFeature::initPlayer,
+			FeatureType.ENCHANTMENT
 	);
 
 	private static final int MAX_AIR_SUPPLY = 300;
@@ -58,7 +60,10 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 
 	@SuppressWarnings("unused")
 	public VanillaEnvironmentDamageFeature(FeatureConfiguration configuration) {
+		this.enchantmentFeature = configuration.get(FeatureType.ENCHANTMENT);
 	}
+
+	private final EnchantmentFeature enchantmentFeature;
 
 	public static void initPlayer(Player player, boolean firstInit) {
 		player.setTag(AIR_SUPPLY, MAX_AIR_SUPPLY);
@@ -123,7 +128,7 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 		var block = instance.getBlock(position);
 
 		if (block.compare(Block.FIRE) || block.compare(Block.SOUL_FIRE)) {
-			entity.setFireTicks(FIRE_IGNITE_TICKS);
+			this.setFireTicks(entity, FIRE_IGNITE_TICKS);
 			entity.damage(DamageType.IN_FIRE, 1.0F);
 			return;
 		}
@@ -139,7 +144,7 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 		if (this.isFireImmune(entity)) return;
 		if (!this.isInLava(entity)) return;
 
-		entity.setFireTicks(LAVA_IGNITE_TICKS);
+		this.setFireTicks(entity, LAVA_IGNITE_TICKS);
 		entity.damage(DamageType.LAVA, 4.0F);
 	}
 
@@ -305,6 +310,10 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 				SoundEvent.ENTITY_GENERIC_EXTINGUISH_FIRE, Sound.Source.NEUTRAL,
 				0.7F, 1.0F
 		), entity);
+	}
+
+	private void setFireTicks(LivingEntity entity, int fireTicks) {
+		entity.setFireTicks(this.enchantmentFeature.getFireDuration(entity, fireTicks));
 	}
 
 	private boolean isInLava(LivingEntity entity) {
