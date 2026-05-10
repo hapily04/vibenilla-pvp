@@ -21,6 +21,7 @@ import net.minestom.server.event.EventNode;
 import net.minestom.server.event.entity.EntityAttackEvent;
 import net.minestom.server.event.item.PlayerCancelItemUseEvent;
 import net.minestom.server.event.player.PlayerTickEvent;
+import net.minestom.server.event.player.PlayerUseItemEvent;
 import net.minestom.server.event.trait.EntityInstanceEvent;
 import net.minestom.server.instance.EntityTracker;
 import net.minestom.server.item.ItemStack;
@@ -60,6 +61,19 @@ public class VanillaTridentFeature implements TridentFeature, RegistrableFeature
 
 	@Override
 	public void init(EventNode<EntityInstanceEvent> node) {
+		node.addListener(PlayerUseItemEvent.class, event -> {
+			var player = event.getPlayer();
+			var stack = event.getItemStack();
+			if (stack.material() != Material.TRIDENT) return;
+
+			var riptide = stack.get(DataComponents.ENCHANTMENTS).level(Enchantment.RIPTIDE);
+
+			if (this.nextDamageWillBreak(stack)
+					|| (riptide > 0 && !this.isInWaterOrRain(player))) {
+				event.setCancelled(true);
+			}
+		});
+
 		node.addListener(PlayerCancelItemUseEvent.class, event -> {
 			Player player = event.getPlayer();
 			ItemStack stack = event.getItemStack();
@@ -67,9 +81,11 @@ public class VanillaTridentFeature implements TridentFeature, RegistrableFeature
 
 			long ticks = player.getCurrentItemUseTime();
 			if (ticks < 10) return;
+			if (this.nextDamageWillBreak(stack)) return;
 
 			int riptide = stack.get(DataComponents.ENCHANTMENTS).level(Enchantment.RIPTIDE);
 			if (riptide > 0 && !this.isInWaterOrRain(player)) return;
+			if (riptide > 0 && player.getVehicle() != null) return;
 
             this.itemDamageFeature.damageEquipment(player, event.getHand() == PlayerHand.MAIN ?
 					EquipmentSlot.MAIN_HAND : EquipmentSlot.OFF_HAND, 1);
@@ -156,5 +172,15 @@ public class VanillaTridentFeature implements TridentFeature, RegistrableFeature
 
 	private boolean isInWaterOrRain(Player player) {
 		return FluidUtil.isTouchingWater(player) || FluidUtil.isInRain(player);
+	}
+
+	private boolean nextDamageWillBreak(ItemStack stack) {
+		if (stack.has(DataComponents.UNBREAKABLE)) return false;
+
+		var maxDamage = stack.get(DataComponents.MAX_DAMAGE, 0);
+
+		if (maxDamage <= 0) return false;
+
+		return stack.get(DataComponents.DAMAGE, 0) + 1 >= maxDamage;
 	}
 }
