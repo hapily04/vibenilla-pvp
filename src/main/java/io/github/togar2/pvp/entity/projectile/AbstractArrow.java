@@ -245,7 +245,7 @@ public abstract class AbstractArrow extends CustomEntityProjectile {
 
 			return getPiercingLevel() <= 0;
 		} else {
-			setVelocity(getVelocity().mul(-0.5 * 0.2));
+			setVelocity(getVelocity().mul(-0.02));
 			refreshPosition(position.withYaw(position.yaw() + 170.0f + 20.0f * ThreadLocalRandom.current().nextFloat()));
 
 			if (getVelocity().lengthSquared() < 1.0E-7D) {

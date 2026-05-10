@@ -95,7 +95,7 @@ public class ThrownTrident extends AbstractArrow {
 			crystal.damage(damageObj);
 			this.damageDone = true;
 
-			this.setVelocity(this.velocity.mul(-0.02, -0.2, -0.02));
+			this.setVelocity(this.velocity.mul(-0.002, -0.02, -0.002));
 			this.getViewersAsAudience().playSound(Sound.sound(
 					SoundEvent.ITEM_TRIDENT_HIT, Sound.Source.NEUTRAL,
 					1.0f, 1.0f
@@ -121,7 +121,7 @@ public class ThrownTrident extends AbstractArrow {
 
         this.damageDone = true;
 
-        this.setVelocity(this.velocity.mul(-0.02, -0.2, -0.02));
+        this.setVelocity(this.velocity.mul(-0.002, -0.02, -0.002));
         this.getViewersAsAudience().playSound(Sound.sound(
 				SoundEvent.ITEM_TRIDENT_HIT, Sound.Source.NEUTRAL,
 				1.0f, 1.0f
