@@ -106,6 +106,13 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 		assert damageType != null;
 
 		DamageTypeInfo typeInfo = DamageTypeInfo.of(damage.getType());
+		if (entity instanceof Player player
+				&& player.isInvulnerable()
+				&& !this.bypassesInvulnerability(damageType)) {
+			event.setCancelled(true);
+			return;
+		}
+
 		if (event.getEntity() instanceof Player player && typeInfo.shouldScaleWithDifficulty(damage)) {
 			damage.setAmount(this.scaleWithDifficulty(player, damage.getAmount()));
 
@@ -309,6 +316,13 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 		var noKnockback = MinecraftServer.process().damageType().getTag(Key.key("minecraft:no_knockback"));
 
 		return noKnockback != null && noKnockback.contains(damage.getType());
+	}
+
+	private boolean bypassesInvulnerability(DamageType damageType) {
+		var bypassesInvulnerability = MinecraftServer.process().damageType().getTag(Key.key("minecraft:bypasses_invulnerability"));
+
+		return bypassesInvulnerability != null
+				&& bypassesInvulnerability.contains(MinecraftServer.getDamageTypeRegistry().getKey(damageType));
 	}
 
 	protected float scaleWithDifficulty(Player player, float amount) {
