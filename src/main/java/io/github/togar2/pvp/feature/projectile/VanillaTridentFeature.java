@@ -92,6 +92,7 @@ public class VanillaTridentFeature implements TridentFeature, RegistrableFeature
 
 			if (riptide > 0) {
                 this.applyRiptide(player, riptide);
+				event.setRiptideSpinAttack(true);
 			} else {
 				ThrownTrident trident = new ThrownTrident(player, stack, this.enchantmentFeature);
 
@@ -167,7 +168,7 @@ public class VanillaTridentFeature implements TridentFeature, RegistrableFeature
 				1.0f, 1.0f
 		), player);
 
-		player.scheduleNextTick(entity -> player.refreshActiveHand(false, false, true));
+		player.refreshActiveHand(false, false, true);
 	}
 
 	private boolean isInWaterOrRain(Player player) {
