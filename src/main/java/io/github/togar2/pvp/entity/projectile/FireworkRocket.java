@@ -57,6 +57,7 @@ public final class FireworkRocket extends CustomEntityProjectile {
         ));
 
         var meta = (FireworkRocketMeta) this.getEntityMeta();
+        meta.setShooter(null);
         meta.setFireworkInfo(this.itemStack);
         meta.setShotAtAngle(shotAtAngle);
     }
@@ -65,6 +66,7 @@ public final class FireworkRocket extends CustomEntityProjectile {
         this(attachedToEntity, itemStack, false);
 
         this.attachedToEntity = attachedToEntity;
+        ((FireworkRocketMeta) this.getEntityMeta()).setShooter(attachedToEntity);
     }
 
     @Override
