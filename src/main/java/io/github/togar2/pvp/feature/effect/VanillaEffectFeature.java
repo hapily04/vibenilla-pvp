@@ -19,6 +19,7 @@ import net.kyori.adventure.util.RGBLike;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.ServerFlag;
 import net.minestom.server.entity.Entity;
+import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.LivingEntity;
 import net.minestom.server.entity.Player;
@@ -121,6 +122,11 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 			if (!(event.getEntity() instanceof LivingEntity entity)) return;
 			var potion = event.getPotion();
 
+			if (this.isImmuneToPotion(entity, potion.effect())) {
+				event.setCancelled(true);
+				return;
+			}
+
 			entity.scheduler().scheduleNextProcess(() -> {
 				if (!this.hasActivePotion(entity, potion)) return;
 
@@ -161,6 +167,13 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 	private boolean hasActivePotion(LivingEntity entity, Potion potion) {
 		return entity.getActiveEffects().stream()
 				.anyMatch(timedPotion -> timedPotion.potion() == potion);
+	}
+
+	private boolean isImmuneToPotion(LivingEntity entity, PotionEffect potionEffect) {
+		var entityType = entity.getEntityType();
+
+		return (entityType == EntityType.SILVERFISH && potionEffect == PotionEffect.INFESTED)
+				|| (entityType == EntityType.SLIME && potionEffect == PotionEffect.OOZING);
 	}
 
 	private void applyWindChargedBurst(LivingEntity entity) {

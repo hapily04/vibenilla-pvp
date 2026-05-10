@@ -60,9 +60,9 @@ public class CombatPotionEffects {
 				new CombatPotionEffect(PotionEffect.TRIAL_OMEN, potion -> Particle.TRIAL_OMEN),
 				new CombatPotionEffect(PotionEffect.RAID_OMEN, potion -> Particle.RAID_OMEN),
 				new CombatPotionEffect(PotionEffect.WIND_CHARGED, potion -> Particle.SMALL_GUST),
-				new CombatPotionEffect(PotionEffect.WEAVING),
-				new CombatPotionEffect(PotionEffect.OOZING),
-				new CombatPotionEffect(PotionEffect.INFESTED)
+				new CombatPotionEffect(PotionEffect.WEAVING, potion -> Particle.ITEM_COBWEB),
+				new CombatPotionEffect(PotionEffect.OOZING, potion -> Particle.ITEM_SLIME),
+				new CombatPotionEffect(PotionEffect.INFESTED, potion -> Particle.INFESTED)
 		);
 	}
 }
