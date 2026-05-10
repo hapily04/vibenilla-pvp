@@ -361,7 +361,11 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 	                                   float yaw, double power, double spread) {
 		var shotVector = this.getProjectileShotVector(player.getPosition(), yaw);
 		projectileEntity.shoot(shotVector.x(), shotVector.y(), shotVector.z(), power, spread);
-		projectileEntity.setInstance(Objects.requireNonNull(player.getInstance()), position.withView(projectileEntity.getPosition()));
+		var spawnFuture = projectileEntity.setInstance(Objects.requireNonNull(player.getInstance()), position.withView(projectileEntity.getPosition()));
+
+		if (spawnFuture != null) {
+			spawnFuture.thenRun(() -> projectileEntity.setVelocity(projectileEntity.getVelocity()));
+		}
 	}
 
 	private Vec getProjectileShotVector(Pos position, float angle) {
