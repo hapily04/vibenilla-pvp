@@ -193,7 +193,7 @@ public class ThrownTrident extends AbstractArrow {
 				continue;
 			}
 
-			livingEntity.setFireTicks(Math.max(livingEntity.getFireTicks(), 8 * ServerFlag.SERVER_TICKS_PER_SECOND));
+			this.setFireTicks(livingEntity, Math.max(livingEntity.getFireTicks(), 8 * ServerFlag.SERVER_TICKS_PER_SECOND));
 			livingEntity.damage(DamageType.LIGHTNING_BOLT, 5.0F);
 		}
 	}

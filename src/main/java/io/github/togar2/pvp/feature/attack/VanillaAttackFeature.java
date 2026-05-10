@@ -191,7 +191,8 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 
 			if (attack.fireAspect() > 0) {
 				for (LivingEntity entity : affectedEntities) {
-					entity.setFireTicks(attack.fireAspect() * 4 * ServerFlag.SERVER_TICKS_PER_SECOND);
+					var fireTicks = attack.fireAspect() * 4 * ServerFlag.SERVER_TICKS_PER_SECOND;
+					entity.setFireTicks(this.enchantmentFeature.getFireDuration(entity, fireTicks));
 				}
 			}
 		}

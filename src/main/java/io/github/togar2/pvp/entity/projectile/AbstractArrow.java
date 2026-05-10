@@ -181,7 +181,7 @@ public abstract class AbstractArrow extends CustomEntityProjectile {
 			if (entity.getEntityType() == EntityType.ENDERMAN) return false;
 
 			if (isOnFire()) {
-				living.setFireTicks(5 * ServerFlag.SERVER_TICKS_PER_SECOND);
+				this.setFireTicks(living, 5 * ServerFlag.SERVER_TICKS_PER_SECOND);
 			}
 
 			if (getPiercingLevel() <= 0) {
@@ -345,5 +345,9 @@ public abstract class AbstractArrow extends CustomEntityProjectile {
 		DISALLOWED,
 		ALLOWED,
 		CREATIVE_ONLY
+	}
+
+	protected void setFireTicks(LivingEntity entity, int fireTicks) {
+		entity.setFireTicks(this.enchantmentFeature.getFireDuration(entity, fireTicks));
 	}
 }
