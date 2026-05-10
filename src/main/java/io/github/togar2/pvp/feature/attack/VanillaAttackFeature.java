@@ -18,7 +18,9 @@ import io.github.togar2.pvp.utils.ViewUtil;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.ServerFlag;
+import net.minestom.server.collision.BoundingBox;
 import net.minestom.server.component.DataComponents;
+import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.*;
 import net.minestom.server.entity.attribute.Attribute;
@@ -88,11 +90,26 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 		node.addListener(EntityAttackEvent.class, event -> {
 			if (event.getEntity() instanceof Player player && player.getGameMode() != GameMode.SPECTATOR && !player.isDead()) {
 				Entity target = event.getTarget();
-				double maxDistanceSquared = Math.pow(player.getAttributeValue(Attribute.ENTITY_INTERACTION_RANGE) + ATTACK_RANGE_MARGIN, 2);
-				if (player.getPosition().distanceSquared(target.getPosition().add(0, target.getEyeHeight(), 0)) < maxDistanceSquared)
-                    this.performAttack(player, target);
+				var maxDistanceSquared = Math.pow(player.getAttributeValue(Attribute.ENTITY_INTERACTION_RANGE) + ATTACK_RANGE_MARGIN, 2);
+				var eyePosition = player.getPosition().add(0.0, player.getEyeHeight(), 0.0);
+				if (this.distanceSquaredToBox(eyePosition, target.getBoundingBox(), target.getPosition()) < maxDistanceSquared)
+					this.performAttack(player, target);
 			}
 		});
+	}
+
+	private double distanceSquaredToBox(Point point, BoundingBox boundingBox, Point position) {
+		var minX = position.x() + boundingBox.minX();
+		var maxX = position.x() + boundingBox.maxX();
+		var minY = position.y() + boundingBox.minY();
+		var maxY = position.y() + boundingBox.maxY();
+		var minZ = position.z() + boundingBox.minZ();
+		var maxZ = position.z() + boundingBox.maxZ();
+		var distanceX = point.x() < minX ? minX - point.x() : Math.max(point.x() - maxX, 0.0);
+		var distanceY = point.y() < minY ? minY - point.y() : Math.max(point.y() - maxY, 0.0);
+		var distanceZ = point.z() < minZ ? minZ - point.z() : Math.max(point.z() - maxZ, 0.0);
+
+		return distanceX * distanceX + distanceY * distanceY + distanceZ * distanceZ;
 	}
 
 	@Override
