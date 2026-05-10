@@ -176,6 +176,9 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 
 		if (register) entity.setTag(LAST_DAMAGE_AMOUNT, amountBeforeProcessing);
 
+		var velocityBeforeKnockback = entity.getVelocity();
+		var appliedKnockback = false;
+
 		if (hurtSoundAndAnimation) {
 			entity.setTag(NEW_DAMAGE_TIME, entity.getAliveTicks() + finalDamageEvent.getInvulnerabilityTicks());
 
@@ -194,6 +197,8 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 			}
 
 			if (!fullyBlocked && damage.getType() != DamageType.DROWN) {
+				appliedKnockback = true;
+
 				if (attacker != null && !typeInfo.explosive()) {
                     this.knockbackFeature.applyDamageKnockback(damage, entity);
 				} else {
@@ -254,8 +259,15 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 		if (death && !event.isCancelled()) {
 			EntityPreDeathEvent entityPreDeathEvent = new EntityPreDeathEvent(entity, damage);
 			EventDispatcher.call(entityPreDeathEvent);
+			if ((entityPreDeathEvent.isCancelled() || entityPreDeathEvent.isCancelDeath()) && appliedKnockback) {
+				entity.setVelocity(velocityBeforeKnockback);
+			}
+
 			if (entityPreDeathEvent.isCancelled()) event.setCancelled(true);
-			if (entityPreDeathEvent.isCancelDeath()) amount = 0;
+			if (entityPreDeathEvent.isCancelDeath()) {
+				amount = 0;
+				event.setCancelled(true);
+			}
 		}
 
 		damage.setAmount(amount);
