@@ -153,7 +153,14 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 			return false;
 		}
 
-		if (target instanceof CrystalEntity) return true;
+		if (target instanceof CrystalEntity) {
+			this.playAttackSounds(attacker, attack);
+
+			if (attacker instanceof Player player)
+				this.exhaustionFeature.addAttackExhaustion(player);
+
+			return true;
+		}
 
 		// Target is always living now, because the damage would not have succeeded if it wasn't
 		LivingEntity living = (LivingEntity) target;
@@ -171,34 +178,7 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 		if (target instanceof CombatPlayer custom)
 			custom.sendImmediateVelocityUpdate();
 
-		// Play attack sounds
-		if (attack.sounds()) {
-			Audience audience = attacker.getViewersAsAudience();
-			if (attacker instanceof Player player)
-				audience = Audience.audience(audience, player);
-
-			if (attack.sprint()) audience.playSound(Sound.sound(
-				SoundEvent.ENTITY_PLAYER_ATTACK_KNOCKBACK, Sound.Source.PLAYER,
-				1.0f, 1.0f
-			), attacker);
-
-			if (attack.sweeping()) audience.playSound(Sound.sound(
-				SoundEvent.ENTITY_PLAYER_ATTACK_SWEEP, Sound.Source.PLAYER,
-				1.0f, 1.0f
-			), attacker);
-
-			if (attack.critical()) audience.playSound(Sound.sound(
-				SoundEvent.ENTITY_PLAYER_ATTACK_CRIT, Sound.Source.PLAYER,
-				1.0f, 1.0f
-			), attacker);
-
-			if (!attack.critical() && !attack.sweeping()) audience.playSound(Sound.sound(
-				attack.strong() ?
-					SoundEvent.ENTITY_PLAYER_ATTACK_STRONG :
-					SoundEvent.ENTITY_PLAYER_ATTACK_WEAK,
-				Sound.Source.PLAYER, 1.0f, 1.0f
-			), attacker);
-		}
+		this.playAttackSounds(attacker, attack);
 
 		// Play attack effects
 		if (attack.critical()) attacker.sendPacketToViewersAndSelf(new EntityAnimationPacket(
@@ -246,6 +226,36 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 		return true;
 	}
 
+	private void playAttackSounds(LivingEntity attacker, AttackValues.Final attack) {
+		if (!attack.sounds()) return;
+
+		Audience audience = attacker.getViewersAsAudience();
+		if (attacker instanceof Player player)
+			audience = Audience.audience(audience, player);
+
+		if (attack.sprint()) audience.playSound(Sound.sound(
+				SoundEvent.ENTITY_PLAYER_ATTACK_KNOCKBACK, Sound.Source.PLAYER,
+				1.0f, 1.0f
+		), attacker);
+
+		if (attack.sweeping()) audience.playSound(Sound.sound(
+				SoundEvent.ENTITY_PLAYER_ATTACK_SWEEP, Sound.Source.PLAYER,
+				1.0f, 1.0f
+		), attacker);
+
+		if (attack.critical()) audience.playSound(Sound.sound(
+				SoundEvent.ENTITY_PLAYER_ATTACK_CRIT, Sound.Source.PLAYER,
+				1.0f, 1.0f
+		), attacker);
+
+		if (!attack.critical() && !attack.sweeping()) audience.playSound(Sound.sound(
+				attack.strong() ?
+						SoundEvent.ENTITY_PLAYER_ATTACK_STRONG :
+						SoundEvent.ENTITY_PLAYER_ATTACK_WEAK,
+				Sound.Source.PLAYER, 1.0f, 1.0f
+		), attacker);
+	}
+
 	protected @Nullable AttackValues.Final prepareAttack(LivingEntity attacker, Entity target) {
 		float damage = (float) attacker.getAttributeValue(Attribute.ATTACK_DAMAGE);
 		float magicalDamage = this.enchantmentFeature.getAttackDamage(
@@ -278,7 +288,9 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 			damage, magicalDamage, cooldownProgress,
 			strongAttack, sprintAttack, knockback, fireAspect
 		);
-		AttackValues.PreSweeping preSweeping = preCritical.withCritical(this.criticalFeature.shouldCrit(attacker, preCritical));
+		AttackValues.PreSweeping preSweeping = preCritical.withCritical(
+				target instanceof LivingEntity && this.criticalFeature.shouldCrit(attacker, preCritical)
+		);
 		AttackValues.PreSounds preSounds = preSweeping.withSweeping(this.sweepingFeature.shouldSweep(attacker, preSweeping));
 
 		boolean critical = preSounds.critical();
