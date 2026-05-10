@@ -245,7 +245,6 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 			if (entity instanceof Player && sound == SoundEvent.ENTITY_PLAYER_HURT) {
 				String effects = damageType.effects();
 				if (effects != null) sound = switch (effects) {
-					case "thorns" -> SoundEvent.ENCHANT_THORNS_HIT;
 					case "drowning" -> SoundEvent.ENTITY_PLAYER_HURT_DROWN;
 					case "burning" -> SoundEvent.ENTITY_PLAYER_HURT_ON_FIRE;
 					case "poking" -> SoundEvent.ENTITY_PLAYER_HURT_SWEET_BERRY_BUSH;
@@ -264,6 +263,15 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 						sound, entity instanceof Player ? Sound.Source.PLAYER : Sound.Source.HOSTILE,
 						entity.getPosition(),
 						1.0F, pitch, random.nextLong()
+				));
+			}
+
+			if (damage.getType().equals(DamageType.THORNS)) {
+				entity.sendPacketToViewersAndSelf(new SoundEffectPacket(
+						SoundEvent.ENCHANT_THORNS_HIT,
+						entity instanceof Player ? Sound.Source.PLAYER : Sound.Source.HOSTILE,
+						entity.getPosition(),
+						1.0F, 1.0F, 0L
 				));
 			}
 		}
