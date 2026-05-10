@@ -1,10 +1,10 @@
 package io.github.togar2.pvp.feature.totem;
 
-import io.github.togar2.pvp.damage.DamageTypeInfo;
 import io.github.togar2.pvp.events.TotemUseEvent;
 import io.github.togar2.pvp.feature.FeatureType;
 import io.github.togar2.pvp.feature.config.DefinedFeature;
 import io.github.togar2.pvp.feature.food.VanillaFoodFeature;
+import net.kyori.adventure.key.Key;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.component.DataComponents;
 import net.minestom.server.entity.LivingEntity;
@@ -28,7 +28,7 @@ public class VanillaTotemFeature implements TotemFeature {
 
 	@Override
 	public boolean tryProtect(LivingEntity entity, DamageType type) {
-		if (DamageTypeInfo.of(MinecraftServer.getDamageTypeRegistry().getKey(type)).outOfWorld()) return false;
+		if (this.bypassesInvulnerability(type)) return false;
 
 		DeathProtection deathProtection = null;
 		for (PlayerHand hand : PlayerHand.values()) {
@@ -59,4 +59,11 @@ public class VanillaTotemFeature implements TotemFeature {
 
 		return deathProtection != null;
 	}
+
+    private boolean bypassesInvulnerability(DamageType damageType) {
+        var bypassesInvulnerability = MinecraftServer.process().damageType().getTag(Key.key("minecraft:bypasses_invulnerability"));
+
+        return bypassesInvulnerability != null
+                && bypassesInvulnerability.contains(MinecraftServer.getDamageTypeRegistry().getKey(damageType));
+    }
 }
