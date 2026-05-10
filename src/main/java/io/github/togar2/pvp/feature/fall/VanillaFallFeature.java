@@ -249,6 +249,10 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 			this.playPowderSnowFallSound(entity, fallDistance);
 		}
 
+		if (block.compare(Block.HONEY_BLOCK)) {
+			this.playHoneyBlockSlideEffects(entity);
+		}
+
 		double safeFallDistance = entity.getAttributeValue(Attribute.SAFE_FALL_DISTANCE);
 		if (adjustedFallDistance > safeFallDistance) {
 			if (!block.isAir()) {
@@ -272,7 +276,11 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 		int damage = this.getFallDamage(entity, adjustedFallDistance, damageModifier);
 		if (damage > 0) {
             this.playFallSound(entity, damage);
-			entity.damage(damageType, damage);
+			var damaged = entity.damage(damageType, damage);
+
+			if (damaged && block.compare(Block.HONEY_BLOCK)) {
+				this.playHoneyBlockFallSound(entity);
+			}
 		}
 	}
 
@@ -297,6 +305,23 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 						SoundEvent.ENTITY_PLAYER_SMALL_FALL,
 				entity instanceof Player ? Sound.Source.PLAYER : Sound.Source.HOSTILE,
 				1.0f, 1.0f
+		), entity);
+	}
+
+	private void playHoneyBlockSlideEffects(LivingEntity entity) {
+		entity.getViewersAsAudience().playSound(Sound.sound(
+				SoundEvent.BLOCK_HONEY_BLOCK_SLIDE,
+				entity instanceof Player ? Sound.Source.PLAYER : Sound.Source.HOSTILE,
+				1.0f, 1.0f
+		), entity);
+		entity.triggerStatus((byte) 54);
+	}
+
+	private void playHoneyBlockFallSound(LivingEntity entity) {
+		entity.getViewersAsAudience().playSound(Sound.sound(
+				SoundEvent.BLOCK_HONEY_BLOCK_FALL,
+				entity instanceof Player ? Sound.Source.PLAYER : Sound.Source.HOSTILE,
+				0.5f, 0.75f
 		), entity);
 	}
 
