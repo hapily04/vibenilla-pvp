@@ -11,6 +11,7 @@ import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.EntityType;
+import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.LivingEntity;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.attribute.Attribute;
@@ -199,7 +200,7 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 
 						var tps = ServerFlag.SERVER_TICKS_PER_SECOND;
 						if (entity instanceof Player player) {
-							if (!player.getGameMode().invulnerable() && !player.isFlying()) {
+							if (this.shouldApplyPlayerKnockback(player)) {
 								if (player instanceof CombatPlayer custom) {
 									this.playerKnockback.put(player, knockbackVec);
 									custom.setVelocityNoUpdate(velocity -> velocity.add(knockbackVec.mul(tps)));
@@ -285,6 +286,11 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 				return instance.getEntities().stream()
 						.filter(entity -> entity.getUuid().equals(uuid))
 						.findAny().orElse(null);
+			}
+
+			private boolean shouldApplyPlayerKnockback(Player player) {
+				return player.getGameMode() != GameMode.SPECTATOR
+						&& (player.getGameMode() != GameMode.CREATIVE || !player.isFlying());
 			}
 		};
 	}
