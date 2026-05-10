@@ -188,6 +188,19 @@ public final class FireworkRocket extends CustomEntityProjectile {
             damage.setAmount(damageAmount * (float) Math.sqrt((radius - this.getDistance(entity)) / radius));
             livingEntity.damage(damage);
         }
+        for (var player : instance.getPlayers()) {
+
+            if (!damageBox.intersectEntity(source, player) || this.getDistance(player) > radius) {
+                continue;
+            }
+
+            if (!this.canDamage(center, player)) {
+                continue;
+            }
+
+            damage.setAmount(damageAmount * (float) Math.sqrt((radius - this.getDistance(player)) / radius));
+            player.damage(damage);
+        }
     }
 
     private boolean canDamage(Point center, Entity entity) {
