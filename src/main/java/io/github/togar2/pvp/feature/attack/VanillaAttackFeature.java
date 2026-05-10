@@ -1,7 +1,6 @@
 package io.github.togar2.pvp.feature.attack;
 
 import io.github.togar2.pvp.enchantment.EntityGroup;
-import io.github.togar2.pvp.enums.Tool;
 import io.github.togar2.pvp.events.FinalAttackEvent;
 import io.github.togar2.pvp.events.PrepareAttackEvent;
 import io.github.togar2.pvp.feature.FeatureType;
@@ -19,6 +18,7 @@ import io.github.togar2.pvp.utils.ViewUtil;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.ServerFlag;
+import net.minestom.server.component.DataComponents;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.*;
 import net.minestom.server.entity.attribute.Attribute;
@@ -198,9 +198,10 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 		}
 
 		// Damage item
-		Tool tool = Tool.fromMaterial(attacker.getItemInMainHand().material());
-		if (tool != null) this.itemDamageFeature.damageEquipment(attacker, EquipmentSlot.MAIN_HAND,
-			(tool.isSword() || tool.isMace() || tool.isSpear() || tool == Tool.TRIDENT) ? 1 : 2);
+		var weapon = attacker.getItemInMainHand().get(DataComponents.WEAPON);
+		if (weapon != null) {
+			this.itemDamageFeature.damageEquipment(attacker, EquipmentSlot.MAIN_HAND, weapon.itemDamagePerAttack());
+		}
 
 		// Damage indicator particles
 		float damageDone = originalHealth - living.getHealth();
