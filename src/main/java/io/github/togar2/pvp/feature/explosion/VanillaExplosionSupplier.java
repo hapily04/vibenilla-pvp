@@ -135,6 +135,7 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 				Entity sourceEntity = this.getSourceEntity(instance);
 
 				List<Entity> entities = new ArrayList<>(instance.getEntities().stream()
+						.filter(entity -> !(entity instanceof Player))
 						.filter(entity -> entity != sourceEntity)
 						.filter(entity -> this.intersectsEntity(minX, minY, minZ, maxX, maxY, maxZ, entity))
 						.toList());

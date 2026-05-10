@@ -86,9 +86,9 @@ public class ThrownPotion extends CustomEntityProjectile implements ItemHoldingP
 	private void applyWaterSplash(@Nullable Entity hitEntity) {
 		var boundingBox = this.getBoundingBox().expand(8.0, 4.0, 8.0);
 		var entities = Objects.requireNonNull(this.getInstance()).getEntities().stream()
+				.filter(entity -> !(entity instanceof Player))
 				.filter(entity -> boundingBox.intersectEntity(this.getPosition().add(0, -2, 0), entity))
-				.filter(entity -> entity instanceof LivingEntity
-						&& !(entity instanceof Player player && player.getGameMode() == GameMode.SPECTATOR))
+				.filter(entity -> entity instanceof LivingEntity)
 				.map(entity -> (LivingEntity) entity)
 				.collect(Collectors.toList());
 		entities.addAll(Objects.requireNonNull(this.getInstance()).getPlayers().stream()
@@ -111,9 +111,9 @@ public class ThrownPotion extends CustomEntityProjectile implements ItemHoldingP
 	private void applySplash(PotionContents potionContents, @Nullable Entity hitEntity) {
 		var boundingBox = this.getBoundingBox().expand(8.0, 4.0, 8.0);
 		var entities = Objects.requireNonNull(this.getInstance()).getEntities().stream()
+				.filter(entity -> !(entity instanceof Player))
 				.filter(entity -> boundingBox.intersectEntity(this.getPosition().add(0, -2, 0), entity))
-				.filter(entity -> entity instanceof LivingEntity
-						&& !(entity instanceof Player player && player.getGameMode() == GameMode.SPECTATOR))
+				.filter(entity -> entity instanceof LivingEntity)
 				.map(entity -> (LivingEntity) entity)
 				.collect(Collectors.toList());
 		entities.addAll(Objects.requireNonNull(this.getInstance()).getPlayers().stream()
