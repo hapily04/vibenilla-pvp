@@ -111,6 +111,10 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 		var instance = entity.getInstance();
 
 		if (instance == null) return;
+		if (this.isFireImmune(entity)) {
+			entity.setFireTicks(0);
+			return;
+		}
 
 		var position = entity.getPosition();
 		var block = instance.getBlock(position);
@@ -129,6 +133,7 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 	}
 
 	private void handleLavaDamage(LivingEntity entity) {
+		if (this.isFireImmune(entity)) return;
 		if (!this.isInLava(entity)) return;
 
 		entity.setFireTicks(LAVA_IGNITE_TICKS);
@@ -391,6 +396,10 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 	private boolean hasWaterBreathing(LivingEntity entity) {
 		return entity.hasEffect(PotionEffect.WATER_BREATHING)
 				|| entity.hasEffect(PotionEffect.CONDUIT_POWER);
+	}
+
+	private boolean isFireImmune(LivingEntity entity) {
+		return entity.getEntityType().registry().fireImmune();
 	}
 
 	private int decreaseAirSupply(LivingEntity entity, int currentSupply) {

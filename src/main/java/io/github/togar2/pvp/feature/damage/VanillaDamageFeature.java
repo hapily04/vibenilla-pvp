@@ -112,6 +112,10 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 			event.setCancelled(true);
 			return;
 		}
+		if (typeInfo.fire() && entity.getEntityType().registry().fireImmune()) {
+			event.setCancelled(true);
+			return;
+		}
 
 		// This will be used to determine whether knockback should be applied
 		// We can't just check if the remaining damage is 0 because this would apply no knockback for snowballs & eggs
