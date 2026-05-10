@@ -227,7 +227,7 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 	}
 
 	protected int getCrossbowUseDuration(ItemStack stack) {
-		return this.getCrossbowChargeDuration(stack) + 3;
+		return 72000;
 	}
 
 	protected int getCrossbowChargeDuration(ItemStack stack) {
@@ -334,9 +334,9 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 
 	private void shootProjectileEntity(CustomEntityProjectile projectileEntity, Player player, Pos position,
 	                                   float yaw, double power, double spread) {
-		projectileEntity.setInstance(Objects.requireNonNull(player.getInstance()), position);
 		var shotVector = this.getProjectileShotVector(player.getPosition(), yaw);
 		projectileEntity.shoot(shotVector.x(), shotVector.y(), shotVector.z(), power, spread);
+		projectileEntity.setInstance(Objects.requireNonNull(player.getInstance()), position);
 	}
 
 	private Vec getProjectileShotVector(Pos position, float angle) {
