@@ -198,7 +198,7 @@ public class CombatManager {
 			if (attacker instanceof Player && (player == null || entry.damage().getAmount() > playerDamage)) {
 				player = (Player) attacker;
 				playerDamage = entry.damage().getAmount();
-			} else if (attacker instanceof LivingEntity && (entity == null || entry.damage().getAmount() <= livingDamage)) {
+			} else if (attacker instanceof LivingEntity && (entity == null || entry.damage().getAmount() > livingDamage)) {
 				entity = (LivingEntity) attacker;
 				livingDamage = entry.damage().getAmount();
 			}
