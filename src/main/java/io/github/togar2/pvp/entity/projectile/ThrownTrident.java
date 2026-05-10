@@ -13,6 +13,7 @@ import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.*;
 import net.minestom.server.entity.damage.Damage;
 import net.minestom.server.entity.damage.DamageType;
+import net.minestom.server.entity.metadata.projectile.AbstractArrowMeta;
 import net.minestom.server.entity.metadata.projectile.ThrownTridentMeta;
 import net.minestom.server.event.entity.projectile.ProjectileCollideWithBlockEvent;
 import net.minestom.server.instance.Instance;
@@ -58,6 +59,8 @@ public class ThrownTrident extends AbstractArrow {
 				// Move towards owner
                 this.setNoClip(true);
                 this.setNoGravity(true);
+				this.collisionDirection = null;
+				((AbstractArrowMeta) this.getEntityMeta()).setInGround(false);
 				Vec vector = shooter.getPosition().add(0, shooter.getEyeHeight(), 0).asVec().sub(this.position);
                 this.refreshPosition(this.position.add(0, vector.y() * 0.015 * loyalty, 0));
                 this.setVelocity(this.velocity.mul(0.95).add(vector.normalize().mul(0.05 * loyalty)
