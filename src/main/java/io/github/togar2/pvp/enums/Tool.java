@@ -19,6 +19,7 @@ import java.util.Objects;
 public enum Tool {
 	WOODEN_SWORD(ToolMaterial.WOOD, 3, 4.0F, -2.4F, false, true),
 	STONE_SWORD(ToolMaterial.STONE, 3, 4.0F, -2.4F, false, true),
+	COPPER_SWORD(ToolMaterial.COPPER, 3, 3.0F, -2.4F, false, true),
 	IRON_SWORD(ToolMaterial.IRON, 3, 4.0F, -2.4F, false, true),
 	DIAMOND_SWORD(ToolMaterial.DIAMOND, 3, 4.0F, -2.4F, false, true),
 	GOLDEN_SWORD(ToolMaterial.GOLD, 3, 4.0F, -2.4F, false, true),
@@ -26,6 +27,7 @@ public enum Tool {
 
 	WOODEN_SHOVEL(ToolMaterial.WOOD, 1.5F, 1.0F, -3.0F),
 	STONE_SHOVEL(ToolMaterial.STONE, 1.5F, 1.0F, -3.0F),
+	COPPER_SHOVEL(ToolMaterial.COPPER, 1.5F, 1.5F, -3.0F),
 	IRON_SHOVEL(ToolMaterial.IRON, 1.5F, 1.0F, -3.0F),
 	DIAMOND_SHOVEL(ToolMaterial.DIAMOND, 1.5F, 1.0F, -3.0F),
 	GOLDEN_SHOVEL(ToolMaterial.GOLD, 1.5F, 1.0F, -3.0F),
@@ -33,6 +35,7 @@ public enum Tool {
 
 	WOODEN_PICKAXE(ToolMaterial.WOOD, 1, 2.0F, -2.8F),
 	STONE_PICKAXE(ToolMaterial.STONE, 1, 2.0F, -2.8F),
+	COPPER_PICKAXE(ToolMaterial.COPPER, 1, 1.0F, -2.8F),
 	IRON_PICKAXE(ToolMaterial.IRON, 1, 2.0F, -2.8F),
 	DIAMOND_PICKAXE(ToolMaterial.DIAMOND, 1, 2.0F, -2.8F),
 	GOLDEN_PICKAXE(ToolMaterial.GOLD, 1, 2.0F, -2.8F),
@@ -40,6 +43,7 @@ public enum Tool {
 
 	WOODEN_AXE(ToolMaterial.WOOD, 6.0F, 3.0F, -3.2F, true, false),
 	STONE_AXE(ToolMaterial.STONE, 7.0F, 3.0F, -3.2F, true, false),
+	COPPER_AXE(ToolMaterial.COPPER, 7.0F, 7.0F, -3.2F, true, false),
 	IRON_AXE(ToolMaterial.IRON, 6.0F, 3.0F, -3.1F, true, false),
 	DIAMOND_AXE(ToolMaterial.DIAMOND, 5.0F, 3.0F, -3.0F, true, false),
 	GOLDEN_AXE(ToolMaterial.GOLD, 6.0F, 3.0F, -3.0F, true, false),
@@ -48,6 +52,7 @@ public enum Tool {
 	// Attack damage for hoes is negative to disable the ToolMaterial attack damage
 	WOODEN_HOE(ToolMaterial.WOOD, 0, 0, -3.0F),
 	STONE_HOE(ToolMaterial.STONE, -1, -1, -2.0F),
+	COPPER_HOE(ToolMaterial.COPPER, -1, -1, -2.0F),
 	IRON_HOE(ToolMaterial.IRON, -2, -2, -1.0F),
 	DIAMOND_HOE(ToolMaterial.DIAMOND, -3, -3, 0.0F),
 	GOLDEN_HOE(ToolMaterial.GOLD, 0, 0, -3.0F),
