@@ -120,10 +120,11 @@ public class VanillaFishingRodFeature implements FishingRodFeature, RegistrableF
 							-zDir
 					);
 					double length = velocity.length();
+					double velocityMultiplier = 0.6D / length;
 					velocity = velocity.mul(
-							0.6D / length + 0.5D + random.nextGaussian() * spread,
-							0.6D / length + 0.5D + random.nextGaussian() * spread,
-							0.6D / length + 0.5D + random.nextGaussian() * spread
+							velocityMultiplier + this.triangle(random, 0.5D, 0.0103365D),
+							velocityMultiplier + this.triangle(random, 0.5D, 0.0103365D),
+							velocityMultiplier + this.triangle(random, 0.5D, 0.0103365D)
 					);
 				} else {
 					double maxVelocity = 0.4F;
@@ -145,9 +146,18 @@ public class VanillaFishingRodFeature implements FishingRodFeature, RegistrableF
 							.mul(1.5);
 				}
 
-				//TODO fix velocity code
-				bobber.setVelocity(velocity.mul(ServerFlag.SERVER_TICKS_PER_SECOND * 0.75));
+				var velocityScale = ServerFlag.SERVER_TICKS_PER_SECOND;
+
+				if (this.version.legacy()) {
+					velocityScale *= 0.75;
+				}
+
+				bobber.setVelocity(velocity.mul(velocityScale));
 			}
 		});
+	}
+
+	private double triangle(ThreadLocalRandom random, double mean, double spread) {
+		return mean + spread * (random.nextDouble() - random.nextDouble());
 	}
 }
