@@ -231,10 +231,14 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 			public void apply(@NotNull Instance instance) {
 				List<Point> blocks = this.prepare(instance);
 				if (blocks == null) return; // Event was canceled
+				boolean tntExplodes = true;
+				if (additionalData != null && additionalData.keySet().contains("tntExplodes"))
+					tntExplodes = additionalData.getBoolean("tntExplodes");
+
 				byte[] records = new byte[3 * blocks.size()];
 				for (int i = 0; i < blocks.size(); i++) {
 					final var pos = blocks.get(i);
-					if (instance.getBlock(pos).compare(Block.TNT)) {
+					if (tntExplodes && instance.getBlock(pos).compare(Block.TNT)) {
 						Entity causingEntity = this.getCausingEntity(instance);
                         VanillaExplosionSupplier.this.feature.primeExplosive(instance, pos, new ExplosionFeature.IgnitionCause.Explosion(causingEntity),
 								ThreadLocalRandom.current().nextInt(20) + 10);
