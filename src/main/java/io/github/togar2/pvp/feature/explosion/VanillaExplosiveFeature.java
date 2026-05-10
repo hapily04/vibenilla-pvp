@@ -98,12 +98,12 @@ public class VanillaExplosiveFeature implements ExplosiveFeature, RegistrableFea
 			Point above = event.getPosition().add(0, 1, 0);
 			if (!instance.getBlock(above).isAir()) return;
 
+			Point spawnPosition = above.add(0.5, 0, 0.5);
 			BoundingBox checkIntersect = new BoundingBox(1, 2, 1);
 			for (Entity entity : instance.getNearbyEntities(above, 3)) {
-				if (entity.getBoundingBox().intersectBox(above.sub(entity.getPosition()), checkIntersect)) return;
+				if (checkIntersect.intersectEntity(spawnPosition, entity)) return;
 			}
 
-			Point spawnPosition = above.add(0.5, 0, 0.5);
 			var crystalPlaceEvent = new CrystalPlaceEvent(event.getPlayer(), spawnPosition);
 
 			EventDispatcher.callCancellable(crystalPlaceEvent, () -> {
