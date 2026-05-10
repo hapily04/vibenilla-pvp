@@ -10,6 +10,7 @@ import net.kyori.adventure.sound.Sound;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.CoordConversion;
 import net.minestom.server.entity.EquipmentSlot;
+import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.LivingEntity;
 import net.minestom.server.entity.Player;
@@ -225,6 +226,8 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 	}
 
 	private void handleBerryBushDamage(LivingEntity entity, Block block) {
+		if (this.isBerryBushImmune(entity)) return;
+
 		var ageProperty = block.getProperty("age");
 
 		if (ageProperty == null || "0".equals(ageProperty)) return;
@@ -400,6 +403,12 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 
 	private boolean isFireImmune(LivingEntity entity) {
 		return entity.getEntityType().registry().fireImmune();
+	}
+
+	private boolean isBerryBushImmune(LivingEntity entity) {
+		var entityType = entity.getEntityType();
+
+		return entityType == EntityType.FOX || entityType == EntityType.BEE;
 	}
 
 	private int decreaseAirSupply(LivingEntity entity, int currentSupply) {
