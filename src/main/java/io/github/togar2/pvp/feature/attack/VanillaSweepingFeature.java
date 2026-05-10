@@ -75,26 +75,17 @@ public class VanillaSweepingFeature implements SweepingFeature {
 		BoundingBox boundingBox = target.getBoundingBox().expand(1.0, 0.25, 1.0);
 		assert target.getInstance() != null;
 		for (Entity nearbyEntity : target.getInstance().getNearbyEntities(target.getPosition(), 2)) {
-			if (nearbyEntity == target || nearbyEntity == attacker) continue;
-			if (!(nearbyEntity instanceof LivingEntity living)) continue;
-			if (nearbyEntity.getEntityType() == EntityType.ARMOR_STAND) continue;
-			if (!boundingBox.intersectEntity(target.getPosition(), nearbyEntity)) continue;
+			var affectedEntity = this.applySweepingToEntity(attacker, target, sweepingDamage, boundingBox, nearbyEntity);
 
-			// Apply sweeping knockback and damage to the entity
-			if (attacker.getPosition().distanceSquared(nearbyEntity.getPosition()) < 9.0) {
-				float currentDamage = sweepingDamage + this.enchantmentFeature.getAttackDamage(
-						attacker.getItemInMainHand(), EntityGroup.ofEntity(living));
+			if (affectedEntity != null) {
+				affectedEntities.add(affectedEntity);
+			}
+		}
+		for (var player : target.getInstance().getPlayers()) {
+			var affectedEntity = this.applySweepingToEntity(attacker, target, sweepingDamage, boundingBox, player);
 
-				var damaged = living.damage(new Damage(
-						attacker instanceof Player ? DamageType.PLAYER_ATTACK : DamageType.MOB_ATTACK,
-						attacker, attacker,
-						null, currentDamage
-				));
-
-				if (damaged) {
-					affectedEntities.add(living);
-					this.knockbackFeature.applySweepingKnockback(attacker, living);
-				}
+			if (affectedEntity != null) {
+				affectedEntities.add(affectedEntity);
 			}
 		}
 
@@ -111,5 +102,29 @@ public class VanillaSweepingFeature implements SweepingFeature {
 		));
 
 		return affectedEntities;
+	}
+
+	private LivingEntity applySweepingToEntity(LivingEntity attacker, LivingEntity target, float sweepingDamage,
+	                                           BoundingBox boundingBox, Entity nearbyEntity) {
+		if (nearbyEntity == target || nearbyEntity == attacker) return null;
+		if (!(nearbyEntity instanceof LivingEntity living)) return null;
+		if (nearbyEntity.getEntityType() == EntityType.ARMOR_STAND) return null;
+		if (!boundingBox.intersectEntity(target.getPosition(), nearbyEntity)) return null;
+		if (attacker.getPosition().distanceSquared(nearbyEntity.getPosition()) >= 9.0) return null;
+
+		float currentDamage = sweepingDamage + this.enchantmentFeature.getAttackDamage(
+				attacker.getItemInMainHand(), EntityGroup.ofEntity(living));
+
+		var damaged = living.damage(new Damage(
+				attacker instanceof Player ? DamageType.PLAYER_ATTACK : DamageType.MOB_ATTACK,
+				attacker, attacker,
+				null, currentDamage
+		));
+
+		if (!damaged) return null;
+
+		this.knockbackFeature.applySweepingKnockback(attacker, living);
+
+		return living;
 	}
 }
