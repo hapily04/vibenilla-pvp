@@ -219,23 +219,29 @@ public class ThrownTrident extends AbstractArrow {
 
 	private void damageLightningEntities(Instance instance, Point point) {
 		for (var entity : instance.getNearbyEntities(point, 9.0)) {
-
-			if (!(entity instanceof LivingEntity livingEntity)) {
-				continue;
-			}
-
-			var position = entity.getPosition();
-
-			if (Math.abs(position.x() - point.x()) > 3.0
-					|| position.y() - point.y() < -3.0
-					|| position.y() - point.y() > 9.0
-					|| Math.abs(position.z() - point.z()) > 3.0) {
-				continue;
-			}
-
-			this.setFireTicks(livingEntity, Math.max(livingEntity.getFireTicks(), 8 * ServerFlag.SERVER_TICKS_PER_SECOND));
-			livingEntity.damage(DamageType.LIGHTNING_BOLT, 5.0F);
+			this.damageLightningEntity(point, entity);
 		}
+		for (var player : instance.getPlayers()) {
+			this.damageLightningEntity(point, player);
+		}
+	}
+
+	private void damageLightningEntity(Point point, Entity entity) {
+		if (!(entity instanceof LivingEntity livingEntity)) {
+			return;
+		}
+
+		var position = entity.getPosition();
+
+		if (Math.abs(position.x() - point.x()) > 3.0
+				|| position.y() - point.y() < -3.0
+				|| position.y() - point.y() > 9.0
+				|| Math.abs(position.z() - point.z()) > 3.0) {
+			return;
+		}
+
+		this.setFireTicks(livingEntity, Math.max(livingEntity.getFireTicks(), 8 * ServerFlag.SERVER_TICKS_PER_SECOND));
+		livingEntity.damage(DamageType.LIGHTNING_BOLT, 5.0F);
 	}
 
 	private boolean isLightningRod(Block block) {
