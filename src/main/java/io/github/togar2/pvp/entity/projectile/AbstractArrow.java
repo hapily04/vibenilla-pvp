@@ -157,7 +157,6 @@ public abstract class AbstractArrow extends CustomEntityProjectile {
 		double movementSpeed = getVelocity().length() / ServerFlag.SERVER_TICKS_PER_SECOND;
 		int damage = (int) Math.ceil(MathUtils.clamp(
 				movementSpeed * baseDamage, 0.0, 2.147483647E9D));
-		damage = (int) Math.min(damage + this.damageBonus, 2.147483647E9D);
 
 		if (getPiercingLevel() > 0) {
 			if (piercingIgnore.size() >= getPiercingLevel() + 1) {
@@ -171,6 +170,8 @@ public abstract class AbstractArrow extends CustomEntityProjectile {
 			int randomDamage = random.nextInt(damage / 2 + 2);
 			damage = (int) Math.min(randomDamage + damage, 2147483647L);
 		}
+
+		damage = (int) Math.min(damage + this.damageBonus, 2.147483647E9D);
 
 		Entity shooter = getShooter();
 		Damage damageObj = new Damage(
