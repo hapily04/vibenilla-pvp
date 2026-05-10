@@ -3,6 +3,7 @@ package io.github.togar2.pvp.entity.explosion;
 import org.jetbrains.annotations.NotNull;
 
 import io.github.togar2.pvp.damage.DamageTypeInfo;
+import net.kyori.adventure.nbt.CompoundBinaryTag;
 import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.LivingEntity;
 import net.minestom.server.entity.damage.Damage;
@@ -49,10 +50,15 @@ public class CrystalEntity extends LivingEntity {
 
 		// Save this.instance locally
 		Instance instance = this.instance;
+		var attacker = damage.getAttacker();
         this.remove();
 		if (instance.getExplosionSupplier() != null
 				&& !DamageTypeInfo.of(damage.getType()).explosive()) {
-			instance.explode((float) this.position.x(), (float) this.position.y(), (float) this.position.z(), 6.0f);
+			instance.explode((float) this.position.x(), (float) this.position.y(), (float) this.position.z(), 6.0f,
+					attacker == null ? null
+							: CompoundBinaryTag.builder()
+									.putString("causingEntity", attacker.getUuid().toString())
+									.build());
 		}
 
 		return true;

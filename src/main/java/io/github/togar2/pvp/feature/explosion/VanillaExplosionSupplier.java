@@ -15,6 +15,7 @@ import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.LivingEntity;
 import net.minestom.server.entity.Player;
+import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.entity.damage.Damage;
 import net.minestom.server.entity.damage.DamageType;
 import net.minestom.server.event.EventDispatcher;
@@ -146,7 +147,8 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 					damageObj = new Damage(DamageType.BAD_RESPAWN_POINT, null, null, null, 0);
 				} else {
 					Entity causingEntity = this.getCausingEntity(instance);
-					damageObj = new Damage(DamageType.PLAYER_EXPLOSION, causingEntity, causingEntity, null, 0);
+					damageObj = new Damage(causingEntity == null ? DamageType.EXPLOSION : DamageType.PLAYER_EXPLOSION,
+							causingEntity, causingEntity, null, 0);
 				}
 
 				// Blocks and entities list may be modified during the event call
@@ -173,8 +175,9 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 									/ 2.0D * 7.0D * strength + 1.0D));
 							double knockback = currentStrength;
 							if (entity instanceof LivingEntity living) {
-								if (!living.damage(damageObj)) continue;
 								knockback = VanillaExplosionSupplier.this.enchantmentFeature.getExplosionKnockback(living, currentStrength);
+								knockback *= 1.0 - living.getAttributeValue(Attribute.EXPLOSION_KNOCKBACK_RESISTANCE);
+								living.damage(damageObj);
 							}
 
 							Vec knockbackVec = new Vec(
