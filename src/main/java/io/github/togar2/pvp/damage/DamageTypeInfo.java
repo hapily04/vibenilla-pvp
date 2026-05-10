@@ -67,14 +67,14 @@ public record DamageTypeInfo(boolean damagesHelmet, boolean bypassesArmor, boole
             this.put(DamageType.STING, new DamageTypeInfo().scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
             this.put(DamageType.MOB_ATTACK, new DamageTypeInfo().scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
             this.put(DamageType.MOB_ATTACK_NO_AGGRO, new DamageTypeInfo().scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
-            this.put(DamageType.MOB_PROJECTILE, new DamageTypeInfo().scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
+            this.put(DamageType.MOB_PROJECTILE, new DamageTypeInfo().projectile(true).scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
             this.put(DamageType.SPIT, new DamageTypeInfo().scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
             this.put(DamageType.PLAYER_ATTACK, new DamageTypeInfo().scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
-            this.put(DamageType.TRIDENT, new DamageTypeInfo().scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
+            this.put(DamageType.TRIDENT, new DamageTypeInfo().projectile(true).scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
             this.put(DamageType.MACE_SMASH, new DamageTypeInfo().scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
             this.put(DamageType.SPEAR, new DamageTypeInfo().scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
             this.put(DamageType.WIND_CHARGE, new DamageTypeInfo().projectile(true).scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
-            this.put(DamageType.FIREWORKS, new DamageTypeInfo().scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
+            this.put(DamageType.FIREWORKS, new DamageTypeInfo().explosive(true).scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
             this.put(DamageType.SONIC_BOOM, new DamageTypeInfo().bypassesArmor(true).bypassesEnchantments(true).scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
             this.put(DamageType.OUTSIDE_BORDER, new DamageTypeInfo().bypassesArmor(true));
             this.put(DamageType.CAMPFIRE, new DamageTypeInfo().fire(true));
