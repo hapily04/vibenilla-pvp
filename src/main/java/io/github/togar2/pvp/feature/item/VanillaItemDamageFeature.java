@@ -78,11 +78,8 @@ public class VanillaItemDamageFeature implements ItemDamageFeature {
 
 	@Override
 	public void damageEquipment(LivingEntity entity, EquipmentSlot slot, int amount) {
-        // CREDIT: https://github.com/TogAr2/MinestomPvP/pull/80
         if (entity instanceof Player player) {
-            var canDamageEquipment = player.getGameMode() == GameMode.SURVIVAL || player.getGameMode() != GameMode.ADVENTURE;
-
-            if (!canDamageEquipment) {
+            if (player.getGameMode() == GameMode.CREATIVE) {
                 return;
             }
         }
