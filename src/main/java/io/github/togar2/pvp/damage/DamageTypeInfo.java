@@ -27,10 +27,9 @@ public record DamageTypeInfo(boolean damagesHelmet, boolean bypassesArmor, boole
 		return INFO_MAP.getOrDefault(type, DEFAULT);
 	}
 
-	//TODO check source and add missing
 	public static final Map<RegistryKey<DamageType>, DamageTypeInfo> INFO_MAP = new HashMap<>() {
 		{
-            this.put(DamageType.IN_FIRE, new DamageTypeInfo().bypassesArmor(true).fire(true));
+            this.put(DamageType.IN_FIRE, new DamageTypeInfo().fire(true));
             this.put(DamageType.ON_FIRE, new DamageTypeInfo().bypassesArmor(true).fire(true));
             this.put(DamageType.LAVA, new DamageTypeInfo().fire(true));
             this.put(DamageType.HOT_FLOOR, new DamageTypeInfo().fire(true));
@@ -39,6 +38,7 @@ public record DamageTypeInfo(boolean damagesHelmet, boolean bypassesArmor, boole
             this.put(DamageType.DROWN, new DamageTypeInfo().bypassesArmor(true));
             this.put(DamageType.STARVE, new DamageTypeInfo().bypassesArmor(true).unblockable(true));
             this.put(DamageType.FALL, new DamageTypeInfo().bypassesArmor(true).fall(true));
+            this.put(DamageType.ENDER_PEARL, new DamageTypeInfo().bypassesArmor(true).fall(true));
             this.put(DamageType.FLY_INTO_WALL, new DamageTypeInfo().bypassesArmor(true));
             this.put(DamageType.OUT_OF_WORLD, new DamageTypeInfo().bypassesArmor(true).outOfWorld(true));
             this.put(DamageType.GENERIC, new DamageTypeInfo().bypassesArmor(true));
@@ -49,6 +49,7 @@ public record DamageTypeInfo(boolean damagesHelmet, boolean bypassesArmor, boole
             this.put(DamageType.FALLING_ANVIL, new DamageTypeInfo().damagesHelmet(true));
             this.put(DamageType.FALLING_BLOCK, new DamageTypeInfo().damagesHelmet(true));
             this.put(DamageType.DRAGON_BREATH, new DamageTypeInfo().bypassesArmor(true));
+            this.put(DamageType.DRY_OUT, new DamageTypeInfo());
             this.put(DamageType.FREEZE, new DamageTypeInfo().freeze(true).bypassesArmor(true));
             this.put(DamageType.FALLING_STALACTITE, new DamageTypeInfo().damagesHelmet(true));
             this.put(DamageType.STALAGMITE, new DamageTypeInfo().bypassesArmor(true).fall(true));
@@ -63,15 +64,19 @@ public record DamageTypeInfo(boolean damagesHelmet, boolean bypassesArmor, boole
             this.put(DamageType.THROWN, new DamageTypeInfo().projectile(true).scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
             this.put(DamageType.STING, new DamageTypeInfo().scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
             this.put(DamageType.MOB_ATTACK, new DamageTypeInfo().scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
+            this.put(DamageType.MOB_ATTACK_NO_AGGRO, new DamageTypeInfo().scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
             this.put(DamageType.MOB_PROJECTILE, new DamageTypeInfo().scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
+            this.put(DamageType.SPIT, new DamageTypeInfo().scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
             this.put(DamageType.PLAYER_ATTACK, new DamageTypeInfo().scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
             this.put(DamageType.TRIDENT, new DamageTypeInfo().scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
             this.put(DamageType.MACE_SMASH, new DamageTypeInfo().scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
             this.put(DamageType.SPEAR, new DamageTypeInfo().scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
+            this.put(DamageType.WIND_CHARGE, new DamageTypeInfo().projectile(true).scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
             this.put(DamageType.FIREWORKS, new DamageTypeInfo().scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
             this.put(DamageType.SONIC_BOOM, new DamageTypeInfo().bypassesArmor(true).scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
             this.put(DamageType.OUTSIDE_BORDER, new DamageTypeInfo().bypassesArmor(true));
             this.put(DamageType.CAMPFIRE, new DamageTypeInfo().fire(true));
+            this.put(DamageType.LIGHTNING_BOLT, new DamageTypeInfo());
             this.put(DamageType.CACTUS, new DamageTypeInfo());
             this.put(DamageType.SWEET_BERRY_BUSH, new DamageTypeInfo());
 		}
