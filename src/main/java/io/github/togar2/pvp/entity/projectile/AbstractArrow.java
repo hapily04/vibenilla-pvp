@@ -196,6 +196,7 @@ public abstract class AbstractArrow extends CustomEntityProjectile {
 				this, Objects.requireNonNullElse(shooter, this),
 				null, damage
 		);
+		Pos position = this.getPosition();
 
 		if (living.damage(damageObj)) {
 			if (entity.getEntityType() == EntityType.ENDERMAN) return false;
@@ -237,12 +238,11 @@ public abstract class AbstractArrow extends CustomEntityProjectile {
 				getViewersAsAudience().playSound(Sound.sound(
 						getSound(), Sound.Source.NEUTRAL,
 						1.0f, 1.2f / (random.nextFloat() * 0.2f + 0.9f)
-				), this);
+				), position.x(), position.y(), position.z());
 			}
 
 			return getPiercingLevel() <= 0;
 		} else {
-			Pos position = getPosition();
 			setVelocity(getVelocity().mul(-0.5 * 0.2));
 			refreshPosition(position.withYaw(position.yaw() + 170.0f + 20.0f * ThreadLocalRandom.current().nextFloat()));
 
@@ -262,10 +262,11 @@ public abstract class AbstractArrow extends CustomEntityProjectile {
 	public boolean onStuck() {
 		if (!isSilent()) {
 			ThreadLocalRandom random = ThreadLocalRandom.current();
+			Pos position = this.getPosition();
 			getViewersAsAudience().playSound(Sound.sound(
 					getSound(), Sound.Source.NEUTRAL,
 					1.0f, 1.2f / (random.nextFloat() * 0.2f + 0.9f)
-			), this);
+			), position.x(), position.y(), position.z());
 		}
 
 		pickupDelay = 7;
