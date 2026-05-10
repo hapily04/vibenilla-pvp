@@ -1,5 +1,6 @@
 package io.github.togar2.pvp.feature.explosion;
 
+import io.github.togar2.pvp.entity.explosion.CrystalEntity;
 import io.github.togar2.pvp.events.ExplosionEvent;
 import io.github.togar2.pvp.feature.enchantment.EnchantmentFeature;
 import io.github.togar2.pvp.player.CombatPlayer;
@@ -177,12 +178,15 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 								/ 2.0D * 7.0D * strength + 1.0D);
 
 						var knockback = impactStrength;
+						var entityDamage = new Damage(damageObj.getType(), damageObj.getSource(),
+								damageObj.getAttacker(), damageObj.getSourcePosition(), damageAmount);
+
 						if (entity instanceof LivingEntity living) {
-							var entityDamage = new Damage(damageObj.getType(), damageObj.getSource(),
-									damageObj.getAttacker(), damageObj.getSourcePosition(), damageAmount);
 							knockback = VanillaExplosionSupplier.this.enchantmentFeature.getExplosionKnockback(living, impactStrength);
 							knockback *= 1.0 - living.getAttributeValue(Attribute.EXPLOSION_KNOCKBACK_RESISTANCE);
 							living.damage(entityDamage);
+						} else if (entity instanceof CrystalEntity crystal) {
+							crystal.damage(entityDamage);
 						}
 
 						var knockbackVec = new Vec(
