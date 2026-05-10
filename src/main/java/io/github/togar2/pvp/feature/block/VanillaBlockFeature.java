@@ -144,13 +144,13 @@ public class VanillaBlockFeature implements BlockFeature {
 	}
 
 	protected void disableShield(Player player) {
-        this.itemCooldownFeature.setCooldown(player, Material.SHIELD, 100);
+		PlayerHand hand = player.getPlayerMeta().getActiveHand();
+        this.itemCooldownFeature.setCooldown(player, player.getItemInHand(hand), 100);
 
 		// Shield disable status
 		player.triggerStatus((byte) 30);
 		player.triggerStatus((byte) 9);
 
-		PlayerHand hand = player.getPlayerMeta().getActiveHand();
 		player.refreshActiveHand(false, hand == PlayerHand.OFF, false);
 	}
 }

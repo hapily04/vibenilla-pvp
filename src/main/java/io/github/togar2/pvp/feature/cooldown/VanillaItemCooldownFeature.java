@@ -4,12 +4,13 @@ import io.github.togar2.pvp.feature.FeatureType;
 import io.github.togar2.pvp.feature.RegistrableFeature;
 import io.github.togar2.pvp.feature.config.DefinedFeature;
 import net.minestom.server.MinecraftServer;
+import net.minestom.server.component.DataComponents;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerTickEvent;
 import net.minestom.server.event.player.PlayerUseItemEvent;
 import net.minestom.server.event.trait.EntityInstanceEvent;
-import net.minestom.server.item.Material;
+import net.minestom.server.item.ItemStack;
 import net.minestom.server.network.packet.server.play.SetCooldownPacket;
 import net.minestom.server.tag.Tag;
 
@@ -26,7 +27,7 @@ public class VanillaItemCooldownFeature implements ItemCooldownFeature, Registra
 			VanillaItemCooldownFeature::initPlayer
 	);
 
-	public static final Tag<Map<Material, Long>> COOLDOWN_END = Tag.Transient("cooldownEnd");
+	public static final Tag<Map<String, Long>> COOLDOWN_END = Tag.Transient("cooldownEnd");
 
 	private static void initPlayer(Player player, boolean firstInit) {
 		player.setTag(COOLDOWN_END, new HashMap<>());
@@ -42,14 +43,14 @@ public class VanillaItemCooldownFeature implements ItemCooldownFeature, Registra
 	public void init(EventNode<EntityInstanceEvent> node) {
 		node.addListener(PlayerTickEvent.class, event -> {
 			Player player = event.getPlayer();
-			Map<Material, Long> cooldown = player.getTag(COOLDOWN_END);
+			Map<String, Long> cooldown = player.getTag(COOLDOWN_END);
 			if (cooldown.isEmpty()) return;
 			long time = System.currentTimeMillis();
 
-			Iterator<Map.Entry<Material, Long>> iterator = cooldown.entrySet().iterator();
+			Iterator<Map.Entry<String, Long>> iterator = cooldown.entrySet().iterator();
 
 			while (iterator.hasNext()) {
-				Map.Entry<Material, Long> entry = iterator.next();
+				Map.Entry<String, Long> entry = iterator.next();
 				if (entry.getValue() <= time) {
 					iterator.remove();
                     this.sendCooldownPacket(player, entry.getKey(), 0);
@@ -58,25 +59,34 @@ public class VanillaItemCooldownFeature implements ItemCooldownFeature, Registra
 		});
 
 		node.addListener(PlayerUseItemEvent.class, event -> {
-			if (this.hasCooldown(event.getPlayer(), event.getItemStack().material()))
+			if (this.hasCooldown(event.getPlayer(), event.getItemStack()))
 				event.setCancelled(true);
 		});
 	}
 
 	@Override
-	public boolean hasCooldown(Player player, Material material) {
-		Map<Material, Long> cooldown = player.getTag(COOLDOWN_END);
-		return cooldown.containsKey(material) && cooldown.get(material) > System.currentTimeMillis();
+	public boolean hasCooldown(Player player, String cooldownGroup) {
+		Map<String, Long> cooldown = player.getTag(COOLDOWN_END);
+		return cooldown.containsKey(cooldownGroup) && cooldown.get(cooldownGroup) > System.currentTimeMillis();
 	}
 
 	@Override
-	public void setCooldown(Player player, Material material, int ticks) {
-		Map<Material, Long> cooldown = player.getTag(COOLDOWN_END);
-		cooldown.put(material, System.currentTimeMillis() + (long) ticks * MinecraftServer.TICK_MS);
-        this.sendCooldownPacket(player, material, ticks);
+	public void setCooldown(Player player, String cooldownGroup, int ticks) {
+		Map<String, Long> cooldown = player.getTag(COOLDOWN_END);
+		cooldown.put(cooldownGroup, System.currentTimeMillis() + (long) ticks * MinecraftServer.TICK_MS);
+        this.sendCooldownPacket(player, cooldownGroup, ticks);
 	}
 
-	protected void sendCooldownPacket(Player player, Material material, int ticks) {
-		player.getPlayerConnection().sendPacket(new SetCooldownPacket(material.key().asString(), ticks));
+	@Override
+	public String getCooldownGroup(ItemStack itemStack) {
+		var useCooldown = itemStack.get(DataComponents.USE_COOLDOWN);
+
+		return useCooldown != null && useCooldown.cooldownGroup() != null
+				? useCooldown.cooldownGroup()
+				: itemStack.material().key().asString();
+	}
+
+	protected void sendCooldownPacket(Player player, String cooldownGroup, int ticks) {
+		player.getPlayerConnection().sendPacket(new SetCooldownPacket(cooldownGroup, ticks));
 	}
 }
