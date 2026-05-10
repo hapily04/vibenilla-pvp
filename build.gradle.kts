@@ -1,3 +1,6 @@
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+
 plugins {
     `java-library`
     id("com.vanniktech.maven.publish") version "0.36.0"
@@ -5,14 +8,22 @@ plugins {
 
 description = "Combat for Minestom"
 group = "rocks.minestom"
-version = "0.1.0"
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 
+val minestomVersion = "2026.03.03-1.21.11"
+
 mavenPublishing {
-    coordinates(group.toString(), project.name, version.toString())
+    val mcVersion = minestomVersion.split("-")[1]
+    val date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"))
+    val version = "$date-$mcVersion"
+    coordinates(project.group.toString(), project.name, version)
+
     publishToMavenCentral()
-    signAllPublications()
+
+    if (project.hasProperty("signing.keyId") || project.hasProperty("signingInMemoryKey")) {
+        signAllPublications()
+    }
 
     pom {
         name = project.name
@@ -48,9 +59,9 @@ repositories {
 }
 
 dependencies {
-    compileOnly("net.minestom:minestom:2026.03.03-1.21.11")
+    compileOnly("net.minestom:minestom:$minestomVersion")
     compileOnly("it.unimi.dsi:fastutil:8.5.12")
-    testImplementation("net.minestom:minestom:2026.03.03-1.21.11")
+    testImplementation("net.minestom:minestom:$minestomVersion")
 }
 
 tasks.test {
