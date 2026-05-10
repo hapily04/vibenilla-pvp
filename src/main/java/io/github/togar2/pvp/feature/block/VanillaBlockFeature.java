@@ -90,7 +90,8 @@ public class VanillaBlockFeature implements BlockFeature {
 			Pos entityPos = entity.getPosition();
 
 			Vec attackerPosVector = attackerPos.asVec();
-			Vec entityRotation = entityPos.direction();
+			var yaw = Math.toRadians(entityPos.yaw());
+			var entityRotation = new Vec(-Math.sin(yaw), 0.0, Math.cos(yaw));
 			Vec attackerDirection = entityPos.asVec().sub(attackerPosVector).normalize();
 			attackerDirection = attackerDirection.withY(0);
 
