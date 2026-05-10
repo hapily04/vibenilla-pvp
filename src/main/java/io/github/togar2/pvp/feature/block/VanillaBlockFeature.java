@@ -11,7 +11,9 @@ import io.github.togar2.pvp.feature.config.FeatureConfiguration;
 import io.github.togar2.pvp.feature.cooldown.ItemCooldownFeature;
 import io.github.togar2.pvp.feature.item.ItemDamageFeature;
 import io.github.togar2.pvp.utils.CombatVersion;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
+import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Entity;
@@ -64,10 +66,8 @@ public class VanillaBlockFeature implements BlockFeature {
 	@Override
 	public boolean isDamageBlocked(LivingEntity entity, Damage damage) {
 		if (damage.getAmount() <= 0) return false;
-		DamageTypeInfo info = DamageTypeInfo.of(damage.getType());
 
-		// If damage doesn't bypass armor, no piercing, and a shield is active
-		if (!info.bypassesArmor() && !this.isPiercing(damage)
+		if (!this.bypassesShield(damage) && !this.isPiercing(damage)
 				&& entity.getEntityMeta() instanceof LivingEntityMeta meta
 				&& meta.isHandActive() && entity.getItemInHand(meta.getActiveHand()).material() == Material.SHIELD) {
 			if (this.version.legacy()) return true;
@@ -88,6 +88,12 @@ public class VanillaBlockFeature implements BlockFeature {
 
 		return false;
 	}
+
+    private boolean bypassesShield(Damage damage) {
+        var bypassesShield = MinecraftServer.process().damageType().getTag(Key.key("minecraft:bypasses_shield"));
+
+        return bypassesShield != null && bypassesShield.contains(damage.getType());
+    }
 
 	@Override
 	public boolean applyBlock(LivingEntity entity, Damage damage) {
