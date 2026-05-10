@@ -101,6 +101,8 @@ public class VanillaExplosiveFeature implements ExplosiveFeature, RegistrableFea
 			Point spawnPosition = above.add(0.5, 0, 0.5);
 			BoundingBox checkIntersect = new BoundingBox(1, 2, 1);
 			for (Entity entity : instance.getNearbyEntities(above, 3)) {
+				if (entity instanceof Player) continue;
+
 				if (checkIntersect.intersectEntity(spawnPosition, entity)) return;
 			}
 			for (var player : instance.getPlayers()) {

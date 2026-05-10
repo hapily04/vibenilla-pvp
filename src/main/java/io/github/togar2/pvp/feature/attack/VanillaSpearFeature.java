@@ -399,6 +399,8 @@ public class VanillaSpearFeature implements SpearFeature, RegistrableFeature {
 		List<LivingEntity> hitEntities = new ArrayList<>();
 		assert attacker.getInstance() != null;
 		for (Entity nearby : attacker.getInstance().getNearbyEntities(eyePosition, reach + 1.0)) {
+			if (nearby instanceof Player) continue;
+
 			this.addSpearHitEntity(hitEntities, attacker, eyePosition, direction, minReach, reach, nearby);
 		}
 		for (var player : attacker.getInstance().getPlayers()) {

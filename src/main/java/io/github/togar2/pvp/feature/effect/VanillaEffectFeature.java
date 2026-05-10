@@ -454,6 +454,8 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 				continue;
 			}
 
+			if (nearbyEntity instanceof Player) continue;
+
 			if (!(nearbyEntity instanceof LivingEntity nearbyLiving)) {
 				continue;
 			}
