@@ -87,7 +87,11 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 	private void handleEntityTick(LivingEntity entity) {
 		this.handleExtinguishing(entity);
 		this.handleFireDamage(entity);
+		this.handleLavaDamage(entity);
 		this.handleVoidDamage(entity);
+		this.handleDrowning(entity);
+		this.handleBlockContactDamage(entity);
+		this.handleFreezeDamage(entity);
 	}
 
 	private void handleExtinguishing(LivingEntity entity) {
@@ -141,47 +145,47 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 		entity.damage(DamageType.OUT_OF_WORLD, 4.0F);
 	}
 
-	private void handleDrowning(Player player) {
-		if (player.getGameMode().invulnerable()) return;
+	private void handleDrowning(LivingEntity entity) {
+		if (entity instanceof Player player && player.getGameMode().invulnerable()) return;
 
-		var instance = player.getInstance();
+		var instance = entity.getInstance();
 
 		if (instance == null) return;
 
-		int airSupply = player.hasTag(AIR_SUPPLY) ? player.getTag(AIR_SUPPLY) : MAX_AIR_SUPPLY;
+		int airSupply = entity.hasTag(AIR_SUPPLY) ? entity.getTag(AIR_SUPPLY) : MAX_AIR_SUPPLY;
 
-		if (this.isEyeInWater(player)) {
+		if (this.isEyeInWater(entity)) {
 			var eyeBlock = instance.getBlock(
-					player.getPosition().blockX(),
-					(int) (player.getPosition().y() + player.getEyeHeight()),
-					player.getPosition().blockZ()
+					entity.getPosition().blockX(),
+					(int) (entity.getPosition().y() + entity.getEyeHeight()),
+					entity.getPosition().blockZ()
 			);
 
 			if (eyeBlock.compare(Block.BUBBLE_COLUMN)) {
 				airSupply = this.increaseAirSupply(airSupply);
-			} else if (!this.hasWaterBreathing(player)) {
-				airSupply = this.decreaseAirSupply(player, airSupply);
+			} else if (!this.hasWaterBreathing(entity)) {
+				airSupply = this.decreaseAirSupply(entity, airSupply);
 
 				if (airSupply <= DROWN_THRESHOLD) {
 					airSupply = 0;
-					player.damage(DamageType.DROWN, 2.0F);
+					entity.damage(DamageType.DROWN, 2.0F);
 				}
 			}
 		} else if (airSupply < MAX_AIR_SUPPLY) {
 			airSupply = this.increaseAirSupply(airSupply);
 		}
 
-		player.setTag(AIR_SUPPLY, airSupply);
-		player.getEntityMeta().setAirTicks(Math.max(airSupply, 0));
+		entity.setTag(AIR_SUPPLY, airSupply);
+		entity.getEntityMeta().setAirTicks(Math.max(airSupply, 0));
 	}
 
-	private void handleBlockContactDamage(Player player) {
-		var instance = player.getInstance();
+	private void handleBlockContactDamage(LivingEntity entity) {
+		var instance = entity.getInstance();
 
 		if (instance == null) return;
 
-		var position = player.getPosition();
-		var boundingBox = player.getBoundingBox();
+		var position = entity.getPosition();
+		var boundingBox = entity.getBoundingBox();
 
 		int minX = (int) Math.floor(position.x() - boundingBox.width() / 2);
 		int maxX = (int) Math.floor(position.x() + boundingBox.width() / 2);
@@ -196,57 +200,57 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 					var block = instance.getBlock(blockX, blockY, blockZ);
 
 					if (block.compare(Block.CACTUS)) {
-						player.damage(DamageType.CACTUS, 1.0F);
+						entity.damage(DamageType.CACTUS, 1.0F);
 					} else if (block.compare(Block.SWEET_BERRY_BUSH)) {
-						this.handleBerryBushDamage(player, block);
+						this.handleBerryBushDamage(entity, block);
 					} else if (block.compare(Block.CAMPFIRE) || block.compare(Block.SOUL_CAMPFIRE)) {
-						this.handleCampfireDamage(player, block);
+						this.handleCampfireDamage(entity, block);
 					}
 				}
 			}
 		}
 
-		if (player.isOnGround()) {
+		if (entity.isOnGround()) {
 			var belowBlock = instance.getBlock(position.add(0, -0.5, 0));
 
-			if (belowBlock.compare(Block.MAGMA_BLOCK) && !player.isSneaking()) {
-				player.damage(DamageType.HOT_FLOOR, 1.0F);
+			if (belowBlock.compare(Block.MAGMA_BLOCK) && !entity.isSneaking()) {
+				entity.damage(DamageType.HOT_FLOOR, 1.0F);
 			}
 		}
 	}
 
-	private void handleBerryBushDamage(Player player, Block block) {
+	private void handleBerryBushDamage(LivingEntity entity, Block block) {
 		var ageProperty = block.getProperty("age");
 
 		if (ageProperty == null || "0".equals(ageProperty)) return;
 
-		Pos position = player.getPosition();
-		Pos previousPosition = player.getPreviousPosition();
+		Pos position = entity.getPosition();
+		Pos previousPosition = entity.getPreviousPosition();
 		double movementX = Math.abs(position.x() - previousPosition.x());
 		double movementZ = Math.abs(position.z() - previousPosition.z());
 
 		if (movementX >= 0.003 || movementZ >= 0.003) {
-			player.damage(DamageType.SWEET_BERRY_BUSH, 1.0F);
+			entity.damage(DamageType.SWEET_BERRY_BUSH, 1.0F);
 		}
 	}
 
-	private void handleCampfireDamage(Player player, Block block) {
+	private void handleCampfireDamage(LivingEntity entity, Block block) {
 		var litProperty = block.getProperty("lit");
 
 		if (!"true".equals(litProperty)) return;
 
 		var fireDamage = block.compare(Block.SOUL_CAMPFIRE) ? 2.0F : 1.0F;
-		player.damage(DamageType.CAMPFIRE, fireDamage);
+		entity.damage(DamageType.CAMPFIRE, fireDamage);
 	}
 
-	private void handleFreezeDamage(Player player) {
-		var instance = player.getInstance();
+	private void handleFreezeDamage(LivingEntity entity) {
+		var instance = entity.getInstance();
 
 		if (instance == null) return;
 
-		int freezeTicks = player.hasTag(FREEZE_TICKS) ? player.getTag(FREEZE_TICKS) : 0;
-		boolean inPowderSnow = this.isInPowderSnow(instance, player);
-		boolean canFreeze = this.canFreeze(player);
+		int freezeTicks = entity.hasTag(FREEZE_TICKS) ? entity.getTag(FREEZE_TICKS) : 0;
+		boolean inPowderSnow = this.isInPowderSnow(instance, entity);
+		boolean canFreeze = this.canFreeze(entity);
 
 		if (inPowderSnow && canFreeze) {
 			freezeTicks = Math.min(freezeTicks + 1, FREEZE_MAX_TICKS);
@@ -254,21 +258,21 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 			freezeTicks = Math.max(freezeTicks - 2, 0);
 		}
 
-		player.setTag(FREEZE_TICKS, freezeTicks);
-		player.getEntityMeta().setTickFrozen(freezeTicks);
+		entity.setTag(FREEZE_TICKS, freezeTicks);
+		entity.getEntityMeta().setTickFrozen(freezeTicks);
 
 		if (freezeTicks >= FREEZE_MAX_TICKS
-				&& player.getAliveTicks() % FREEZE_DAMAGE_INTERVAL == 0
+				&& entity.getAliveTicks() % FREEZE_DAMAGE_INTERVAL == 0
 				&& canFreeze) {
-			player.damage(DamageType.FREEZE, 1.0F);
+			entity.damage(DamageType.FREEZE, 1.0F);
 		}
 	}
 
-	private boolean canFreeze(Player player) {
-		if (player.getGameMode() == GameMode.SPECTATOR) return false;
+	private boolean canFreeze(LivingEntity entity) {
+		if (entity instanceof Player player && player.getGameMode() == GameMode.SPECTATOR) return false;
 
 		for (var slot : EquipmentSlot.armors()) {
-			var material = player.getEquipment(slot).material();
+			var material = entity.getEquipment(slot).material();
 
 			if (FREEZE_IMMUNE_WEARABLES.contains(material)) return false;
 		}
@@ -371,14 +375,14 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 		return true;
 	}
 
-	private boolean isEyeInWater(Player player) {
-		var instance = player.getInstance();
+	private boolean isEyeInWater(LivingEntity entity) {
+		var instance = entity.getInstance();
 
 		if (instance == null) return false;
 
-		int eyeBlockX = player.getPosition().blockX();
-		int eyeBlockY = (int) Math.floor(player.getPosition().y() + player.getEyeHeight());
-		int eyeBlockZ = player.getPosition().blockZ();
+		int eyeBlockX = entity.getPosition().blockX();
+		int eyeBlockY = (int) Math.floor(entity.getPosition().y() + entity.getEyeHeight());
+		int eyeBlockZ = entity.getPosition().blockZ();
 		var eyeBlock = instance.getBlock(eyeBlockX, eyeBlockY, eyeBlockZ);
 
 		return eyeBlock.compare(Block.WATER);
