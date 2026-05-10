@@ -291,6 +291,11 @@ public abstract class AbstractArrow extends CustomEntityProjectile {
 		return SoundEvent.ENTITY_ARROW_HIT;
 	}
 
+	@Override
+	protected double getWaterInertia() {
+		return 0.6;
+	}
+
 	public int getKnockback() {
 		return knockback;
 	}

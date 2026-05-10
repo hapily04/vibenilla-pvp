@@ -1,5 +1,6 @@
 package io.github.togar2.pvp.entity.projectile;
 
+import io.github.togar2.pvp.utils.FluidUtil;
 import io.github.togar2.pvp.utils.ProjectileUtil;
 import net.minestom.server.ServerFlag;
 import net.minestom.server.collision.*;
@@ -274,6 +275,10 @@ public class CustomEntityProjectile extends Entity {
 				}
 			}
 
+			if (FluidUtil.isTouchingWater(this)) {
+				this.velocity = this.velocity.mul(this.getWaterInertia());
+			}
+
 			Aerodynamics aerodynamics = this.getAerodynamics();
             this.velocity = this.velocity.mul(
 					aerodynamics.horizontalAirResistance(),
@@ -325,5 +330,9 @@ public class CustomEntityProjectile extends Entity {
 
 	protected int getUpdateInterval() {
 		return 20;
+	}
+
+	protected double getWaterInertia() {
+		return 1.0;
 	}
 }

@@ -147,6 +147,11 @@ public class ThrownTrident extends AbstractArrow {
 	}
 
 	@Override
+	protected double getWaterInertia() {
+		return 0.99;
+	}
+
+	@Override
 	protected ItemStack getPickupItem() {
 		return this.tridentItem;
 	}
