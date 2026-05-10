@@ -1,5 +1,7 @@
 package io.github.togar2.pvp.player;
 
+import io.github.togar2.pvp.utils.ViewUtil;
+import net.kyori.adventure.sound.Sound;
 import net.minestom.server.ServerFlag;
 import net.minestom.server.collision.Aerodynamics;
 import net.minestom.server.collision.PhysicsResult;
@@ -8,6 +10,7 @@ import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.attribute.Attribute;
+import net.minestom.server.entity.damage.DamageType;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.event.entity.EntityVelocityEvent;
 import net.minestom.server.instance.Chunk;
@@ -15,6 +18,7 @@ import net.minestom.server.network.player.GameProfile;
 import net.minestom.server.network.player.PlayerConnection;
 import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.potion.TimedPotion;
+import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.utils.chunk.ChunkUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -110,8 +114,12 @@ public class CombatPlayerImpl extends Player implements CombatPlayer {
 		Chunk finalChunk = ChunkUtils.retrieve(this.instance, this.currentChunk, physicsResult.newPosition());
 		if (!ChunkUtils.isLoaded(finalChunk)) return;
 
+		var oldHorizontalSpeed = this.velocity.div(tps).withY(0.0).length();
+		var newHorizontalSpeed = physicsResult.newVelocity().withY(0.0).length();
         this.velocity = physicsResult.newVelocity().mul(tps);
 		//onGround = physicsResult.isOnGround();
+
+		this.handleFallFlyingCollision(physicsResult, oldHorizontalSpeed, newHorizontalSpeed);
 
 		// Levitation effect
 		TimedPotion levitation = this.getEffect(PotionEffect.LEVITATION);
@@ -128,5 +136,23 @@ public class CombatPlayerImpl extends Player implements CombatPlayer {
 		//	refreshPosition(physicsResult.newPosition(), true, true);
 		//}
         this.sendImmediateVelocityUpdate();
+	}
+
+	private void handleFallFlyingCollision(PhysicsResult physicsResult, double oldHorizontalSpeed, double newHorizontalSpeed) {
+		if (!this.isFlyingWithElytra()) return;
+		if (!physicsResult.collisionX() && !physicsResult.collisionZ()) return;
+
+		var speedDifference = oldHorizontalSpeed - newHorizontalSpeed;
+		var damage = (float) (speedDifference * 10.0 - 3.0);
+		if (!(damage > 0.0F)) return;
+
+		ViewUtil.viewersAndSelf(this).playSound(Sound.sound(
+				damage > 4.0F ? SoundEvent.ENTITY_PLAYER_BIG_FALL : SoundEvent.ENTITY_PLAYER_SMALL_FALL,
+				Sound.Source.PLAYER,
+				1.0F,
+				1.0F
+		), this);
+
+		this.damage(DamageType.FLY_INTO_WALL, damage);
 	}
 }
