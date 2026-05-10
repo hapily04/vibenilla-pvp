@@ -66,7 +66,8 @@ public class VanillaMiscProjectileFeature implements MiscProjectileFeature, Regi
 
 			if (event.getItemStack().material() != Material.SNOWBALL
 					&& event.getItemStack().material() != Material.EGG
-					&& event.getItemStack().material() != Material.ENDER_PEARL)
+					&& event.getItemStack().material() != Material.ENDER_PEARL
+					&& event.getItemStack().material() != Material.WIND_CHARGE)
 				return;
 
 			Player player = event.getPlayer();
@@ -74,6 +75,7 @@ public class VanillaMiscProjectileFeature implements MiscProjectileFeature, Regi
 
 			boolean snowball = stack.material() == Material.SNOWBALL;
 			boolean enderpearl = stack.material() == Material.ENDER_PEARL;
+			boolean windCharge = stack.material() == Material.WIND_CHARGE;
 
 			SoundEvent soundEvent;
 			CustomEntityProjectile projectile;
@@ -83,22 +85,31 @@ public class VanillaMiscProjectileFeature implements MiscProjectileFeature, Regi
 			} else if (enderpearl) {
 				soundEvent = SoundEvent.ENTITY_ENDER_PEARL_THROW;
 				projectile = new ThrownEnderpearl(player, this.fallFeature);
+			} else if (windCharge) {
+				soundEvent = SoundEvent.ENTITY_WIND_CHARGE_THROW;
+				projectile = new WindCharge(player);
 			} else {
 				soundEvent = SoundEvent.ENTITY_EGG_THROW;
 				projectile = new ThrownEgg(player);
 			}
 
-			((ItemHoldingProjectile) projectile).setItem(stack);
+			if (projectile instanceof ItemHoldingProjectile itemHoldingProjectile) {
+				itemHoldingProjectile.setItem(stack);
+			}
 
 			ThreadLocalRandom random = ThreadLocalRandom.current();
 			ViewUtil.viewersAndSelf(player).playSound(Sound.sound(
 					soundEvent,
-					snowball || enderpearl ? Sound.Source.NEUTRAL : Sound.Source.PLAYER,
+					snowball || enderpearl || windCharge ? Sound.Source.NEUTRAL : Sound.Source.PLAYER,
 					0.5f, 0.4f / (random.nextFloat() * 0.4f + 0.8f)
 			), player);
 
 			if (enderpearl) {
                 this.itemCooldownFeature.setCooldown(player, Material.ENDER_PEARL, 20);
+			}
+
+			if (windCharge) {
+				this.itemCooldownFeature.setCooldown(player, stack);
 			}
 
 			Pos position = player.getPosition().add(0, player.getEyeHeight(), 0);
