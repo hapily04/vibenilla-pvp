@@ -13,11 +13,13 @@ import io.github.togar2.pvp.potion.effect.CombatPotionEffects;
 import io.github.togar2.pvp.potion.item.CombatPotionType;
 import io.github.togar2.pvp.potion.item.CombatPotionTypes;
 import io.github.togar2.pvp.utils.CombatVersion;
+import io.github.togar2.pvp.utils.EffectUtil;
 import io.github.togar2.pvp.utils.PotionFlags;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.util.RGBLike;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.ServerFlag;
+import net.minestom.server.coordinate.BlockVec;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.EntityType;
@@ -33,6 +35,7 @@ import net.minestom.server.event.entity.EntityPotionAddEvent;
 import net.minestom.server.event.entity.EntityPotionRemoveEvent;
 import net.minestom.server.event.entity.EntityTickEvent;
 import net.minestom.server.event.trait.EntityInstanceEvent;
+import net.minestom.server.instance.block.Block;
 import net.minestom.server.network.packet.server.play.ParticlePacket;
 import net.minestom.server.item.component.PotionContents;
 import net.minestom.server.particle.Particle;
@@ -43,6 +46,7 @@ import net.minestom.server.potion.TimedPotion;
 import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.tag.Tag;
 import net.minestom.server.utils.time.TimeUnit;
+import net.minestom.server.worldevent.WorldEvent;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -66,6 +70,10 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 	private static final int OOZING_SLIME_SIZE = 2;
 	private static final int OOZING_SLIME_CHECK_RADIUS = 2;
 	private static final int DEFAULT_MAX_ENTITY_CRAMMING = 24;
+	private static final int WEAVING_POSITION_ATTEMPTS = 15;
+	private static final int WEAVING_RADIUS = 1;
+	private static final int WEAVING_LEVEL_EVENT = 3018;
+	private static final double BLOCK_EVENT_DISTANCE = 64.0;
 
 	private final FeatureConfiguration configuration;
 
@@ -90,6 +98,7 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 			if (event.getEntity() instanceof LivingEntity entity) {
 				this.applyWindChargedBurst(entity);
 				this.spawnOozingSlimes(entity);
+				this.spawnWeavingCobwebs(entity);
 			}
 
 			event.getEntity().clearEffects();
@@ -260,6 +269,49 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 
 			var position = new Pos(entity.getPosition().x(), entity.getPosition().y() + 0.5, entity.getPosition().z(), random.nextFloat(360.0F), 0.0F);
 			slime.setInstance(instance, position);
+		}
+	}
+
+	private void spawnWeavingCobwebs(LivingEntity entity) {
+		if (!entity.hasEffect(PotionEffect.WEAVING)) return;
+
+		var instance = entity.getInstance();
+
+		if (instance == null) return;
+
+		var random = ThreadLocalRandom.current();
+		var cobwebCount = random.nextInt(2, 4);
+		var positions = new HashSet<BlockVec>();
+		var origin = entity.getPosition();
+
+		for (var attempt = 0; attempt < WEAVING_POSITION_ATTEMPTS; attempt++) {
+			var blockPosition = new BlockVec(
+					origin.blockX() + random.nextInt(-WEAVING_RADIUS, WEAVING_RADIUS + 1),
+					origin.blockY() + random.nextInt(-WEAVING_RADIUS, WEAVING_RADIUS + 1),
+					origin.blockZ() + random.nextInt(-WEAVING_RADIUS, WEAVING_RADIUS + 1)
+			);
+
+			if (positions.contains(blockPosition)) {
+				continue;
+			}
+
+			var block = instance.getBlock(blockPosition);
+			var below = blockPosition.sub(0, 1, 0);
+
+			if (!block.isAir() || !instance.getBlock(below).isSolid()) {
+				continue;
+			}
+
+			positions.add(blockPosition);
+
+			if (positions.size() >= cobwebCount) {
+				break;
+			}
+		}
+
+		for (var position : positions) {
+			instance.setBlock(position, Block.COBWEB);
+			EffectUtil.sendNearby(instance, WorldEvent.fromId(WEAVING_LEVEL_EVENT), position.blockX(), position.blockY(), position.blockZ(), 0, BLOCK_EVENT_DISTANCE, false);
 		}
 	}
 
