@@ -218,7 +218,7 @@ public class ThrownTrident extends AbstractArrow {
 	}
 
 	private void damageLightningEntities(Instance instance, Point point) {
-		for (var entity : instance.getNearbyEntities(point, 9.0)) {
+		for (var entity : instance.getNearbyEntities(point, 10.0)) {
 			this.damageLightningEntity(point, entity);
 		}
 		for (var player : instance.getPlayers()) {
