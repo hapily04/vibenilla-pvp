@@ -3,6 +3,7 @@ package io.github.togar2.pvp.entity.projectile;
 import io.github.togar2.pvp.feature.explosion.VanillaExplosionSupplier;
 import io.github.togar2.pvp.utils.ViewUtil;
 import net.kyori.adventure.sound.Sound;
+import net.minestom.server.ServerFlag;
 import net.minestom.server.collision.Aerodynamics;
 import net.minestom.server.collision.BoundingBox;
 import net.minestom.server.component.DataComponents;
@@ -30,6 +31,7 @@ public final class FireworkRocket extends CustomEntityProjectile {
     private int life;
     private int lifetime;
     private ItemStack itemStack;
+    private LivingEntity attachedToEntity;
 
     public FireworkRocket(@Nullable Entity shooter, ItemStack itemStack, boolean shotAtAngle) {
         super(shooter, EntityType.FIREWORK_ROCKET);
@@ -59,8 +61,18 @@ public final class FireworkRocket extends CustomEntityProjectile {
         meta.setShotAtAngle(shotAtAngle);
     }
 
+    public FireworkRocket(LivingEntity attachedToEntity, ItemStack itemStack) {
+        this(attachedToEntity, itemStack, false);
+
+        this.attachedToEntity = attachedToEntity;
+    }
+
     @Override
     public void update(long time) {
+        if (this.attachedToEntity != null) {
+            this.updateAttachedRocket();
+        }
+
         super.update(time);
 
         if (this.life == 0 && !this.isSilent()) {
@@ -75,6 +87,38 @@ public final class FireworkRocket extends CustomEntityProjectile {
         if (this.life > this.lifetime) {
             this.explode();
         }
+    }
+
+    @Override
+    protected void movementTick() {
+        if (this.attachedToEntity != null
+                && !this.attachedToEntity.isRemoved()
+                && !this.attachedToEntity.isDead()) {
+            return;
+        }
+
+        super.movementTick();
+    }
+
+    private void updateAttachedRocket() {
+        if (this.attachedToEntity.isRemoved() || this.attachedToEntity.isDead()) {
+            this.attachedToEntity = null;
+            return;
+        }
+
+        if (this.attachedToEntity.isFlyingWithElytra()) {
+            var look = this.attachedToEntity.getPosition().direction();
+            var velocity = this.attachedToEntity.getVelocity();
+            var ticksPerSecond = (double) ServerFlag.SERVER_TICKS_PER_SECOND;
+            var boostedVelocity = velocity
+                    .add(look.mul(0.1 * ticksPerSecond))
+                    .add(look.mul(1.5 * ticksPerSecond).sub(velocity).mul(0.5));
+
+            this.attachedToEntity.setVelocity(boostedVelocity);
+        }
+
+        this.refreshPosition(this.attachedToEntity.getPosition());
+        this.setVelocity(this.attachedToEntity.getVelocity());
     }
 
     @Override

@@ -50,6 +50,12 @@ public class VanillaMiscProjectileFeature implements MiscProjectileFeature, Regi
 	@Override
 	public void init(EventNode<EntityInstanceEvent> node) {
 		node.addListener(PlayerUseItemEvent.class, event -> {
+			if (event.getItemStack().material() == Material.FIREWORK_ROCKET
+					&& event.getPlayer().isFlyingWithElytra()) {
+				this.useFireworkRocket(event);
+				return;
+			}
+
 			if (event.getItemStack().material() != Material.SNOWBALL
 					&& event.getItemStack().material() != Material.EGG
 					&& event.getItemStack().material() != Material.ENDER_PEARL)
@@ -99,5 +105,17 @@ public class VanillaMiscProjectileFeature implements MiscProjectileFeature, Regi
 				player.setItemInHand(event.getHand(), stack.withAmount(stack.amount() - 1));
 			}
 		});
+	}
+
+	private void useFireworkRocket(PlayerUseItemEvent event) {
+		var player = event.getPlayer();
+		var stack = event.getItemStack();
+		var rocket = new FireworkRocket(player, stack);
+
+		rocket.setInstance(Objects.requireNonNull(player.getInstance()), player.getPosition());
+
+		if (player.getGameMode() != GameMode.CREATIVE) {
+			player.setItemInHand(event.getHand(), stack.withAmount(stack.amount() - 1));
+		}
 	}
 }
