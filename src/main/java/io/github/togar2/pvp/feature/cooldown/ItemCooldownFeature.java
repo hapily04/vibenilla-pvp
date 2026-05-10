@@ -1,6 +1,7 @@
 package io.github.togar2.pvp.feature.cooldown;
 
 import io.github.togar2.pvp.feature.CombatFeature;
+import net.minestom.server.ServerFlag;
 import net.minestom.server.component.DataComponents;
 import net.minestom.server.entity.Player;
 import net.minestom.server.item.ItemStack;
@@ -42,7 +43,7 @@ public interface ItemCooldownFeature extends CombatFeature {
 
 	default void setCooldown(Player player, ItemStack itemStack) {
 		var useCooldown = itemStack.get(DataComponents.USE_COOLDOWN);
-		var ticks = useCooldown == null ? 0 : (int) (useCooldown.seconds() * 20.0F);
+		var ticks = useCooldown == null ? 0 : (int) (useCooldown.seconds() * ServerFlag.SERVER_TICKS_PER_SECOND);
 		this.setCooldown(player, itemStack, ticks);
 	}
 
