@@ -157,45 +157,55 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 				damageObj = explosionEvent.getDamageObject();
 
 				for (Entity entity : entities) {
-					double currentStrength = entity.getPosition().distance(centerPoint) / strength;
-					if (currentStrength <= 1.0D) {
-						double dx = entity.getPosition().x() - this.getCenterX();
-						double dy = (entity.getEntityType() == EntityType.TNT ? entity.getPosition().y() :
-								entity.getPosition().y() + entity.getEyeHeight()) - this.getCenterY();
-						double dz = entity.getPosition().z() - this.getCenterZ();
-						double distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
-						if (distance != 0.0D) {
-							dx /= distance;
-							dy /= distance;
-							dz /= distance;
-							double exposure = getExposure(centerPoint, entity);
-							currentStrength = (1.0D - currentStrength) * exposure;
-							damageObj.setAmount((float) ((currentStrength * currentStrength + currentStrength)
-									/ 2.0D * 7.0D * strength + 1.0D));
-							double knockback = currentStrength;
-							if (entity instanceof LivingEntity living) {
-								knockback = VanillaExplosionSupplier.this.enchantmentFeature.getExplosionKnockback(living, currentStrength);
-								knockback *= 1.0 - living.getAttributeValue(Attribute.EXPLOSION_KNOCKBACK_RESISTANCE);
-								living.damage(damageObj);
-							}
+					var distanceStrength = entity.getPosition().distance(centerPoint) / strength;
+					if (distanceStrength <= 1.0D) {
+						var originY = entity.getEntityType() == EntityType.TNT
+								? entity.getPosition().y()
+								: entity.getPosition().y() + entity.getEyeHeight();
+						var directionX = entity.getPosition().x() - this.getCenterX();
+						var directionY = originY - this.getCenterY();
+						var directionZ = entity.getPosition().z() - this.getCenterZ();
+						var directionLength = Math.sqrt(directionX * directionX + directionY * directionY + directionZ * directionZ);
 
-							Vec knockbackVec = new Vec(
-									dx * knockback,
-									dy * knockback,
-									dz * knockback
-							);
+						if (directionLength != 0.0D) {
+							directionX /= directionLength;
+							directionY /= directionLength;
+							directionZ /= directionLength;
+						} else {
+							directionX = 0.0D;
+							directionY = 0.0D;
+							directionZ = 0.0D;
+						}
 
-							int tps = ServerFlag.SERVER_TICKS_PER_SECOND;
-							if (entity instanceof Player player) {
-								if (!player.getGameMode().invulnerable() && !player.isFlying()) {
-                                    this.playerKnockback.put(player, knockbackVec);
+						var exposure = getExposure(centerPoint, entity);
+						var impactStrength = (1.0D - distanceStrength) * exposure;
+						damageObj.setAmount((float) ((impactStrength * impactStrength + impactStrength)
+								/ 2.0D * 7.0D * strength + 1.0D));
 
-									if (player instanceof CombatPlayer custom)
-										custom.setVelocityNoUpdate(velocity -> velocity.add(knockbackVec.mul(tps)));
+						var knockback = impactStrength;
+						if (entity instanceof LivingEntity living) {
+							knockback = VanillaExplosionSupplier.this.enchantmentFeature.getExplosionKnockback(living, impactStrength);
+							knockback *= 1.0 - living.getAttributeValue(Attribute.EXPLOSION_KNOCKBACK_RESISTANCE);
+							living.damage(damageObj);
+						}
+
+						var knockbackVec = new Vec(
+								directionX * knockback,
+								directionY * knockback,
+								directionZ * knockback
+						);
+
+						var tps = ServerFlag.SERVER_TICKS_PER_SECOND;
+						if (entity instanceof Player player) {
+							if (!player.getGameMode().invulnerable() && !player.isFlying()) {
+								this.playerKnockback.put(player, knockbackVec);
+
+								if (player instanceof CombatPlayer custom) {
+									custom.setVelocityNoUpdate(velocity -> velocity.add(knockbackVec.mul(tps)));
 								}
-							} else {
-								entity.setVelocity(entity.getVelocity().add(knockbackVec.mul(tps)));
 							}
+						} else {
+							entity.setVelocity(entity.getVelocity().add(knockbackVec.mul(tps)));
 						}
 					}
 				}
