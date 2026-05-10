@@ -103,6 +103,9 @@ public class VanillaExplosiveFeature implements ExplosiveFeature, RegistrableFea
 			for (Entity entity : instance.getNearbyEntities(above, 3)) {
 				if (checkIntersect.intersectEntity(spawnPosition, entity)) return;
 			}
+			for (var player : instance.getPlayers()) {
+				if (checkIntersect.intersectEntity(spawnPosition, player)) return;
+			}
 
 			var crystalPlaceEvent = new CrystalPlaceEvent(event.getPlayer(), spawnPosition);
 
