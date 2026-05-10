@@ -200,6 +200,8 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 
 								if (player instanceof CombatPlayer custom) {
 									custom.setVelocityNoUpdate(velocity -> velocity.add(knockbackVec.mul(tps)));
+								} else {
+									player.setVelocity(player.getVelocity().add(knockbackVec.mul(tps)));
 								}
 							}
 						} else {
