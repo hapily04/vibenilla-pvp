@@ -37,6 +37,7 @@ public abstract class AbstractArrow extends CustomEntityProjectile {
 	protected PickupMode pickupMode = PickupMode.DISALLOWED;
 	protected int ticks;
 	private double baseDamage = ARROW_BASE_DAMAGE;
+	private double damageBonus = 0.0;
 	private int knockback;
 	private SoundEvent soundEvent = getDefaultSound();
 
@@ -156,6 +157,7 @@ public abstract class AbstractArrow extends CustomEntityProjectile {
 		double movementSpeed = getVelocity().length() / ServerFlag.SERVER_TICKS_PER_SECOND;
 		int damage = (int) Math.ceil(MathUtils.clamp(
 				movementSpeed * baseDamage, 0.0, 2.147483647E9D));
+		damage = (int) Math.min(damage + this.damageBonus, 2.147483647E9D);
 
 		if (getPiercingLevel() > 0) {
 			if (piercingIgnore.size() >= getPiercingLevel() + 1) {
@@ -330,6 +332,14 @@ public abstract class AbstractArrow extends CustomEntityProjectile {
 
 	public void setBaseDamage(double baseDamage) {
 		this.baseDamage = baseDamage;
+	}
+
+	public double getDamageBonus() {
+		return this.damageBonus;
+	}
+
+	public void setDamageBonus(double damageBonus) {
+		this.damageBonus = damageBonus;
 	}
 
 	public boolean isCritical() {

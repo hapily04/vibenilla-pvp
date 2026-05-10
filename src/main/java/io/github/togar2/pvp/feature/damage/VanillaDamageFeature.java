@@ -271,7 +271,7 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 						SoundEvent.ENCHANT_THORNS_HIT,
 						entity instanceof Player ? Sound.Source.PLAYER : Sound.Source.HOSTILE,
 						entity.getPosition(),
-						1.0F, 1.0F, 0L
+						1.0F, 1.0F, ThreadLocalRandom.current().nextLong()
 				));
 			}
 		}
