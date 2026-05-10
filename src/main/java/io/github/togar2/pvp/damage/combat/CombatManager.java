@@ -4,6 +4,7 @@ import io.github.togar2.pvp.damage.DamageTypeInfo;
 import io.github.togar2.pvp.feature.fall.FallFeature;
 import io.github.togar2.pvp.feature.state.PlayerStateFeature;
 import io.github.togar2.pvp.utils.EntityUtil;
+import io.github.togar2.pvp.utils.FluidUtil;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -47,7 +48,8 @@ public class CombatManager {
 	public @Nullable String getFallLocation(PlayerStateFeature playerStateFeature) {
 		Block lastClimbedBlock = playerStateFeature.getLastClimbedBlock(this.player);
 		if (lastClimbedBlock == null) {
-			//TODO check for water at feet
+			if (FluidUtil.isTouchingWater(this.player)) return "water";
+
 			return null;
 		}
 
