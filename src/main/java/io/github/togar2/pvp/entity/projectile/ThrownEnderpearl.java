@@ -1,6 +1,8 @@
 package io.github.togar2.pvp.entity.projectile;
 
 import io.github.togar2.pvp.feature.fall.FallFeature;
+import io.github.togar2.pvp.utils.ViewUtil;
+import net.kyori.adventure.sound.Sound;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.EntityType;
@@ -12,6 +14,7 @@ import net.minestom.server.entity.metadata.item.ThrownEnderPearlMeta;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.network.packet.server.play.ParticlePacket;
 import net.minestom.server.particle.Particle;
+import net.minestom.server.sound.SoundEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -58,11 +61,20 @@ public class ThrownEnderpearl extends CustomEntityProjectile implements ItemHold
 				player.teleport(position);
                 this.fallFeature.resetFallDistance(player);
 
-				player.damage(DamageType.FALL, 5.0F);
+				player.damage(DamageType.ENDER_PEARL, 5.0F);
+				this.playTeleportSound(position);
 			}
 		} else if (shooter != null) {
 			shooter.teleport(position);
+			this.playTeleportSound(position);
 		}
+	}
+
+	private void playTeleportSound(Pos position) {
+		ViewUtil.viewersAndSelf(this).playSound(Sound.sound(
+				SoundEvent.ENTITY_PLAYER_TELEPORT, Sound.Source.PLAYER,
+				1.0F, 1.0F
+		), position.x(), position.y(), position.z());
 	}
 
 	@Override
