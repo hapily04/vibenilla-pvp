@@ -36,6 +36,8 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 public final class VanillaExplosionSupplier implements ExplosionSupplier {
+	private static final float LIQUID_EXPLOSION_RESISTANCE = 100.0F;
+
 	private final ExplosionFeature feature;
 
 	private final EnchantmentFeature enchantmentFeature;
@@ -93,7 +95,7 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 										Block block = instance.getBlock(position);
 
 										if (!block.isAir()) {
-											float explosionResistance = block.registry().explosionResistance();
+											var explosionResistance = this.getExplosionResistance(block);
 											strengthLeft -= (explosionResistance + 0.3F) * 0.3F;
 
 											if (strengthLeft > 0.0F) {
@@ -326,6 +328,16 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 						&& maxY >= entityPosition.y() + boundingBox.minY()
 						&& minZ <= entityPosition.z() + boundingBox.maxZ()
 						&& maxZ >= entityPosition.z() + boundingBox.minZ();
+			}
+
+			private float getExplosionResistance(Block block) {
+				var explosionResistance = block.registry().explosionResistance();
+
+				if (block.isLiquid()) {
+					explosionResistance = Math.max(explosionResistance, LIQUID_EXPLOSION_RESISTANCE);
+				}
+
+				return explosionResistance;
 			}
 		};
 	}
