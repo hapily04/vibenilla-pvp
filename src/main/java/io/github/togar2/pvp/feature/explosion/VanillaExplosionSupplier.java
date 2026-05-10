@@ -132,6 +132,7 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 						.toList());
 				entities.addAll(instance.getPlayers().stream()
 						.filter(player -> player != sourceEntity)
+						.filter(player -> player.getGameMode() != GameMode.SPECTATOR)
 						.filter(player -> this.intersectsEntity(minX, minY, minZ, maxX, maxY, maxZ, player))
 						.toList());
 
