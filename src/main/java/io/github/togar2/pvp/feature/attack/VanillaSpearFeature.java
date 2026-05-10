@@ -399,17 +399,10 @@ public class VanillaSpearFeature implements SpearFeature, RegistrableFeature {
 		List<LivingEntity> hitEntities = new ArrayList<>();
 		assert attacker.getInstance() != null;
 		for (Entity nearby : attacker.getInstance().getNearbyEntities(eyePosition, reach + 1.0)) {
-			if (nearby == attacker) continue;
-			if (!(nearby instanceof LivingEntity living)) continue;
-			if (nearby.getEntityType() == EntityType.ARMOR_STAND) continue;
-			if (!nearby.getBoundingBox().boundingBoxRayIntersectionCheck(
-					eyePosition.asVec(), direction, nearby.getPosition())) continue;
-
-			double distance = eyePosition.distance(nearby.getPosition());
-			if (distance < minReach - HITBOX_MARGIN) continue;
-			if (distance > reach) continue;
-
-			hitEntities.add(living);
+			this.addSpearHitEntity(hitEntities, attacker, eyePosition, direction, minReach, reach, nearby);
+		}
+		for (var player : attacker.getInstance().getPlayers()) {
+			this.addSpearHitEntity(hitEntities, attacker, eyePosition, direction, minReach, reach, player);
 		}
 
 		hitEntities.sort((a, b) -> Double.compare(
@@ -418,6 +411,21 @@ public class VanillaSpearFeature implements SpearFeature, RegistrableFeature {
 		));
 
 		return hitEntities;
+	}
+
+	private void addSpearHitEntity(List<LivingEntity> hitEntities, Player attacker, Pos eyePosition, Vec direction,
+	                               float minReach, double reach, Entity nearby) {
+		if (nearby == attacker) return;
+		if (!(nearby instanceof LivingEntity living)) return;
+		if (nearby.getEntityType() == EntityType.ARMOR_STAND) return;
+		if (!nearby.getBoundingBox().boundingBoxRayIntersectionCheck(
+				eyePosition.asVec(), direction, nearby.getPosition())) return;
+
+		double distance = eyePosition.distance(nearby.getPosition());
+		if (distance < minReach - HITBOX_MARGIN) return;
+		if (distance > reach) return;
+
+		hitEntities.add(living);
 	}
 
 	private void playPiercingSounds(Player attacker, Tool tool, boolean hit) {
