@@ -42,7 +42,10 @@ public class FluidUtil {
 	record PairXZ(int x, int z) {}
 
 	public static boolean isTouchingWater(Entity entity) {
-		Pos position = entity.getPosition();
+		return isTouchingWater(entity, entity.getPosition());
+	}
+
+	public static boolean isTouchingWater(Entity entity, Pos position) {
 		double x = position.x();
 		int blockX = position.blockX();
 		double z = position.z();

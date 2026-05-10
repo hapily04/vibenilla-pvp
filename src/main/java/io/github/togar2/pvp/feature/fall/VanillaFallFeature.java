@@ -197,12 +197,12 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 		double dy = newPos.y() - currPos.y();
 		double fallDistance = this.getFallDistance(entity);
 
-		if (FluidUtil.isTouchingWater(entity) || this.isTouchingSweetBerryBush(entity)) {
+		if (FluidUtil.isTouchingWater(entity, newPos) || this.isTouchingSweetBerryBush(entity, newPos)) {
 			entity.setTag(FALL_DISTANCE, 0.0);
 			return;
 		}
 
-		if (this.isTouchingLava(entity)) {
+		if (this.isTouchingLava(entity, newPos)) {
 			fallDistance *= 0.5;
 			entity.setTag(FALL_DISTANCE, fallDistance);
 		}
@@ -370,20 +370,18 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 		return block.key().value().endsWith("_bed");
 	}
 
-	private boolean isTouchingLava(LivingEntity entity) {
-		return this.isTouchingBlock(entity, Block.LAVA);
+	private boolean isTouchingLava(LivingEntity entity, Pos position) {
+		return this.isTouchingBlock(entity, position, Block.LAVA);
 	}
 
-	private boolean isTouchingSweetBerryBush(LivingEntity entity) {
-		return this.isTouchingBlock(entity, Block.SWEET_BERRY_BUSH);
+	private boolean isTouchingSweetBerryBush(LivingEntity entity, Pos position) {
+		return this.isTouchingBlock(entity, position, Block.SWEET_BERRY_BUSH);
 	}
 
-	private boolean isTouchingBlock(LivingEntity entity, Block block) {
+	private boolean isTouchingBlock(LivingEntity entity, Pos position, Block block) {
 		var instance = entity.getInstance();
 
 		if (instance == null) return false;
-
-		var position = entity.getPosition();
 
 		return instance.getBlock(position).compare(block);
 	}
