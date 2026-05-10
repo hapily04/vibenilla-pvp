@@ -53,6 +53,12 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 	@Override
 	public Explosion createExplosion(float centerX, float centerY, float centerZ,
 	                                 float strength, @Nullable CompoundBinaryTag additionalData) {
+		return this.createExplosion(centerX, centerY, centerZ, strength, additionalData, null, null);
+	}
+
+	public Explosion createExplosion(float centerX, float centerY, float centerZ,
+	                                 float strength, @Nullable CompoundBinaryTag additionalData,
+	                                 @Nullable Entity sourceEntityOverride, @Nullable Entity causingEntityOverride) {
 		return new Explosion(centerX, centerY, centerZ, strength) {
 			private final Map<Player, Vec> playerKnockback = new HashMap<>();
 
@@ -279,10 +285,14 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 			}
 
 			private @Nullable Entity getCausingEntity(Instance instance) {
+				if (causingEntityOverride != null) return causingEntityOverride;
+
 				return this.getEntity(instance, "causingEntity");
 			}
 
 			private @Nullable Entity getSourceEntity(Instance instance) {
+				if (sourceEntityOverride != null) return sourceEntityOverride;
+
 				return this.getEntity(instance, "sourceEntity");
 			}
 

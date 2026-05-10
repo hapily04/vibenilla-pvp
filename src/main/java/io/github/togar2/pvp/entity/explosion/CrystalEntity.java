@@ -3,12 +3,12 @@ package io.github.togar2.pvp.entity.explosion;
 import org.jetbrains.annotations.NotNull;
 
 import io.github.togar2.pvp.damage.DamageTypeInfo;
+import io.github.togar2.pvp.feature.explosion.VanillaExplosionSupplier;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.damage.Damage;
 import net.minestom.server.entity.metadata.other.EndCrystalMeta;
-import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
 
 public class CrystalEntity extends Entity {
@@ -35,8 +35,8 @@ public class CrystalEntity extends Entity {
 	public boolean damage(@NotNull Damage damage) {
 		if (this.isRemoved()) return false;
 
-		// Save this.instance locally
-		Instance instance = this.instance;
+		var instance = this.instance;
+		var position = this.position;
 		var attacker = damage.getAttacker();
 		if (instance.getExplosionSupplier() != null && !DamageTypeInfo.of(damage.getType()).explosive()) {
 			var additionalData = CompoundBinaryTag.builder()
@@ -46,7 +46,15 @@ public class CrystalEntity extends Entity {
 				additionalData.putString("causingEntity", attacker.getUuid().toString());
 			}
 
-			instance.explode((float) this.position.x(), (float) this.position.y(), (float) this.position.z(), 6.0f,
+			if (instance.getExplosionSupplier() instanceof VanillaExplosionSupplier explosionSupplier) {
+				this.remove();
+				explosionSupplier.createExplosion((float) position.x(), (float) position.y(), (float) position.z(), 6.0F,
+						additionalData.build(), this, attacker).apply(instance);
+
+				return true;
+			}
+
+			instance.explode((float) position.x(), (float) position.y(), (float) position.z(), 6.0F,
 					additionalData.build());
 		}
 
