@@ -36,6 +36,7 @@ public class CustomEntityProjectile extends Entity {
 	protected Vec collisionDirection;
 
 	private PhysicsResult previousPhysicsResult = null;
+	private boolean leftOwner;
 
 	/**
 	 * Constructs new projectile.
@@ -206,6 +207,8 @@ public class CustomEntityProjectile extends Entity {
 
 		if (!this.isStuck()) {
 			Vec diff = this.velocity.div(ServerFlag.SERVER_TICKS_PER_SECOND);
+			this.checkLeftOwner(diff);
+
 			// Prevent entity infinitely in the void
 			if (this.instance.isInVoid(this.position)) {
                 this.scheduler().scheduleNextProcess(this::remove);
@@ -225,7 +228,7 @@ public class CustomEntityProjectile extends Entity {
 				boolean noCollideShooter = this.getAliveTicks() < 6;
 				Collection<EntityCollisionResult> entityResult = CollisionUtils.checkEntityCollisions(this.instance, this.boundingBox.expand(0.1, 0.3, 0.1),
                         this.position.add(0, -0.3, 0), diff, 3, e -> {
-							if (noCollideShooter && e == this.shooter) return false;
+							if ((noCollideShooter || !this.leftOwner) && e == this.shooter) return false;
 							return e != this && this.canHit(e);
 						}, physicsResult);
 
@@ -306,6 +309,35 @@ public class CustomEntityProjectile extends Entity {
 
             this.refreshPosition(newPosition.withView(yaw, pitch), this.noClip, this.isStuck());
 		}
+	}
+
+	private void checkLeftOwner(Vec movement) {
+		if (this.leftOwner) return;
+
+		this.leftOwner = this.isOutsideOwnerCollisionRange(movement);
+	}
+
+	private boolean isOutsideOwnerCollisionRange(Vec movement) {
+		if (this.shooter == null) return true;
+
+		var ownerPosition = this.shooter.getPosition();
+		var ownerBox = this.shooter.getBoundingBox();
+		var projectileBox = this.getBoundingBox();
+		var nextPosition = this.position.add(movement);
+
+		var minX = Math.min(this.position.x() + projectileBox.minX(), nextPosition.x() + projectileBox.minX()) - 1.0;
+		var maxX = Math.max(this.position.x() + projectileBox.maxX(), nextPosition.x() + projectileBox.maxX()) + 1.0;
+		var minY = Math.min(this.position.y() + projectileBox.minY(), nextPosition.y() + projectileBox.minY()) - 1.0;
+		var maxY = Math.max(this.position.y() + projectileBox.maxY(), nextPosition.y() + projectileBox.maxY()) + 1.0;
+		var minZ = Math.min(this.position.z() + projectileBox.minZ(), nextPosition.z() + projectileBox.minZ()) - 1.0;
+		var maxZ = Math.max(this.position.z() + projectileBox.maxZ(), nextPosition.z() + projectileBox.maxZ()) + 1.0;
+
+		return maxX < ownerPosition.x() + ownerBox.minX()
+				|| minX > ownerPosition.x() + ownerBox.maxX()
+				|| maxY < ownerPosition.y() + ownerBox.minY()
+				|| minY > ownerPosition.y() + ownerBox.maxY()
+				|| maxZ < ownerPosition.z() + ownerBox.minZ()
+				|| minZ > ownerPosition.z() + ownerBox.maxZ();
 	}
 
 	private static float lerp(float first, float second) {
