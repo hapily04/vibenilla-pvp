@@ -26,7 +26,9 @@ import net.minestom.server.entity.damage.Damage;
 import net.minestom.server.entity.metadata.LivingEntityMeta;
 import net.minestom.server.entity.metadata.projectile.AbstractArrowMeta;
 import net.minestom.server.event.EventDispatcher;
+import net.minestom.server.item.component.BlocksAttacks;
 import net.minestom.server.sound.SoundEvent;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Vanilla implementation of {@link BlockFeature}
@@ -103,19 +105,57 @@ public class VanillaBlockFeature implements BlockFeature {
         return bypassesShield != null && bypassesShield.contains(damage.getType());
     }
 
+	private float resolveBlockedDamage(BlocksAttacks blocksAttacks, Damage damage, float amount) {
+		var damageTypeKey = damage.getType();
+		float blocked = 0.0F;
+
+		for (var reduction : blocksAttacks.damageReductions()) {
+			var typeFilter = reduction.type();
+
+			if (typeFilter != null && !typeFilter.contains(damageTypeKey)) continue;
+
+			blocked += Math.clamp(reduction.base() + reduction.factor() * amount, 0.0F, amount);
+		}
+
+		return Math.clamp(blocked, 0.0F, amount);
+	}
+
+	private int computeShieldItemDamage(@Nullable BlocksAttacks blocksAttacks, float blockedDamage) {
+		if (blockedDamage <= 0) return 0;
+
+		var damageFunction = blocksAttacks == null ? BlocksAttacks.ItemDamageFunction.DEFAULT : blocksAttacks.itemDamage();
+		if (blockedDamage < damageFunction.threshold()) return 0;
+
+		return (int) Math.floor(damageFunction.base() + damageFunction.factor() * blockedDamage);
+	}
+
 	@Override
 	public boolean applyBlock(LivingEntity entity, Damage damage) {
 		float amount = damage.getAmount();
-		float resultingDamage = this.version.legacy() ? Math.max(0, (amount + 1) * 0.5f) : 0;
+		PlayerHand hand = ((LivingEntityMeta) entity.getEntityMeta()).getActiveHand();
+		var blockingStack = entity.getItemInHand(hand);
+		var blocksAttacks = blockingStack.get(DataComponents.BLOCKS_ATTACKS);
+
+		float resultingDamage;
+		float blockedDamage;
+		if (this.version.legacy()) {
+			resultingDamage = Math.max(0, (amount + 1) * 0.5f);
+			blockedDamage = amount - resultingDamage;
+		} else if (blocksAttacks != null) {
+			blockedDamage = this.resolveBlockedDamage(blocksAttacks, damage, amount);
+			resultingDamage = amount - blockedDamage;
+		} else {
+			resultingDamage = 0;
+			blockedDamage = amount;
+		}
 
 		DamageBlockEvent damageBlockEvent = new DamageBlockEvent(entity, amount, resultingDamage, false);
 		EventDispatcher.call(damageBlockEvent);
 		if (damageBlockEvent.isCancelled()) return false;
 		damage.setAmount(damageBlockEvent.getResultingDamage());
 
-		if (amount >= 3) {
-			int shieldDamage = 1 + (int) Math.floor(amount);
-			PlayerHand hand = ((LivingEntityMeta) entity.getEntityMeta()).getActiveHand();
+		int shieldDamage = this.computeShieldItemDamage(blocksAttacks, blockedDamage);
+		if (shieldDamage > 0) {
             this.itemDamageFeature.damageEquipment(
 					entity,
 					hand == PlayerHand.MAIN ?
