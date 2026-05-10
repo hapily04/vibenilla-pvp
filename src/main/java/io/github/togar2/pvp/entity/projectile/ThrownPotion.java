@@ -91,6 +91,10 @@ public class ThrownPotion extends CustomEntityProjectile implements ItemHoldingP
 						&& !(entity instanceof Player player && player.getGameMode() == GameMode.SPECTATOR))
 				.map(entity -> (LivingEntity) entity)
 				.collect(Collectors.toList());
+		entities.addAll(Objects.requireNonNull(this.getInstance()).getPlayers().stream()
+				.filter(player -> boundingBox.intersectEntity(this.getPosition().add(0, -2, 0), player))
+				.filter(player -> player.getGameMode() != GameMode.SPECTATOR)
+				.toList());
 
 		if (hitEntity instanceof LivingEntity livingEntity && !entities.contains(livingEntity)) {
 			entities.add(livingEntity);
@@ -112,6 +116,10 @@ public class ThrownPotion extends CustomEntityProjectile implements ItemHoldingP
 						&& !(entity instanceof Player player && player.getGameMode() == GameMode.SPECTATOR))
 				.map(entity -> (LivingEntity) entity)
 				.collect(Collectors.toList());
+		entities.addAll(Objects.requireNonNull(this.getInstance()).getPlayers().stream()
+				.filter(player -> boundingBox.intersectEntity(this.getPosition().add(0, -2, 0), player))
+				.filter(player -> player.getGameMode() != GameMode.SPECTATOR)
+				.toList());
 
 		if (hitEntity instanceof LivingEntity && !entities.contains(hitEntity)) {
 			entities.add((LivingEntity) hitEntity);
