@@ -105,7 +105,7 @@ public class CustomEntityProjectile extends Entity {
 		this.shoot(dx, dy, dz, power, spread);
 	}
 
-	private void shoot(double dx, double dy, double dz, double power, double spread) {
+	public void shoot(double dx, double dy, double dz, double power, double spread) {
 		//TODO custom shoot event
 //		EntityShootEvent shootEvent = new EntityShootEvent(shooter == null ? this : shooter, this, from, power, spread);
 //		EventDispatcher.call(shootEvent);

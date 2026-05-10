@@ -10,6 +10,8 @@ import org.jetbrains.annotations.Nullable;
 
 import io.github.togar2.pvp.entity.projectile.AbstractArrow;
 import io.github.togar2.pvp.entity.projectile.Arrow;
+import io.github.togar2.pvp.entity.projectile.CustomEntityProjectile;
+import io.github.togar2.pvp.entity.projectile.FireworkRocket;
 import io.github.togar2.pvp.entity.projectile.SpectralArrow;
 import io.github.togar2.pvp.feature.FeatureType;
 import io.github.togar2.pvp.feature.RegistrableFeature;
@@ -21,6 +23,7 @@ import io.github.togar2.pvp.feature.item.ItemDamageFeature;
 import io.github.togar2.pvp.utils.ViewUtil;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.EquipmentSlot;
 import net.minestom.server.entity.GameMode;
@@ -291,24 +294,21 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 	protected void shootCrossbowProjectile(Player player, PlayerHand hand, ItemStack crossbowStack,
 	                                       ItemStack projectile, float soundPitch,
 	                                       double power, double spread, float yaw) {
-		boolean firework = projectile.material() == Material.FIREWORK_ROCKET;
-		if (firework) return; //TODO firework
+		var firework = projectile.material() == Material.FIREWORK_ROCKET;
 
-		AbstractArrow arrow = this.getCrossbowArrow(player, crossbowStack, projectile);
-		if (player.getGameMode() == GameMode.CREATIVE || yaw != 0.0) {
-			arrow.setPickupMode(AbstractArrow.PickupMode.CREATIVE_ONLY);
+		if (firework) {
+			var projectileEntity = new FireworkRocket(player, projectile, true);
+			var position = player.getPosition().add(0, player.getEyeHeight() - 0.15, 0);
+			this.shootProjectileEntity(projectileEntity, player, position, yaw, power, spread);
+		} else {
+			var arrow = this.getCrossbowArrow(player, crossbowStack, projectile);
+			if (player.getGameMode() == GameMode.CREATIVE || yaw != 0.0) {
+				arrow.setPickupMode(AbstractArrow.PickupMode.CREATIVE_ONLY);
+			}
+
+			var position = player.getPosition().add(0, player.getEyeHeight() - 0.1, 0);
+			this.shootProjectileEntity(arrow, player, position, yaw, power, spread);
 		}
-
-		//TODO fix velocity and yaw
-		Pos position = player.getPosition().add(0, player.getEyeHeight() - 0.1, 0);
-		arrow.setInstance(Objects.requireNonNull(player.getInstance()), position);
-
-		position = position.withYaw(position.yaw() + yaw);
-		//Vec direction = position.direction();
-		//position = position.add(direction).sub(0, 0.2, 0); //????????
-
-		//TODO probably use shootFromRotation
-		arrow.shootFrom(position, power, spread);
 
         this.itemDamageFeature.damageEquipment(player, hand == PlayerHand.MAIN ?
 				EquipmentSlot.MAIN_HAND : EquipmentSlot.OFF_HAND, firework ? 3 : 1);
@@ -317,6 +317,42 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 				SoundEvent.ITEM_CROSSBOW_SHOOT, Sound.Source.PLAYER,
 				1.0f, soundPitch
 		), player);
+	}
+
+	private void shootProjectileEntity(CustomEntityProjectile projectileEntity, Player player, Pos position,
+	                                   float yaw, double power, double spread) {
+		projectileEntity.setInstance(Objects.requireNonNull(player.getInstance()), position);
+		var shotVector = this.getProjectileShotVector(player.getPosition(), yaw);
+		projectileEntity.shoot(shotVector.x(), shotVector.y(), shotVector.z(), power, spread);
+	}
+
+	private Vec getProjectileShotVector(Pos position, float angle) {
+		var viewVector = position.direction();
+		var upVector = this.getUpVector(position);
+
+		return this.rotateAroundAxis(viewVector, upVector, angle);
+	}
+
+	private Vec getUpVector(Pos position) {
+		var pitch = Math.toRadians(position.pitch());
+		var yaw = Math.toRadians(position.yaw());
+
+		return new Vec(
+				Math.sin(yaw) * Math.sin(pitch),
+				Math.cos(pitch),
+				-Math.cos(yaw) * Math.sin(pitch)
+		);
+	}
+
+	private Vec rotateAroundAxis(Vec vector, Vec axis, float angle) {
+		var radians = Math.toRadians(angle);
+		var cos = Math.cos(radians);
+		var sin = Math.sin(radians);
+		var normalizedAxis = axis.normalize();
+
+		return vector.mul(cos)
+				.add(normalizedAxis.cross(vector).mul(sin))
+				.add(normalizedAxis.mul(normalizedAxis.dot(vector) * (1.0 - cos)));
 	}
 
 	protected AbstractArrow getCrossbowArrow(Player player, ItemStack crossbowStack, ItemStack projectile) {
