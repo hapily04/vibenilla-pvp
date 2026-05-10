@@ -105,8 +105,14 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 		assert damageType != null;
 
 		DamageTypeInfo typeInfo = DamageTypeInfo.of(damage.getType());
-		if (event.getEntity() instanceof Player player && typeInfo.shouldScaleWithDifficulty(damage))
+		if (event.getEntity() instanceof Player player && typeInfo.shouldScaleWithDifficulty(damage)) {
 			damage.setAmount(this.scaleWithDifficulty(player, damage.getAmount()));
+
+            if (damage.getAmount() == 0.0F) {
+                event.setCancelled(true);
+                return;
+            }
+        }
 
 		if (typeInfo.fire() && entity.hasEffect(PotionEffect.FIRE_RESISTANCE)) {
 			event.setCancelled(true);
