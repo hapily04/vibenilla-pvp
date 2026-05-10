@@ -151,23 +151,30 @@ public class VanillaSmashAttackFeature implements SmashAttackFeature {
 
 		assert attacker.getInstance() != null;
 		for (Entity nearbyEntity : attacker.getInstance().getNearbyEntities(attackerPosition, WIND_BURST_RADIUS)) {
-			if (nearbyEntity == attacker) continue;
-			if (!(nearbyEntity instanceof LivingEntity nearbyLiving)) continue;
-			if (nearbyEntity.getEntityType() == EntityType.ARMOR_STAND) continue;
-
-			Vec direction = nearbyEntity.getPosition().asVec().sub(attackerPosition.asVec());
-			double directionLength = direction.length();
-			if (directionLength <= 0 || directionLength > WIND_BURST_RADIUS) continue;
-
-			double knockbackFactor = (1.0 - directionLength / WIND_BURST_RADIUS) * power;
-			Vec knockbackVector = direction.normalize().mul(knockbackFactor);
-			Vec nearbyVelocity = nearbyLiving.getVelocity();
-			nearbyLiving.setVelocity(new Vec(
-					nearbyVelocity.x() + knockbackVector.x() * tps,
-					nearbyVelocity.y() + Math.abs(knockbackVector.y() + 0.3) * tps,
-					nearbyVelocity.z() + knockbackVector.z() * tps
-			));
+			this.applyWindBurstKnockback(attacker, attackerPosition, power, tps, nearbyEntity);
 		}
+		for (var player : attacker.getInstance().getPlayers()) {
+			this.applyWindBurstKnockback(attacker, attackerPosition, power, tps, player);
+		}
+	}
+
+	private void applyWindBurstKnockback(LivingEntity attacker, Pos attackerPosition, float power, int tps, Entity nearbyEntity) {
+		if (nearbyEntity == attacker) return;
+		if (!(nearbyEntity instanceof LivingEntity nearbyLiving)) return;
+		if (nearbyEntity.getEntityType() == EntityType.ARMOR_STAND) return;
+
+		Vec direction = nearbyEntity.getPosition().asVec().sub(attackerPosition.asVec());
+		double directionLength = direction.length();
+		if (directionLength <= 0 || directionLength > WIND_BURST_RADIUS) return;
+
+		double knockbackFactor = (1.0 - directionLength / WIND_BURST_RADIUS) * power;
+		Vec knockbackVector = direction.normalize().mul(knockbackFactor);
+		Vec nearbyVelocity = nearbyLiving.getVelocity();
+		nearbyLiving.setVelocity(new Vec(
+				nearbyVelocity.x() + knockbackVector.x() * tps,
+				nearbyVelocity.y() + Math.abs(knockbackVector.y() + 0.3) * tps,
+				nearbyVelocity.z() + knockbackVector.z() * tps
+		));
 	}
 
 	private void applySmashKnockback(LivingEntity attacker, LivingEntity target, boolean heavySmash) {
@@ -200,34 +207,41 @@ public class VanillaSmashAttackFeature implements SmashAttackFeature {
 		int tps = ServerFlag.SERVER_TICKS_PER_SECOND;
 
 		for (Entity nearbyEntity : target.getInstance().getNearbyEntities(target.getPosition(), SMASH_ATTACK_KNOCKBACK_RADIUS)) {
-			if (nearbyEntity == attacker || nearbyEntity == target) continue;
-			if (!(nearbyEntity instanceof LivingEntity nearbyLiving)) continue;
-			if (nearbyEntity.getEntityType() == EntityType.ARMOR_STAND
-					&& nearbyEntity.getEntityMeta() instanceof ArmorStandMeta armorStandMeta
-					&& armorStandMeta.isMarker()) continue;
-			if (nearbyEntity instanceof Player nearbyPlayer && nearbyPlayer.getGameMode() == GameMode.SPECTATOR) continue;
-			if (nearbyEntity instanceof Player nearbyPlayer && nearbyPlayer.getGameMode() == GameMode.CREATIVE && nearbyPlayer.isFlying()) continue;
-			if (target.getPosition().distanceSquared(nearbyEntity.getPosition()) > SMASH_ATTACK_KNOCKBACK_RADIUS * SMASH_ATTACK_KNOCKBACK_RADIUS) continue;
-
-			Vec direction = nearbyEntity.getPosition().asVec().sub(target.getPosition().asVec());
-			double directionLength = direction.length();
-			if (directionLength <= 0) continue;
-
-			double knockbackResistance = nearbyLiving.getAttributeValue(Attribute.KNOCKBACK_RESISTANCE);
-			double knockbackPower = (SMASH_ATTACK_KNOCKBACK_RADIUS - directionLength)
-					* SMASH_ATTACK_KNOCKBACK_POWER
-					* (heavySmash ? 2 : 1)
-					* (1.0 - knockbackResistance);
-
-			if (knockbackPower <= 0) continue;
-
-			Vec knockbackVector = direction.normalize().mul(knockbackPower);
-			Vec nearbyVelocity = nearbyLiving.getVelocity();
-			nearbyLiving.setVelocity(new Vec(
-					nearbyVelocity.x() + knockbackVector.x() * tps,
-					SMASH_ATTACK_VERTICAL_KNOCKBACK * tps,
-					nearbyVelocity.z() + knockbackVector.z() * tps
-			));
+			this.applySmashKnockbackToEntity(attacker, target, heavySmash, tps, nearbyEntity);
 		}
+		for (var player : target.getInstance().getPlayers()) {
+			this.applySmashKnockbackToEntity(attacker, target, heavySmash, tps, player);
+		}
+	}
+
+	private void applySmashKnockbackToEntity(LivingEntity attacker, LivingEntity target, boolean heavySmash, int tps, Entity nearbyEntity) {
+		if (nearbyEntity == attacker || nearbyEntity == target) return;
+		if (!(nearbyEntity instanceof LivingEntity nearbyLiving)) return;
+		if (nearbyEntity.getEntityType() == EntityType.ARMOR_STAND
+				&& nearbyEntity.getEntityMeta() instanceof ArmorStandMeta armorStandMeta
+				&& armorStandMeta.isMarker()) return;
+		if (nearbyEntity instanceof Player nearbyPlayer && nearbyPlayer.getGameMode() == GameMode.SPECTATOR) return;
+		if (nearbyEntity instanceof Player nearbyPlayer && nearbyPlayer.getGameMode() == GameMode.CREATIVE && nearbyPlayer.isFlying()) return;
+		if (target.getPosition().distanceSquared(nearbyEntity.getPosition()) > SMASH_ATTACK_KNOCKBACK_RADIUS * SMASH_ATTACK_KNOCKBACK_RADIUS) return;
+
+		Vec direction = nearbyEntity.getPosition().asVec().sub(target.getPosition().asVec());
+		double directionLength = direction.length();
+		if (directionLength <= 0) return;
+
+		double knockbackResistance = nearbyLiving.getAttributeValue(Attribute.KNOCKBACK_RESISTANCE);
+		double knockbackPower = (SMASH_ATTACK_KNOCKBACK_RADIUS - directionLength)
+				* SMASH_ATTACK_KNOCKBACK_POWER
+				* (heavySmash ? 2 : 1)
+				* (1.0 - knockbackResistance);
+
+		if (knockbackPower <= 0) return;
+
+		Vec knockbackVector = direction.normalize().mul(knockbackPower);
+		Vec nearbyVelocity = nearbyLiving.getVelocity();
+		nearbyLiving.setVelocity(new Vec(
+				nearbyVelocity.x() + knockbackVector.x() * tps,
+				SMASH_ATTACK_VERTICAL_KNOCKBACK * tps,
+				nearbyVelocity.z() + knockbackVector.z() * tps
+		));
 	}
 }
