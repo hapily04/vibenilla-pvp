@@ -99,6 +99,10 @@ public class VanillaSmashAttackFeature implements SmashAttackFeature {
 
 		boolean heavySmash = fallDistance > SMASH_ATTACK_HEAVY_THRESHOLD;
 		if (target.isOnGround()) {
+			if (attacker instanceof Player) {
+				this.fallFeature.setExtraFallParticles(attacker, true);
+			}
+
 			SoundEvent sound = heavySmash ? SoundEvent.ITEM_MACE_SMASH_GROUND_HEAVY : SoundEvent.ITEM_MACE_SMASH_GROUND;
 			ViewUtil.viewersAndSelf(attacker).playSound(Sound.sound(
 					sound, attacker instanceof Player ? Sound.Source.PLAYER : Sound.Source.HOSTILE,
