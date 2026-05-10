@@ -104,6 +104,8 @@ public class VanillaExplosiveFeature implements ExplosiveFeature, RegistrableFea
 				if (checkIntersect.intersectEntity(spawnPosition, entity)) return;
 			}
 			for (var player : instance.getPlayers()) {
+				if (player.getGameMode() == GameMode.SPECTATOR) continue;
+
 				if (checkIntersect.intersectEntity(spawnPosition, player)) return;
 			}
 
