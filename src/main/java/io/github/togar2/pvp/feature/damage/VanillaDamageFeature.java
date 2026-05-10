@@ -37,6 +37,7 @@ import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.tag.Tag;
 
 import java.util.Objects;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Vanilla implementation of {@link DamageFeature}.
@@ -256,12 +257,15 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 
 		if (hurtSoundAndAnimation) {
 			// Play sound (copied from Minestom, because of complications with cancelling)
-			if (sound != null) entity.sendPacketToViewersAndSelf(new SoundEffectPacket(
-					sound, entity instanceof Player ? Sound.Source.PLAYER : Sound.Source.HOSTILE,
-					entity.getPosition(),
-					//TODO seed randomizing?
-					1.0f, 1.0f, 0
-			));
+			if (sound != null) {
+				var random = ThreadLocalRandom.current();
+				var pitch = (random.nextFloat() - random.nextFloat()) * 0.2F + 1.0F;
+				entity.sendPacketToViewersAndSelf(new SoundEffectPacket(
+						sound, entity instanceof Player ? Sound.Source.PLAYER : Sound.Source.HOSTILE,
+						entity.getPosition(),
+						1.0F, pitch, random.nextLong()
+				));
+			}
 		}
 
 		damage.setAmount(amount);
