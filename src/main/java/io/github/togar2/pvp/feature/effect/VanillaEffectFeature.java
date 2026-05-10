@@ -18,12 +18,14 @@ import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.util.RGBLike;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.ServerFlag;
+import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.LivingEntity;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.metadata.LivingEntityMeta;
+import net.minestom.server.entity.metadata.other.SlimeMeta;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.entity.EntityDeathEvent;
@@ -60,6 +62,10 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 	public static final int DEFAULT_POTION_COLOR = 0xff385dc6;
 	private static final double WIND_CHARGED_MIN_POWER = 3.0;
 	private static final double WIND_CHARGED_RANDOM_POWER = 2.0;
+	private static final int OOZING_SLIME_COUNT = 2;
+	private static final int OOZING_SLIME_SIZE = 2;
+	private static final int OOZING_SLIME_CHECK_RADIUS = 2;
+	private static final int DEFAULT_MAX_ENTITY_CRAMMING = 24;
 
 	private final FeatureConfiguration configuration;
 
@@ -83,6 +89,7 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 		node.addListener(EntityDeathEvent.class, event -> {
 			if (event.getEntity() instanceof LivingEntity entity) {
 				this.applyWindChargedBurst(entity);
+				this.spawnOozingSlimes(entity);
 			}
 
 			event.getEntity().clearEffects();
@@ -227,6 +234,32 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 					Math.abs(knockbackVector.y() + 0.3) * ServerFlag.SERVER_TICKS_PER_SECOND,
 					knockbackVector.z() * ServerFlag.SERVER_TICKS_PER_SECOND
 			));
+		}
+	}
+
+	private void spawnOozingSlimes(LivingEntity entity) {
+		if (!entity.hasEffect(PotionEffect.OOZING)) return;
+
+		var instance = entity.getInstance();
+
+		if (instance == null) return;
+
+		var nearbySlimes = instance.getNearbyEntities(entity.getPosition(), OOZING_SLIME_CHECK_RADIUS).stream()
+				.filter(nearbyEntity -> nearbyEntity.getEntityType() == EntityType.SLIME)
+				.limit(DEFAULT_MAX_ENTITY_CRAMMING)
+				.count();
+		var spawnCount = Math.clamp(DEFAULT_MAX_ENTITY_CRAMMING - (int) nearbySlimes, 0, OOZING_SLIME_COUNT);
+		var random = ThreadLocalRandom.current();
+
+		for (var slimeNumber = 0; slimeNumber < spawnCount; slimeNumber++) {
+			var slime = new Entity(EntityType.SLIME);
+
+			if (slime.getEntityMeta() instanceof SlimeMeta slimeMeta) {
+				slimeMeta.setSize(OOZING_SLIME_SIZE);
+			}
+
+			var position = new Pos(entity.getPosition().x(), entity.getPosition().y() + 0.5, entity.getPosition().z(), random.nextFloat(360.0F), 0.0F);
+			slime.setInstance(instance, position);
 		}
 	}
 
