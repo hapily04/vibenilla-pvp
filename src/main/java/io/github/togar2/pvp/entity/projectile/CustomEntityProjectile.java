@@ -72,6 +72,10 @@ public class CustomEntityProjectile extends Entity {
 		return false;
 	}
 
+	public boolean onStuck(ProjectileCollideWithBlockEvent event) {
+		return this.onStuck();
+	}
+
 	/**
 	 * Called when this projectile unstucks.
 	 * Probably you want to add some random velocity to arrows in such case.
@@ -263,7 +267,7 @@ public class CustomEntityProjectile extends Entity {
                     this.setVelocity(Vec.ZERO);
 					this.collisionDirection = collisionDirection;
 
-					if (this.onStuck()) {
+					if (this.onStuck(event)) {
 						// Don't remove now because rest of Entity#tick might throw errors
                         this.scheduler().scheduleNextProcess(this::remove);
 					}

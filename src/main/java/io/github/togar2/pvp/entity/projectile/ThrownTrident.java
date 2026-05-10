@@ -3,17 +3,24 @@ package io.github.togar2.pvp.entity.projectile;
 import io.github.togar2.pvp.enchantment.EntityGroup;
 import io.github.togar2.pvp.feature.enchantment.EnchantmentFeature;
 import io.github.togar2.pvp.utils.EntityUtil;
+import io.github.togar2.pvp.utils.FluidUtil;
+import io.github.togar2.pvp.utils.ViewUtil;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.ServerFlag;
 import net.minestom.server.component.DataComponents;
+import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.*;
 import net.minestom.server.entity.damage.Damage;
 import net.minestom.server.entity.damage.DamageType;
 import net.minestom.server.entity.metadata.projectile.ThrownTridentMeta;
+import net.minestom.server.event.entity.projectile.ProjectileCollideWithBlockEvent;
+import net.minestom.server.instance.Instance;
+import net.minestom.server.instance.block.Block;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.enchant.Enchantment;
 import net.minestom.server.sound.SoundEvent;
+import net.minestom.server.utils.time.TimeUnit;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -80,12 +87,19 @@ public class ThrownTrident extends AbstractArrow {
 		if (!(entity instanceof LivingEntity living)) return false;
 		Entity shooter = this.getShooter();
 
-		float damage = 8.0f + this.enchantmentFeature.getAttackDamage(this.tridentItem, EntityGroup.ofEntity(living));
-		Damage damageObj = new Damage(DamageType.TRIDENT, this, shooter == null ? this : shooter, null, damage);
-		if (living.damage(damageObj) && shooter instanceof LivingEntity livingShooter) {
+		var damage = 8.0F + this.enchantmentFeature.getAttackDamage(this.tridentItem, EntityGroup.ofEntity(living));
+		var damageObj = new Damage(DamageType.TRIDENT, this, shooter == null ? this : shooter, null, damage);
+		var damaged = living.damage(damageObj);
+
+		if (damaged && shooter instanceof LivingEntity livingShooter) {
             this.enchantmentFeature.onUserDamaged(living, livingShooter);
             this.enchantmentFeature.onTargetDamaged(livingShooter, living);
 		}
+
+		if (damaged && this.canChannel(living.getPosition())) {
+			this.channelLightning(living.getPosition());
+		}
+
         this.damageDone = true;
 
         this.setVelocity(this.velocity.mul(-0.01, -0.1, -0.01));
@@ -95,6 +109,15 @@ public class ThrownTrident extends AbstractArrow {
 		), this.position.x(), this.position.y(), this.position.z());
 
 		return false;
+	}
+
+	@Override
+	public boolean onStuck(ProjectileCollideWithBlockEvent event) {
+		if (this.isLightningRod(event.getBlock()) && this.canChannel(event.getCollisionPosition())) {
+			this.channelLightning(event.getCollisionPosition());
+		}
+
+		return super.onStuck(event);
 	}
 
 	@Override
@@ -126,5 +149,56 @@ public class ThrownTrident extends AbstractArrow {
 	@Override
 	protected ItemStack getPickupItem() {
 		return this.tridentItem;
+	}
+
+	private boolean canChannel(Point point) {
+		if (this.tridentItem.get(DataComponents.ENCHANTMENTS).level(Enchantment.CHANNELING) <= 0) return false;
+
+		var instance = this.getInstance();
+
+		if (instance == null) return false;
+		if (instance.getWeather().thunderLevel() <= 0.0F) return false;
+		if (!instance.getCachedDimensionType().hasSkylight() || instance.getCachedDimensionType().hasCeiling()) return false;
+
+		return FluidUtil.isRainingAt(instance, point.blockX(), point.blockY(), point.blockZ());
+	}
+
+	private void channelLightning(Point point) {
+		var instance = Objects.requireNonNull(this.getInstance());
+		var lightning = new Entity(EntityType.LIGHTNING_BOLT);
+
+		lightning.setInstance(instance, point);
+		lightning.scheduleRemove(20, TimeUnit.SERVER_TICK);
+		ViewUtil.viewersAndSelf(this).playSound(Sound.sound(
+				SoundEvent.ITEM_TRIDENT_THUNDER, Sound.Source.WEATHER,
+				5.0F, 1.0F
+		), point.x(), point.y(), point.z());
+
+		this.damageLightningEntities(instance, point);
+	}
+
+	private void damageLightningEntities(Instance instance, Point point) {
+		for (var entity : instance.getNearbyEntities(point, 9.0)) {
+
+			if (!(entity instanceof LivingEntity livingEntity)) {
+				continue;
+			}
+
+			var position = entity.getPosition();
+
+			if (Math.abs(position.x() - point.x()) > 3.0
+					|| position.y() - point.y() < -3.0
+					|| position.y() - point.y() > 9.0
+					|| Math.abs(position.z() - point.z()) > 3.0) {
+				continue;
+			}
+
+			livingEntity.setFireTicks(Math.max(livingEntity.getFireTicks(), 8 * ServerFlag.SERVER_TICKS_PER_SECOND));
+			livingEntity.damage(DamageType.LIGHTNING_BOLT, 5.0F);
+		}
+	}
+
+	private boolean isLightningRod(Block block) {
+		return block.key().value().endsWith("lightning_rod");
 	}
 }
