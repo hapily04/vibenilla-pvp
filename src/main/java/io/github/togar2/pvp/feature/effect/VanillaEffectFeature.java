@@ -14,8 +14,10 @@ import io.github.togar2.pvp.potion.item.CombatPotionType;
 import io.github.togar2.pvp.potion.item.CombatPotionTypes;
 import io.github.togar2.pvp.utils.CombatVersion;
 import io.github.togar2.pvp.utils.PotionFlags;
+import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.util.RGBLike;
 import net.minestom.server.MinecraftServer;
+import net.minestom.server.ServerFlag;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.LivingEntity;
@@ -28,18 +30,21 @@ import net.minestom.server.event.entity.EntityPotionAddEvent;
 import net.minestom.server.event.entity.EntityPotionRemoveEvent;
 import net.minestom.server.event.entity.EntityTickEvent;
 import net.minestom.server.event.trait.EntityInstanceEvent;
+import net.minestom.server.network.packet.server.play.ParticlePacket;
 import net.minestom.server.item.component.PotionContents;
 import net.minestom.server.particle.Particle;
 import net.minestom.server.potion.Potion;
 import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.potion.PotionType;
 import net.minestom.server.potion.TimedPotion;
+import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.tag.Tag;
 import net.minestom.server.utils.time.TimeUnit;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Vanilla implementation of {@link EffectFeature}
@@ -52,6 +57,8 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 
 	public static final Tag<Map<PotionEffect, Integer>> DURATION_LEFT = Tag.Transient("effectDurationLeft");
 	public static final int DEFAULT_POTION_COLOR = 0xff385dc6;
+	private static final double WIND_CHARGED_MIN_POWER = 3.0;
+	private static final double WIND_CHARGED_RANDOM_POWER = 2.0;
 
 	private final FeatureConfiguration configuration;
 
@@ -72,8 +79,13 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 
 	@Override
 	public void init(EventNode<EntityInstanceEvent> node) {
-		node.addListener(EntityDeathEvent.class, event ->
-				event.getEntity().clearEffects());
+		node.addListener(EntityDeathEvent.class, event -> {
+			if (event.getEntity() instanceof LivingEntity entity) {
+				this.applyWindChargedBurst(entity);
+			}
+
+			event.getEntity().clearEffects();
+		});
 
 		node.addListener(EntityTickEvent.class, event -> {
 			if (!(event.getEntity() instanceof LivingEntity entity)) return;
@@ -149,6 +161,60 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 	private boolean hasActivePotion(LivingEntity entity, Potion potion) {
 		return entity.getActiveEffects().stream()
 				.anyMatch(timedPotion -> timedPotion.potion() == potion);
+	}
+
+	private void applyWindChargedBurst(LivingEntity entity) {
+		if (!entity.hasEffect(PotionEffect.WIND_CHARGED)) return;
+
+		var instance = entity.getInstance();
+
+		if (instance == null) return;
+
+		var random = ThreadLocalRandom.current();
+		var position = entity.getPosition().add(0.0, entity.getBoundingBox().height() / 2.0F, 0.0);
+		var power = WIND_CHARGED_MIN_POWER + random.nextDouble(WIND_CHARGED_RANDOM_POWER);
+
+		entity.sendPacketToViewersAndSelf(new ParticlePacket(
+				Particle.GUST_EMITTER_SMALL, false, false,
+				position.x(), position.y(), position.z(),
+				0.0F, 0.0F, 0.0F,
+				0.0F, 1
+		));
+		entity.sendPacketToViewersAndSelf(new ParticlePacket(
+				Particle.GUST_EMITTER_LARGE, false, false,
+				position.x(), position.y(), position.z(),
+				0.0F, 0.0F, 0.0F,
+				0.0F, 1
+		));
+		entity.getViewersAsAudience().playSound(Sound.sound(
+				SoundEvent.ENTITY_WIND_CHARGE_WIND_BURST,
+				entity instanceof Player ? Sound.Source.PLAYER : Sound.Source.HOSTILE,
+				1.0F, 1.0F
+		), entity);
+
+		for (var nearbyEntity : instance.getNearbyEntities(position, power)) {
+
+			if (!(nearbyEntity instanceof LivingEntity nearbyLiving)) {
+				continue;
+			}
+
+			var direction = nearbyEntity.getPosition().asVec().sub(position.asVec());
+			var distance = direction.length();
+
+			if (distance <= 0.0 || distance > power) {
+				continue;
+			}
+
+			var knockback = (1.0 - distance / power) * power;
+			var knockbackVector = direction.normalize().mul(knockback);
+			var velocity = nearbyLiving.getVelocity();
+
+			nearbyLiving.setVelocity(velocity.add(
+					knockbackVector.x() * ServerFlag.SERVER_TICKS_PER_SECOND,
+					Math.abs(knockbackVector.y() + 0.3) * ServerFlag.SERVER_TICKS_PER_SECOND,
+					knockbackVector.z() * ServerFlag.SERVER_TICKS_PER_SECOND
+			));
+		}
 	}
 
 	@Override
