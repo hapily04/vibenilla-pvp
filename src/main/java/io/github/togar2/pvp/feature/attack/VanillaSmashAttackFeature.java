@@ -202,6 +202,7 @@ public class VanillaSmashAttackFeature implements SmashAttackFeature {
 			if (nearbyEntity == attacker || nearbyEntity == target) continue;
 			if (!(nearbyEntity instanceof LivingEntity nearbyLiving)) continue;
 			if (nearbyEntity.getEntityType() == EntityType.ARMOR_STAND) continue;
+			if (nearbyEntity instanceof Player nearbyPlayer && nearbyPlayer.getGameMode() == GameMode.SPECTATOR) continue;
 			if (nearbyEntity instanceof Player nearbyPlayer && nearbyPlayer.getGameMode() == GameMode.CREATIVE && nearbyPlayer.isFlying()) continue;
 			if (target.getPosition().distanceSquared(nearbyEntity.getPosition()) > SMASH_ATTACK_KNOCKBACK_RADIUS * SMASH_ATTACK_KNOCKBACK_RADIUS) continue;
 
