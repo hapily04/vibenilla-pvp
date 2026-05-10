@@ -128,6 +128,16 @@ public final class AreaEffectCloud extends Entity {
                     }
                 }
         );
+        for (var player : instance.getPlayers()) {
+
+            if (player.getGameMode() == GameMode.SPECTATOR) {
+                continue;
+            }
+
+            if (this.getHorizontalDistanceSquared(player) <= radiusSquared) {
+                this.nearbyVictims.add(player);
+            }
+        }
 
         for (var entity : this.nearbyVictims) {
 
