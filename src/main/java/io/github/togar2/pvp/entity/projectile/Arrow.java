@@ -74,6 +74,10 @@ public class Arrow extends AbstractArrow {
 		return this.itemStack.get(DataComponents.POTION_CONTENTS, PotionContents.EMPTY);
 	}
 
+	public float getPotionDurationScale() {
+		return this.itemStack.get(DataComponents.POTION_DURATION_SCALE, 1.0F);
+	}
+
 	public void setPotion(@NotNull PotionContents potion) {
 		if (this.itemStack.material() != Material.TIPPED_ARROW)
             this.itemStack = ItemStack.of(Material.TIPPED_ARROW);

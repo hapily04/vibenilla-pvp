@@ -672,6 +672,7 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 	@Override
 	public void addArrowEffects(LivingEntity entity, Arrow arrow) {
 		PotionContents potionContents = arrow.getPotion();
+		float durationScale = arrow.getPotionDurationScale();
 
 		CombatPotionType combatPotionType = CombatPotionTypes.get(potionContents.potion());
 		if (combatPotionType != null) {
@@ -681,7 +682,7 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 					combatPotionEffect.applyInstantEffect(arrow, null,
 							entity, potion.amplifier(), 1.0, this.exhaustionFeature, this.foodFeature);
 				} else {
-					int duration = Math.max(potion.duration() / 8, 1);
+					int duration = Math.max((int) (potion.duration() * durationScale), 1);
 					entity.addEffect(new Potion(potion.effect(), potion.amplifier(), duration, potion.flags()));
 				}
 			}
@@ -703,7 +704,7 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 						combatPotionEffect.applyInstantEffect(arrow, null,
 								entity, potion.amplifier(), 1.0, this.exhaustionFeature, this.foodFeature);
 					} else {
-						var duration = Math.max(potion.duration() / 8, 1);
+						var duration = Math.max((int) (potion.duration() * durationScale), 1);
 						entity.addEffect(new Potion(potion.effect(), potion.amplifier(),
 								duration, potion.flags()));
 					}
