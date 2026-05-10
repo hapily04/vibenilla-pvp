@@ -169,7 +169,7 @@ public final class FireworkRocket extends CustomEntityProjectile {
         var center = this.getPosition();
         var radius = 5.0;
         var damageBox = new BoundingBox(radius * 2.0, radius * 2.0, radius * 2.0);
-        var source = center.sub(radius, radius, radius);
+        var source = center.sub(0.0, radius, 0.0);
 
         for (var entity : instance.getEntities()) {
 
