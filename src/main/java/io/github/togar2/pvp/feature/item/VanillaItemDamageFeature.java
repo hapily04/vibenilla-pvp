@@ -1,7 +1,5 @@
 package io.github.togar2.pvp.feature.item;
 
-import io.github.togar2.pvp.damage.DamageTypeInfo;
-import io.github.togar2.pvp.enums.ArmorMaterial;
 import io.github.togar2.pvp.events.EquipmentDamageEvent;
 import io.github.togar2.pvp.feature.FeatureType;
 import io.github.togar2.pvp.feature.config.DefinedFeature;
@@ -104,14 +102,29 @@ public class VanillaItemDamageFeature implements ItemDamageFeature {
 
 		for (EquipmentSlot slot : slots) {
 			ItemStack stack = entity.getEquipment(slot);
-			DamageTypeInfo info = DamageTypeInfo.of(MinecraftServer.getDamageTypeRegistry().getKey(damageType));
-            var isNetherite = stack.material().key().value().toLowerCase().contains("netherite");
 
-			if (!(info.fire() && isNetherite) && ArmorMaterial.fromMaterial(stack.material()) != null) {
+			if (this.canDamageEquipment(stack, damageType)) {
                 this.damageEquipment(entity, slot, (int) damage);
 			}
 		}
 	}
+
+    private boolean canDamageEquipment(ItemStack stack, DamageType damageType) {
+        var equippable = stack.get(DataComponents.EQUIPPABLE);
+        if (equippable == null || !equippable.damageOnHurt() || stack.get(DataComponents.MAX_DAMAGE, 0) <= 0) {
+            return false;
+        }
+
+        var damageResistant = stack.get(DataComponents.DAMAGE_RESISTANT);
+        if (damageResistant == null) {
+            return true;
+        }
+
+        var damageResistantTypes = MinecraftServer.getDamageTypeRegistry().getTag(damageResistant.types());
+
+        return damageResistantTypes == null
+                || !damageResistantTypes.contains(MinecraftServer.getDamageTypeRegistry().getKey(damageType));
+    }
 
 	private static void triggerEquipmentBreak(LivingEntity entity, EquipmentSlot slot) {
 		entity.triggerStatus(getEquipmentBreakStatus(slot));
