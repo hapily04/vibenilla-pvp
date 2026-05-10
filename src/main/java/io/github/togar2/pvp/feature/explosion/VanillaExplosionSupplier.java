@@ -122,19 +122,12 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 				int minZ = Math.min(minZ_, maxZ_);
 				int maxZ = Math.max(minZ_, maxZ_);
 
-				BoundingBox explosionBox = new BoundingBox(
-						maxX - minX,
-						maxY - minY,
-						maxZ - minZ
-				);
-
 				Vec centerPoint = new Vec(this.getCenterX(), this.getCenterY(), this.getCenterZ());
 				Entity sourceEntity = this.getSourceEntity(instance);
 
-				Vec src = centerPoint.sub(0, explosionBox.height() / 2, 0);
 				List<Entity> entities = new ArrayList<>(instance.getEntities().stream()
 						.filter(entity -> entity != sourceEntity)
-						.filter(entity -> explosionBox.intersectEntity(src, entity))
+						.filter(entity -> this.intersectsEntity(minX, minY, minZ, maxX, maxY, maxZ, entity))
 						.toList());
 
 				boolean anchor = false;
@@ -291,6 +284,18 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 			private boolean shouldApplyPlayerKnockback(Player player) {
 				return player.getGameMode() != GameMode.SPECTATOR
 						&& (player.getGameMode() != GameMode.CREATIVE || !player.isFlying());
+			}
+
+			private boolean intersectsEntity(double minX, double minY, double minZ, double maxX, double maxY, double maxZ, Entity entity) {
+				var boundingBox = entity.getBoundingBox();
+				var entityPosition = entity.getPosition();
+
+				return minX <= entityPosition.x() + boundingBox.maxX()
+						&& maxX >= entityPosition.x() + boundingBox.minX()
+						&& minY <= entityPosition.y() + boundingBox.maxY()
+						&& maxY >= entityPosition.y() + boundingBox.minY()
+						&& minZ <= entityPosition.z() + boundingBox.maxZ()
+						&& maxZ >= entityPosition.z() + boundingBox.minZ();
 			}
 		};
 	}
