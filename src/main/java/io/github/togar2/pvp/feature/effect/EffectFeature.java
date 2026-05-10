@@ -32,6 +32,8 @@ public interface EffectFeature extends CombatFeature {
 		@Override public void addArrowEffects(LivingEntity entity, Arrow arrow) {}
 		@Override public void addSplashPotionEffects(LivingEntity entity, PotionContents potionContents, double proximity,
 		                                             @Nullable Entity source, @Nullable Entity attacker) {}
+		@Override public void addLingeringPotionEffects(LivingEntity entity, PotionContents potionContents,
+		                                                @Nullable Entity source, @Nullable Entity attacker) {}
 	};
 
 	int getPotionColor(PotionContents contents);
@@ -70,4 +72,7 @@ public interface EffectFeature extends CombatFeature {
 	 */
 	void addSplashPotionEffects(LivingEntity entity, PotionContents potionContents, double proximity,
 	                            @Nullable Entity source, @Nullable Entity attacker);
+
+	void addLingeringPotionEffects(LivingEntity entity, PotionContents potionContents,
+	                               @Nullable Entity source, @Nullable Entity attacker);
 }

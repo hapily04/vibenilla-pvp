@@ -280,4 +280,20 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 			}
 		}
 	}
+
+	@Override
+	public void addLingeringPotionEffects(LivingEntity entity, PotionContents potionContents,
+	                                      @Nullable Entity source, @Nullable Entity attacker) {
+		for (var potion : this.getAllPotions(potionContents)) {
+			var combatPotionEffect = CombatPotionEffects.get(potion.effect());
+
+			if (combatPotionEffect.isInstant()) {
+				combatPotionEffect.applyInstantEffect(source, attacker,
+						entity, potion.amplifier(), 0.5, this.exhaustionFeature, this.foodFeature);
+			} else {
+				var duration = Math.max(potion.duration() / 4, 1);
+				entity.addEffect(new Potion(potion.effect(), potion.amplifier(), duration, potion.flags()));
+			}
+		}
+	}
 }

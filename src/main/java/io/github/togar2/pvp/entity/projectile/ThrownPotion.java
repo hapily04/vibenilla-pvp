@@ -1,5 +1,6 @@
 package io.github.togar2.pvp.entity.projectile;
 
+import io.github.togar2.pvp.entity.AreaEffectCloud;
 import io.github.togar2.pvp.feature.effect.EffectFeature;
 import io.github.togar2.pvp.utils.EffectUtil;
 import net.minestom.server.collision.BoundingBox;
@@ -57,7 +58,8 @@ public class ThrownPotion extends CustomEntityProjectile implements ItemHoldingP
 			this.dowseFireBlocks();
 		} else if (!potions.isEmpty()) {
 			if (this.lingering) {
-				//TODO lingering
+				var areaEffectCloud = new AreaEffectCloud(potionContents, this.getShooter(), this.effectFeature);
+				areaEffectCloud.setInstance(Objects.requireNonNull(this.getInstance()), this.getPosition());
 			} else {
 				this.applySplash(potionContents, entity);
 			}
