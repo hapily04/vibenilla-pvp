@@ -10,6 +10,7 @@ import io.github.togar2.pvp.utils.FluidUtil;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.MinecraftServer;
+import net.minestom.server.ServerFlag;
 import net.minestom.server.component.DataComponents;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
@@ -215,9 +216,9 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 			return;
 		}
 
-		if (entity.isFlyingWithElytra() && entity.getVelocity().y() > -0.5) {
-			entity.setTag(FALL_DISTANCE, 1.0);
-			return;
+		if (entity.getVelocity().y() > -0.5 * ServerFlag.SERVER_TICKS_PER_SECOND && fallDistance > 1.0) {
+			fallDistance = 1.0;
+			entity.setTag(FALL_DISTANCE, fallDistance);
 		}
 
 		if (!onGround) {
