@@ -20,6 +20,7 @@ import net.kyori.adventure.util.RGBLike;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.ServerFlag;
 import net.minestom.server.coordinate.BlockVec;
+import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.EntityType;
@@ -449,28 +450,42 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 		), entity);
 
 		for (var nearbyEntity : instance.getNearbyEntities(position, power)) {
+			if (nearbyEntity == entity) {
+				continue;
+			}
 
 			if (!(nearbyEntity instanceof LivingEntity nearbyLiving)) {
 				continue;
 			}
 
-			var direction = nearbyEntity.getPosition().asVec().sub(position.asVec());
-			var distance = direction.length();
-
-			if (distance <= 0.0 || distance > power) {
+			this.applyWindChargedKnockback(position, power, nearbyLiving);
+		}
+		for (var player : instance.getPlayers()) {
+			if (player == entity) {
 				continue;
 			}
 
-			var knockback = (1.0 - distance / power) * power;
-			var knockbackVector = direction.normalize().mul(knockback);
-			var velocity = nearbyLiving.getVelocity();
-
-			nearbyLiving.setVelocity(velocity.add(
-					knockbackVector.x() * ServerFlag.SERVER_TICKS_PER_SECOND,
-					Math.abs(knockbackVector.y() + 0.3) * ServerFlag.SERVER_TICKS_PER_SECOND,
-					knockbackVector.z() * ServerFlag.SERVER_TICKS_PER_SECOND
-			));
+			this.applyWindChargedKnockback(position, power, player);
 		}
+	}
+
+	private void applyWindChargedKnockback(Point position, double power, LivingEntity nearbyLiving) {
+		var direction = nearbyLiving.getPosition().asVec().sub(position.asVec());
+		var distance = direction.length();
+
+		if (distance <= 0.0 || distance > power) {
+			return;
+		}
+
+		var knockback = (1.0 - distance / power) * power;
+		var knockbackVector = direction.normalize().mul(knockback);
+		var velocity = nearbyLiving.getVelocity();
+
+		nearbyLiving.setVelocity(velocity.add(
+				knockbackVector.x() * ServerFlag.SERVER_TICKS_PER_SECOND,
+				Math.abs(knockbackVector.y() + 0.3) * ServerFlag.SERVER_TICKS_PER_SECOND,
+				knockbackVector.z() * ServerFlag.SERVER_TICKS_PER_SECOND
+		));
 	}
 
 	private void spawnOozingSlimes(LivingEntity entity) {

@@ -93,47 +93,54 @@ public final class WindCharge extends CustomEntityProjectile {
 		var ticksPerSecond = ServerFlag.SERVER_TICKS_PER_SECOND;
 
 		for (var entity : instance.getNearbyEntities(center, doubleRadius)) {
-			if (entity == this) continue;
+			this.applyExplosionKnockback(center, centerVector, doubleRadius, ticksPerSecond, entity);
+		}
+		for (var player : instance.getPlayers()) {
+			this.applyExplosionKnockback(center, centerVector, doubleRadius, ticksPerSecond, player);
+		}
+	}
 
-			var distanceStrength = entity.getPosition().distance(center) / doubleRadius;
+	private void applyExplosionKnockback(Point center, Vec centerVector, double doubleRadius, int ticksPerSecond, Entity entity) {
+		if (entity == this) return;
 
-			if (distanceStrength > 1.0) {
-				continue;
-			}
+		var distanceStrength = entity.getPosition().distance(center) / doubleRadius;
 
-			var originY = entity.getPosition().y() + entity.getEyeHeight();
-			var direction = new Vec(
-					entity.getPosition().x() - center.x(),
-					originY - center.y(),
-					entity.getPosition().z() - center.z()
-			);
-			var directionLength = direction.length();
+		if (distanceStrength > 1.0) {
+			return;
+		}
 
-			if (directionLength == 0.0) {
-				continue;
-			}
+		var originY = entity.getPosition().y() + entity.getEyeHeight();
+		var direction = new Vec(
+				entity.getPosition().x() - center.x(),
+				originY - center.y(),
+				entity.getPosition().z() - center.z()
+		);
+		var directionLength = direction.length();
 
-			var exposure = this.hasLineOfSight(centerVector, entity) ? 1.0 : 0.0;
-			var knockback = (1.0 - distanceStrength) * exposure * KNOCKBACK_MULTIPLIER;
+		if (directionLength == 0.0) {
+			return;
+		}
 
-			if (entity instanceof LivingEntity livingEntity) {
-				knockback *= 1.0 - livingEntity.getAttributeValue(Attribute.EXPLOSION_KNOCKBACK_RESISTANCE);
-			}
+		var exposure = this.hasLineOfSight(centerVector, entity) ? 1.0 : 0.0;
+		var knockback = (1.0 - distanceStrength) * exposure * KNOCKBACK_MULTIPLIER;
 
-			if (knockback <= 0.0) {
-				continue;
-			}
+		if (entity instanceof LivingEntity livingEntity) {
+			knockback *= 1.0 - livingEntity.getAttributeValue(Attribute.EXPLOSION_KNOCKBACK_RESISTANCE);
+		}
 
-			var knockbackVelocity = direction.normalize().mul(knockback * ticksPerSecond);
+		if (knockback <= 0.0) {
+			return;
+		}
 
-			if (entity instanceof Player player) {
-				if (player.getGameMode() == GameMode.SPECTATOR) continue;
-				if (player.getGameMode() == GameMode.CREATIVE && player.isFlying()) continue;
+		var knockbackVelocity = direction.normalize().mul(knockback * ticksPerSecond);
 
-				player.setVelocity(player.getVelocity().add(knockbackVelocity));
-			} else {
-				entity.setVelocity(entity.getVelocity().add(knockbackVelocity));
-			}
+		if (entity instanceof Player player) {
+			if (player.getGameMode() == GameMode.SPECTATOR) return;
+			if (player.getGameMode() == GameMode.CREATIVE && player.isFlying()) return;
+
+			player.setVelocity(player.getVelocity().add(knockbackVelocity));
+		} else {
+			entity.setVelocity(entity.getVelocity().add(knockbackVelocity));
 		}
 	}
 
