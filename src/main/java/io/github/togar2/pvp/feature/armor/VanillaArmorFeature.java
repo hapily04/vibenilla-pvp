@@ -81,7 +81,7 @@ public class VanillaArmorFeature implements ArmorFeature {
 
 		int k;
 		TimedPotion effect = entity.getEffect(PotionEffect.RESISTANCE);
-		if (effect != null) {
+		if (effect != null && !damageTypeInfo.bypassesResistance()) {
 			k = (effect.potion().amplifier() + 1) * 5;
 			int j = 25 - k;
 			float f = amount * (float) j;
@@ -90,6 +90,8 @@ public class VanillaArmorFeature implements ArmorFeature {
 
 		if (amount <= 0) {
 			return 0;
+		} else if (damageTypeInfo.bypassesEnchantments()) {
+			return amount;
 		} else {
 			k = this.enchantmentFeature.getProtectionAmount(entity, damageType);
 			if (this.version.modern()) {

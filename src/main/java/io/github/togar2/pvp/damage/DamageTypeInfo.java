@@ -10,7 +10,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public record DamageTypeInfo(boolean damagesHelmet, boolean bypassesArmor, boolean outOfWorld,
-                             boolean unblockable, boolean fire, ScaleWithDifficulty scaleWithDifficulty,
+                             boolean unblockable, boolean bypassesResistance, boolean bypassesEnchantments,
+                             boolean fire, ScaleWithDifficulty scaleWithDifficulty,
                              boolean magic, boolean explosive, boolean fall, boolean thorns, boolean projectile,
                              boolean freeze) {
 	private static final DamageTypeInfo DEFAULT = new DamageTypeInfo();
@@ -18,7 +19,8 @@ public record DamageTypeInfo(boolean damagesHelmet, boolean bypassesArmor, boole
 	public DamageTypeInfo() {
 		this(
 				false, false, false,
-				false, false, ScaleWithDifficulty.NEVER,
+				false, false, false,
+                false, ScaleWithDifficulty.NEVER,
 				false, false, false, false, false, false
 		);
 	}
@@ -40,9 +42,9 @@ public record DamageTypeInfo(boolean damagesHelmet, boolean bypassesArmor, boole
             this.put(DamageType.FALL, new DamageTypeInfo().bypassesArmor(true).fall(true));
             this.put(DamageType.ENDER_PEARL, new DamageTypeInfo().bypassesArmor(true).fall(true));
             this.put(DamageType.FLY_INTO_WALL, new DamageTypeInfo().bypassesArmor(true));
-            this.put(DamageType.OUT_OF_WORLD, new DamageTypeInfo().bypassesArmor(true).outOfWorld(true));
+            this.put(DamageType.OUT_OF_WORLD, new DamageTypeInfo().bypassesArmor(true).outOfWorld(true).bypassesResistance(true));
             this.put(DamageType.GENERIC, new DamageTypeInfo().bypassesArmor(true));
-            this.put(DamageType.GENERIC_KILL, new DamageTypeInfo().bypassesArmor(true));
+            this.put(DamageType.GENERIC_KILL, new DamageTypeInfo().bypassesArmor(true).bypassesResistance(true));
             this.put(DamageType.MAGIC, new DamageTypeInfo().bypassesArmor(true).magic(true));
             this.put(DamageType.INDIRECT_MAGIC, new DamageTypeInfo().bypassesArmor(true).magic(true).scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
             this.put(DamageType.WITHER, new DamageTypeInfo().bypassesArmor(true));
@@ -73,7 +75,7 @@ public record DamageTypeInfo(boolean damagesHelmet, boolean bypassesArmor, boole
             this.put(DamageType.SPEAR, new DamageTypeInfo().scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
             this.put(DamageType.WIND_CHARGE, new DamageTypeInfo().projectile(true).scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
             this.put(DamageType.FIREWORKS, new DamageTypeInfo().scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
-            this.put(DamageType.SONIC_BOOM, new DamageTypeInfo().bypassesArmor(true).scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
+            this.put(DamageType.SONIC_BOOM, new DamageTypeInfo().bypassesArmor(true).bypassesEnchantments(true).scale(ScaleWithDifficulty.WHEN_CAUSED_BY_LIVING_NON_PLAYER));
             this.put(DamageType.OUTSIDE_BORDER, new DamageTypeInfo().bypassesArmor(true));
             this.put(DamageType.CAMPFIRE, new DamageTypeInfo().fire(true));
             this.put(DamageType.LIGHTNING_BOLT, new DamageTypeInfo());
@@ -85,7 +87,8 @@ public record DamageTypeInfo(boolean damagesHelmet, boolean bypassesArmor, boole
 	public DamageTypeInfo damagesHelmet(boolean damagesHelmet) {
 		return new DamageTypeInfo(
 				damagesHelmet, this.bypassesArmor, this.outOfWorld,
-                this.unblockable, this.fire, this.scaleWithDifficulty,
+                this.unblockable, this.bypassesResistance, this.bypassesEnchantments,
+                this.fire, this.scaleWithDifficulty,
                 this.magic, this.explosive, this.fall, this.thorns, this.projectile,
                 this.freeze
 		);
@@ -94,7 +97,8 @@ public record DamageTypeInfo(boolean damagesHelmet, boolean bypassesArmor, boole
 	public DamageTypeInfo bypassesArmor(boolean bypassesArmor) {
 		return new DamageTypeInfo(
                 this.damagesHelmet, bypassesArmor, this.outOfWorld,
-                this.unblockable, this.fire, this.scaleWithDifficulty,
+                this.unblockable, this.bypassesResistance, this.bypassesEnchantments,
+                this.fire, this.scaleWithDifficulty,
                 this.magic, this.explosive, this.fall, this.thorns, this.projectile,
                 this.freeze
 		);
@@ -103,7 +107,8 @@ public record DamageTypeInfo(boolean damagesHelmet, boolean bypassesArmor, boole
 	public DamageTypeInfo outOfWorld(boolean outOfWorld) {
 		return new DamageTypeInfo(
                 this.damagesHelmet, this.bypassesArmor, outOfWorld,
-                this.unblockable, this.fire, this.scaleWithDifficulty,
+                this.unblockable, this.bypassesResistance, this.bypassesEnchantments,
+                this.fire, this.scaleWithDifficulty,
                 this.magic, this.explosive, this.fall, this.thorns, this.projectile,
                 this.freeze
 		);
@@ -112,16 +117,38 @@ public record DamageTypeInfo(boolean damagesHelmet, boolean bypassesArmor, boole
 	public DamageTypeInfo unblockable(boolean unblockable) {
 		return new DamageTypeInfo(
                 this.damagesHelmet, this.bypassesArmor, this.outOfWorld,
-				unblockable, this.fire, this.scaleWithDifficulty,
+                unblockable, this.bypassesResistance, this.bypassesEnchantments,
+                this.fire, this.scaleWithDifficulty,
                 this.magic, this.explosive, this.fall, this.thorns, this.projectile,
                 this.freeze
 		);
 	}
 
+    public DamageTypeInfo bypassesResistance(boolean bypassesResistance) {
+        return new DamageTypeInfo(
+                this.damagesHelmet, this.bypassesArmor, this.outOfWorld,
+                this.unblockable, bypassesResistance, this.bypassesEnchantments,
+                this.fire, this.scaleWithDifficulty,
+                this.magic, this.explosive, this.fall, this.thorns, this.projectile,
+                this.freeze
+        );
+    }
+
+    public DamageTypeInfo bypassesEnchantments(boolean bypassesEnchantments) {
+        return new DamageTypeInfo(
+                this.damagesHelmet, this.bypassesArmor, this.outOfWorld,
+                this.unblockable, this.bypassesResistance, bypassesEnchantments,
+                this.fire, this.scaleWithDifficulty,
+                this.magic, this.explosive, this.fall, this.thorns, this.projectile,
+                this.freeze
+        );
+    }
+
 	public DamageTypeInfo fire(boolean fire) {
 		return new DamageTypeInfo(
                 this.damagesHelmet, this.bypassesArmor, this.outOfWorld,
-                this.unblockable, fire, this.scaleWithDifficulty,
+                this.unblockable, this.bypassesResistance, this.bypassesEnchantments,
+                fire, this.scaleWithDifficulty,
                 this.magic, this.explosive, this.fall, this.thorns, this.projectile,
                 this.freeze
 		);
@@ -130,7 +157,8 @@ public record DamageTypeInfo(boolean damagesHelmet, boolean bypassesArmor, boole
 	public DamageTypeInfo scale(ScaleWithDifficulty scale) {
 		return new DamageTypeInfo(
                 this.damagesHelmet, this.bypassesArmor, this.outOfWorld,
-                this.unblockable, this.fire, scale,
+                this.unblockable, this.bypassesResistance, this.bypassesEnchantments,
+                this.fire, scale,
                 this.magic, this.explosive, this.fall, this.thorns, this.projectile,
                 this.freeze
 		);
@@ -139,7 +167,8 @@ public record DamageTypeInfo(boolean damagesHelmet, boolean bypassesArmor, boole
 	public DamageTypeInfo magic(boolean magic) {
 		return new DamageTypeInfo(
                 this.damagesHelmet, this.bypassesArmor, this.outOfWorld,
-                this.unblockable, this.fire, this.scaleWithDifficulty,
+                this.unblockable, this.bypassesResistance, this.bypassesEnchantments,
+                this.fire, this.scaleWithDifficulty,
 				magic, this.explosive, this.fall, this.thorns, this.projectile,
                 this.freeze
 		);
@@ -148,7 +177,8 @@ public record DamageTypeInfo(boolean damagesHelmet, boolean bypassesArmor, boole
 	public DamageTypeInfo explosive(boolean explosive) {
 		return new DamageTypeInfo(
                 this.damagesHelmet, this.bypassesArmor, this.outOfWorld,
-                this.unblockable, this.fire, this.scaleWithDifficulty,
+                this.unblockable, this.bypassesResistance, this.bypassesEnchantments,
+                this.fire, this.scaleWithDifficulty,
                 this.magic, explosive, this.fall, this.thorns, this.projectile,
                 this.freeze
 		);
@@ -157,7 +187,8 @@ public record DamageTypeInfo(boolean damagesHelmet, boolean bypassesArmor, boole
 	public DamageTypeInfo fall(boolean fall) {
 		return new DamageTypeInfo(
                 this.damagesHelmet, this.bypassesArmor, this.outOfWorld,
-                this.unblockable, this.fire, this.scaleWithDifficulty,
+                this.unblockable, this.bypassesResistance, this.bypassesEnchantments,
+                this.fire, this.scaleWithDifficulty,
                 this.magic, this.explosive, fall, this.thorns, this.projectile,
                 this.freeze
 		);
@@ -166,7 +197,8 @@ public record DamageTypeInfo(boolean damagesHelmet, boolean bypassesArmor, boole
 	public DamageTypeInfo thorns(boolean thorns) {
 		return new DamageTypeInfo(
                 this.damagesHelmet, this.bypassesArmor, this.outOfWorld,
-                this.unblockable, this.fire, this.scaleWithDifficulty,
+                this.unblockable, this.bypassesResistance, this.bypassesEnchantments,
+                this.fire, this.scaleWithDifficulty,
                 this.magic, this.explosive, this.fall, thorns, this.projectile,
                 this.freeze
 		);
@@ -175,7 +207,8 @@ public record DamageTypeInfo(boolean damagesHelmet, boolean bypassesArmor, boole
 	public DamageTypeInfo projectile(boolean projectile) {
 		return new DamageTypeInfo(
                 this.damagesHelmet, this.bypassesArmor, this.outOfWorld,
-                this.unblockable, this.fire, this.scaleWithDifficulty,
+                this.unblockable, this.bypassesResistance, this.bypassesEnchantments,
+                this.fire, this.scaleWithDifficulty,
                 this.magic, this.explosive, this.fall, this.thorns, projectile,
                 this.freeze
 		);
@@ -184,7 +217,8 @@ public record DamageTypeInfo(boolean damagesHelmet, boolean bypassesArmor, boole
 	public DamageTypeInfo freeze(boolean freeze) {
 		return new DamageTypeInfo(
                 this.damagesHelmet, this.bypassesArmor, this.outOfWorld,
-                this.unblockable, this.fire, this.scaleWithDifficulty,
+                this.unblockable, this.bypassesResistance, this.bypassesEnchantments,
+                this.fire, this.scaleWithDifficulty,
                 this.magic, this.explosive, this.fall, this.thorns, this.projectile,
 				freeze
 		);
