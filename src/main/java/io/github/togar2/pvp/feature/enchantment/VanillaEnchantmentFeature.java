@@ -125,16 +125,18 @@ public class VanillaEnchantmentFeature implements EnchantmentFeature, Registrabl
 
 	@Override
 	public double getExplosionKnockback(LivingEntity entity, double strength) {
-		int level = this.getEquipmentLevel(entity, Enchantment.BLAST_PROTECTION);
-		if (level > 0) strength -= Math.floor((strength * (double) (level * 0.15f)));
-		return strength;
+		var level = this.getEquipmentLevel(entity, Enchantment.BLAST_PROTECTION);
+		var resistance = Math.min(level * 0.15, 1.0);
+
+		return strength * (1.0 - resistance);
 	}
 
 	@Override
 	public int getFireDuration(LivingEntity entity, int duration) {
-		int level = this.getEquipmentLevel(entity, Enchantment.FIRE_PROTECTION);
-		if (level > 0) duration -= (int) Math.floor((float) duration * (float) level * 0.15F);
-		return duration;
+		var level = this.getEquipmentLevel(entity, Enchantment.FIRE_PROTECTION);
+		var burningTime = Math.max(1.0 - level * 0.15, 0.0);
+
+		return (int) Math.ceil(duration * burningTime);
 	}
 
 	@Override
