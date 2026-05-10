@@ -82,17 +82,19 @@ public class VanillaSweepingFeature implements SweepingFeature {
 
 			// Apply sweeping knockback and damage to the entity
 			if (attacker.getPosition().distanceSquared(nearbyEntity.getPosition()) < 9.0) {
-				affectedEntities.add(living);
-                this.knockbackFeature.applySweepingKnockback(attacker, target);
-
 				float currentDamage = sweepingDamage + this.enchantmentFeature.getAttackDamage(
-						attacker.getItemInMainHand(), EntityGroup.ofEntity(target));
+						attacker.getItemInMainHand(), EntityGroup.ofEntity(living));
 
-				living.damage(new Damage(
+				var damaged = living.damage(new Damage(
 						attacker instanceof Player ? DamageType.PLAYER_ATTACK : DamageType.MOB_ATTACK,
 						attacker, attacker,
 						null, currentDamage
 				));
+
+				if (damaged) {
+					affectedEntities.add(living);
+					this.knockbackFeature.applySweepingKnockback(attacker, living);
+				}
 			}
 		}
 
