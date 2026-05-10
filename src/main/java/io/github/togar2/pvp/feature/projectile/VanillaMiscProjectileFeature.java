@@ -104,11 +104,7 @@ public class VanillaMiscProjectileFeature implements MiscProjectileFeature, Regi
 					0.5f, 0.4f / (random.nextFloat() * 0.4f + 0.8f)
 			), player);
 
-			if (enderpearl) {
-                this.itemCooldownFeature.setCooldown(player, Material.ENDER_PEARL, 20);
-			}
-
-			if (windCharge) {
+			if (enderpearl || windCharge) {
 				this.itemCooldownFeature.setCooldown(player, stack);
 			}
 
