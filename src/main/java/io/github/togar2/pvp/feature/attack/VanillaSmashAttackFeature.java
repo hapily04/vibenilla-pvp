@@ -17,6 +17,7 @@ import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.LivingEntity;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.attribute.Attribute;
+import net.minestom.server.entity.metadata.other.ArmorStandMeta;
 import net.minestom.server.item.enchant.Enchantment;
 import net.minestom.server.network.packet.server.play.ParticlePacket;
 import net.minestom.server.particle.Particle;
@@ -201,7 +202,9 @@ public class VanillaSmashAttackFeature implements SmashAttackFeature {
 		for (Entity nearbyEntity : target.getInstance().getNearbyEntities(target.getPosition(), SMASH_ATTACK_KNOCKBACK_RADIUS)) {
 			if (nearbyEntity == attacker || nearbyEntity == target) continue;
 			if (!(nearbyEntity instanceof LivingEntity nearbyLiving)) continue;
-			if (nearbyEntity.getEntityType() == EntityType.ARMOR_STAND) continue;
+			if (nearbyEntity.getEntityType() == EntityType.ARMOR_STAND
+					&& nearbyEntity.getEntityMeta() instanceof ArmorStandMeta armorStandMeta
+					&& armorStandMeta.isMarker()) continue;
 			if (nearbyEntity instanceof Player nearbyPlayer && nearbyPlayer.getGameMode() == GameMode.SPECTATOR) continue;
 			if (nearbyEntity instanceof Player nearbyPlayer && nearbyPlayer.getGameMode() == GameMode.CREATIVE && nearbyPlayer.isFlying()) continue;
 			if (target.getPosition().distanceSquared(nearbyEntity.getPosition()) > SMASH_ATTACK_KNOCKBACK_RADIUS * SMASH_ATTACK_KNOCKBACK_RADIUS) continue;
