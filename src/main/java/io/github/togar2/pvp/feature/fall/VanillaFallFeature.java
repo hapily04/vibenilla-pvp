@@ -210,7 +210,7 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 
 		if ((entity instanceof Player player && player.isFlying())
 				|| entity.hasEffect(PotionEffect.LEVITATION)
-				|| entity.hasEffect(PotionEffect.SLOW_FALLING) || dy > 0) {
+				|| entity.hasEffect(PotionEffect.SLOW_FALLING)) {
 			entity.setTag(FALL_DISTANCE, 0.0);
 			return;
 		}
