@@ -128,9 +128,11 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 				);
 
 				Vec centerPoint = new Vec(this.getCenterX(), this.getCenterY(), this.getCenterZ());
+				Entity sourceEntity = this.getSourceEntity(instance);
 
 				Vec src = centerPoint.sub(0, explosionBox.height() / 2, 0);
 				List<Entity> entities = new ArrayList<>(instance.getEntities().stream()
+						.filter(entity -> entity != sourceEntity)
 						.filter(entity -> explosionBox.intersectEntity(src, entity))
 						.toList());
 
@@ -144,8 +146,8 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 					damageObj = new Damage(DamageType.BAD_RESPAWN_POINT, null, null, null, 0);
 				} else {
 					Entity causingEntity = this.getCausingEntity(instance);
-					damageObj = new Damage(causingEntity == null ? DamageType.EXPLOSION : DamageType.PLAYER_EXPLOSION,
-							causingEntity, causingEntity, null, 0);
+					damageObj = new Damage(causingEntity == null || sourceEntity == null ? DamageType.EXPLOSION : DamageType.PLAYER_EXPLOSION,
+							sourceEntity, causingEntity, null, 0);
 				}
 
 				// Blocks and entities list may be modified during the event call
@@ -266,19 +268,24 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 					}
 				}
 
-                this.postSend(instance, blocks);
+				this.postSend(instance, blocks);
 			}
 
 			private @Nullable Entity getCausingEntity(Instance instance) {
-				Entity causingEntity = null;
-				if (additionalData != null && additionalData.keySet().contains("causingEntity")) {
-					UUID causingUuid = UUID.fromString(additionalData.getString("causingEntity"));
-					causingEntity = instance.getEntities().stream()
-							.filter(entity -> entity.getUuid().equals(causingUuid))
-							.findAny().orElse(null);
-				}
+				return this.getEntity(instance, "causingEntity");
+			}
 
-				return causingEntity;
+			private @Nullable Entity getSourceEntity(Instance instance) {
+				return this.getEntity(instance, "sourceEntity");
+			}
+
+			private @Nullable Entity getEntity(Instance instance, String key) {
+				if (additionalData == null || !additionalData.keySet().contains(key)) return null;
+
+				UUID uuid = UUID.fromString(additionalData.getString(key));
+				return instance.getEntities().stream()
+						.filter(entity -> entity.getUuid().equals(uuid))
+						.findAny().orElse(null);
 			}
 		};
 	}
