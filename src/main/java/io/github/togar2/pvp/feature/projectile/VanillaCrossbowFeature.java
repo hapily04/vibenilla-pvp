@@ -167,7 +167,6 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 			if (stack.material() != Material.CROSSBOW) return;
 
 			this.loadCrossbowOnRelease(player, event.getHand(), stack, player.getCurrentItemUseTime());
-			player.removeTag(LOADED_DURING_USE);
 		});
 
 		node.addListener(PlayerCancelItemUseEvent.class, event -> {
@@ -175,7 +174,6 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 			if (stack.material() != Material.CROSSBOW) return;
 
 			this.loadCrossbowOnRelease(event.getPlayer(), event.getHand(), stack, event.getUseDuration());
-			event.getPlayer().removeTag(LOADED_DURING_USE);
 		});
 	}
 
