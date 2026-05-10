@@ -9,7 +9,6 @@ import net.minestom.server.collision.BoundingBox;
 import net.minestom.server.collision.CollisionUtils;
 import net.minestom.server.coordinate.BlockVec;
 import net.minestom.server.coordinate.Point;
-import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.EntityType;
@@ -309,6 +308,9 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 	}
 
 	public static boolean noBlocking(Instance instance, Point start, Point end) {
-		return CollisionUtils.isLineOfSightReachingShape(instance, null, start, end, new BoundingBox(1, 1, 1), new Pos(0, 0, 0));
+		var result = CollisionUtils.handlePhysics(instance, null, new BoundingBox(0.0, 0.0, 0.0),
+				start.asPos(), end.sub(start).asVec(), null, false);
+
+		return result.newPosition().samePoint(end);
 	}
 }

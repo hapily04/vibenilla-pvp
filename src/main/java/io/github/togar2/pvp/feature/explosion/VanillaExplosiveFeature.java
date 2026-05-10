@@ -73,6 +73,7 @@ public class VanillaExplosiveFeature implements ExplosiveFeature, RegistrableFea
 			Block block = instance.getBlock(position);
 			if (!block.compare(Block.TNT)) return;
 
+			this.installExplosionSupplier(instance);
             this.explosionFeature.primeExplosive(instance, position, new ByPlayer(player), 80);
 			instance.setBlock(position, Block.AIR);
 
@@ -91,6 +92,8 @@ public class VanillaExplosiveFeature implements ExplosiveFeature, RegistrableFea
 			Instance instance = event.getInstance();
 			Block block = instance.getBlock(event.getPosition());
 			if (!block.compare(Block.OBSIDIAN) && !block.compare(Block.BEDROCK)) return;
+
+			this.installExplosionSupplier(instance);
 
 			Point above = event.getPosition().add(0, 1, 0);
 			if (!instance.getBlock(above).isAir()) return;
@@ -167,6 +170,8 @@ public class VanillaExplosiveFeature implements ExplosiveFeature, RegistrableFea
                  respawnAnchorWorks = worksInDimension;
              }
 
+			this.installExplosionSupplier(instance);
+
 			if (instance.getExplosionSupplier() != null && !respawnAnchorWorks) {
 				var anchorExplodeEvent = new AnchorExplodeEvent(player, event.getBlockPosition());
 				EventDispatcher.callCancellable(anchorExplodeEvent, () -> {
@@ -186,5 +191,14 @@ public class VanillaExplosiveFeature implements ExplosiveFeature, RegistrableFea
 
 			event.setBlockingItemUse(true);
 		});
+	}
+
+	private void installExplosionSupplier(Instance instance) {
+		if (instance.getExplosionSupplier() != null) return;
+
+		var explosionSupplier = this.explosionFeature.getExplosionSupplier();
+		if (explosionSupplier == null) return;
+
+		instance.setExplosionSupplier(explosionSupplier);
 	}
 }
