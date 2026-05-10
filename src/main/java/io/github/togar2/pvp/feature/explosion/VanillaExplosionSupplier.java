@@ -239,7 +239,12 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 					records[i * 3 + 2] = z;
 				}
 
+				var centerPoint = new Vec(centerX, centerY, centerZ);
+				var explosionParticle = this.getStrength() < 2.0F ? Particle.EXPLOSION : Particle.EXPLOSION_EMITTER;
+
 				for (Player player : instance.getPlayers()) {
+					if (player.getPosition().distanceSquared(centerPoint) >= 4096.0) continue;
+
 					var knockbackVec = this.playerKnockback.getOrDefault(player, Vec.ZERO);
 					player.sendPacket(
 							new ExplosionPacket(
@@ -247,7 +252,7 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 									this.getStrength(),
 									blocks.size(),
 									knockbackVec,
-									Particle.EXPLOSION,
+									explosionParticle,
 									SoundEvent.ENTITY_GENERIC_EXPLODE,
 									VanillaExplosionSupplier.this.PARTICLES
 							)
