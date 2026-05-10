@@ -96,7 +96,7 @@ public class ThrownTrident extends AbstractArrow {
             this.enchantmentFeature.onTargetDamaged(livingShooter, living);
 		}
 
-		if (damaged && this.canChannel(living.getPosition())) {
+		if (damaged && this.canChannel(living)) {
 			this.channelLightning(living.getPosition());
 		}
 
@@ -157,7 +157,7 @@ public class ThrownTrident extends AbstractArrow {
 	}
 
 	private boolean canChannel(Point point) {
-		if (this.tridentItem.get(DataComponents.ENCHANTMENTS).level(Enchantment.CHANNELING) <= 0) return false;
+		if (!this.hasChanneling()) return false;
 
 		var instance = this.getInstance();
 
@@ -166,6 +166,22 @@ public class ThrownTrident extends AbstractArrow {
 		if (!instance.getCachedDimensionType().hasSkylight() || instance.getCachedDimensionType().hasCeiling()) return false;
 
 		return FluidUtil.isRainingAt(instance, point.blockX(), point.blockY(), point.blockZ());
+	}
+
+	private boolean canChannel(Entity entity) {
+		if (!this.hasChanneling()) return false;
+
+		var instance = this.getInstance();
+
+		if (instance == null) return false;
+		if (instance.getWeather().thunderLevel() <= 0.0F) return false;
+		if (!instance.getCachedDimensionType().hasSkylight() || instance.getCachedDimensionType().hasCeiling()) return false;
+
+		return FluidUtil.isInRain(entity);
+	}
+
+	private boolean hasChanneling() {
+		return this.tridentItem.get(DataComponents.ENCHANTMENTS).level(Enchantment.CHANNELING) > 0;
 	}
 
 	private void channelLightning(Point point) {
