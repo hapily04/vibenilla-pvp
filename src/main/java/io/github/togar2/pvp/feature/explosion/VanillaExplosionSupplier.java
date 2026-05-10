@@ -273,12 +273,13 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 					if (additionalData.getBoolean("fire")) {
 						ThreadLocalRandom random = ThreadLocalRandom.current();
 						for (Point point : blocks) {
+							var belowBlock = instance.getBlock(point.sub(0, 1, 0));
 							if (random.nextInt(3) != 0
 									|| !instance.getBlock(point).isAir()
-									|| !instance.getBlock(point.sub(0, 1, 0)).isSolid())
+									|| !belowBlock.isSolid())
 								continue;
 
-							instance.setBlock(point, Block.FIRE);
+							instance.setBlock(point, this.getFireBlock(belowBlock));
 						}
 					}
 				}
@@ -338,6 +339,14 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 				}
 
 				return explosionResistance;
+			}
+
+			private Block getFireBlock(Block belowBlock) {
+				if (belowBlock.compare(Block.SOUL_SAND) || belowBlock.compare(Block.SOUL_SOIL)) {
+					return Block.SOUL_FIRE;
+				}
+
+				return Block.FIRE;
 			}
 		};
 	}
