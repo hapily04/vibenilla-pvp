@@ -1,6 +1,7 @@
 package io.github.togar2.pvp.entity.projectile;
 
 import io.github.togar2.pvp.enchantment.EntityGroup;
+import io.github.togar2.pvp.entity.explosion.CrystalEntity;
 import io.github.togar2.pvp.feature.enchantment.EnchantmentFeature;
 import io.github.togar2.pvp.utils.EntityUtil;
 import io.github.togar2.pvp.utils.FluidUtil;
@@ -81,14 +82,29 @@ public class ThrownTrident extends AbstractArrow {
 
 	@Override
 	protected boolean canHit(Entity entity) {
-		return !this.damageDone && super.canHit(entity);
+		return !this.damageDone && (super.canHit(entity) || entity instanceof CrystalEntity);
 	}
 
 	@Override
 	public boolean onHit(@NotNull Entity entity) {
 		if (this.damageDone) return false;
-		if (!(entity instanceof LivingEntity living)) return false;
 		Entity shooter = this.getShooter();
+
+		if (entity instanceof CrystalEntity crystal) {
+			var damageObj = new Damage(DamageType.TRIDENT, this, shooter == null ? this : shooter, null, 8.0F);
+			crystal.damage(damageObj);
+			this.damageDone = true;
+
+			this.setVelocity(this.velocity.mul(-0.02, -0.2, -0.02));
+			this.getViewersAsAudience().playSound(Sound.sound(
+					SoundEvent.ITEM_TRIDENT_HIT, Sound.Source.NEUTRAL,
+					1.0f, 1.0f
+			), this.position.x(), this.position.y(), this.position.z());
+
+			return false;
+		}
+
+		if (!(entity instanceof LivingEntity living)) return false;
 
 		var damage = 8.0F + this.enchantmentFeature.getAttackDamage(this.tridentItem, EntityGroup.ofEntity(living));
 		var damageObj = new Damage(DamageType.TRIDENT, this, shooter == null ? this : shooter, null, damage);

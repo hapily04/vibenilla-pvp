@@ -1,5 +1,6 @@
 package io.github.togar2.pvp.entity.projectile;
 
+import io.github.togar2.pvp.entity.explosion.CrystalEntity;
 import io.github.togar2.pvp.events.PickupEntityEvent;
 import io.github.togar2.pvp.feature.enchantment.EnchantmentFeature;
 import io.github.togar2.pvp.utils.EntityUtil;
@@ -142,13 +143,12 @@ public abstract class AbstractArrow extends CustomEntityProjectile {
 
 	@Override
 	protected boolean canHit(Entity entity) {
-		return super.canHit(entity) && !piercingIgnore.contains(entity.getEntityId());
+		return (super.canHit(entity) || entity instanceof CrystalEntity) && !piercingIgnore.contains(entity.getEntityId());
 	}
 
 	@Override
 	public boolean onHit(@NotNull Entity entity) {
 		if (piercingIgnore.contains(entity.getEntityId())) return false;
-		if (!(entity instanceof LivingEntity living)) return false;
 
 		ThreadLocalRandom random = ThreadLocalRandom.current();
 
@@ -176,6 +176,25 @@ public abstract class AbstractArrow extends CustomEntityProjectile {
 				null, damage
 		);
 		Pos position = this.getPosition();
+
+		if (entity instanceof CrystalEntity crystal) {
+			if (crystal.damage(damageObj)) {
+				if (!isSilent()) {
+					getViewersAsAudience().playSound(Sound.sound(
+							getSound(), Sound.Source.NEUTRAL,
+							1.0f, 1.2f / (random.nextFloat() * 0.2f + 0.9f)
+					), position.x(), position.y(), position.z());
+				}
+
+				return getPiercingLevel() <= 0;
+			} else {
+				setVelocity(getVelocity().mul(-0.5 * 0.2));
+
+				return false;
+			}
+		}
+
+		if (!(entity instanceof LivingEntity living)) return false;
 
 		if (living.damage(damageObj)) {
 			if (entity.getEntityType() == EntityType.ENDERMAN) return false;
