@@ -55,24 +55,24 @@ public abstract class AbstractArrow extends CustomEntityProjectile {
 
 	@Override
 	public void update(long time) {
-		if (onGround) {
-			stuckTime++;
+		if (this.isStuck()) {
+			this.stuckTime++;
 		} else {
-			stuckTime = 0;
+			this.stuckTime = 0;
 		}
 
-		if (pickupDelay > 0) {
-			pickupDelay--;
+		if (this.pickupDelay > 0) {
+			this.pickupDelay--;
 		}
 
-		if (fireTicksLeft > 0) {
-			if (entityMeta.isOnFire()) {
-				fireTicksLeft--;
-				if (fireTicksLeft == 0) {
-					entityMeta.setOnFire(false);
+		if (this.fireTicksLeft > 0) {
+			if (this.entityMeta.isOnFire()) {
+				this.fireTicksLeft--;
+				if (this.fireTicksLeft == 0) {
+					this.entityMeta.setOnFire(false);
 				}
 			} else {
-				fireTicksLeft = 0;
+				this.fireTicksLeft = 0;
 			}
 		}
 
