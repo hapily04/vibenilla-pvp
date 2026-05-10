@@ -311,6 +311,6 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 		var result = CollisionUtils.handlePhysics(instance, null, new BoundingBox(0.0, 0.0, 0.0),
 				start.asPos(), end.sub(start).asVec(), null, false);
 
-		return result.newPosition().samePoint(end);
+		return result.newPosition().samePoint(end, 1.0E-5);
 	}
 }
