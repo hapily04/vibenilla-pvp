@@ -52,6 +52,7 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 
 	private static final Tag<Boolean> START_SOUND_PLAYED = Tag.Transient("StartSoundPlayed");
 	private static final Tag<Boolean> MID_LOAD_SOUND_PLAYED = Tag.Transient("MidLoadSoundPlayed");
+	private static final Tag<Boolean> LOADED_DURING_USE = Tag.Transient("LoadedDuringUse");
 
 	private final FeatureConfiguration configuration;
 
@@ -83,6 +84,10 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 				// Make sure the animation event is not called, because this is not an animation
 				event.setCancelled(true);
 
+				if (Boolean.TRUE.equals(player.getTag(LOADED_DURING_USE))) {
+					return;
+				}
+
 				stack = this.performCrossbowShooting(player, event.getHand(), stack, this.getCrossbowPower(stack), 1.0);
 				player.setItemInHand(event.getHand(), this.setCrossbowProjectile(stack, null));
 			} else {
@@ -101,8 +106,15 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 
 			// If not charging crossbow, return
 			LivingEntityMeta meta = (LivingEntityMeta) player.getEntityMeta();
-			if (!meta.isHandActive() || player.getItemInHand(meta.getActiveHand()).material() != Material.CROSSBOW)
+			if (!meta.isHandActive()) {
+				player.removeTag(LOADED_DURING_USE);
 				return;
+			}
+
+			if (player.getItemInHand(meta.getActiveHand()).material() != Material.CROSSBOW) {
+				player.removeTag(LOADED_DURING_USE);
+				return;
+			}
 
 			PlayerHand hand = player.getPlayerMeta().getActiveHand();
 			ItemStack stack = player.getItemInHand(hand);
@@ -145,6 +157,7 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 
 				this.playCrossbowLoadingEndSound(player);
 				player.setItemInHand(hand, stack);
+				player.setTag(LOADED_DURING_USE, true);
 			}
 		});
 
@@ -154,6 +167,7 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 			if (stack.material() != Material.CROSSBOW) return;
 
 			this.loadCrossbowOnRelease(player, event.getHand(), stack, player.getCurrentItemUseTime());
+			player.removeTag(LOADED_DURING_USE);
 		});
 
 		node.addListener(PlayerCancelItemUseEvent.class, event -> {
@@ -161,6 +175,7 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 			if (stack.material() != Material.CROSSBOW) return;
 
 			this.loadCrossbowOnRelease(event.getPlayer(), event.getHand(), stack, event.getUseDuration());
+			event.getPlayer().removeTag(LOADED_DURING_USE);
 		});
 	}
 
