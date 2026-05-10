@@ -32,7 +32,8 @@ public class FluidUtil {
 	}
 
 	public static boolean isTouchingWater(Entity entity, Block block, int blockY) {
-		if (!block.compare(Block.WATER) && !block.compare(Block.BUBBLE_COLUMN)) return false;
+		if (!block.compare(Block.WATER) && !block.compare(Block.BUBBLE_COLUMN)
+				&& !"true".equals(block.getProperty("waterlogged"))) return false;
 		if (entity.getPosition().y() + entity.getBoundingBox().height() < blockY) return false;
 		if (entity.getPosition().y() > (blockY + getHeight(block))) return false;
 		return true;

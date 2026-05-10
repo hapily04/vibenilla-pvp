@@ -5,6 +5,7 @@ import io.github.togar2.pvp.feature.RegistrableFeature;
 import io.github.togar2.pvp.feature.config.DefinedFeature;
 import io.github.togar2.pvp.feature.config.FeatureConfiguration;
 import io.github.togar2.pvp.feature.state.PlayerStateFeature;
+import io.github.togar2.pvp.utils.FluidUtil;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.MinecraftServer;
@@ -85,6 +86,16 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 		double dy = newPos.y() - currPos.y();
 		double fallDistance = this.getFallDistance(entity);
 
+		if (FluidUtil.isTouchingWater(entity) || this.isTouchingSweetBerryBush(entity)) {
+			entity.setTag(FALL_DISTANCE, 0.0);
+			return;
+		}
+
+		if (this.isTouchingLava(entity)) {
+			fallDistance *= 0.5;
+			entity.setTag(FALL_DISTANCE, fallDistance);
+		}
+
 		if ((entity instanceof Player player && player.isFlying())
 				|| entity.hasEffect(PotionEffect.LEVITATION)
 				|| entity.hasEffect(PotionEffect.SLOW_FALLING) || dy > 0) {
@@ -104,6 +115,8 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 
 		Point landingPos = this.getLandingPos(entity, newPos);
 		Block block = entity.getInstance().getBlock(landingPos);
+		var adjustedFallDistance = this.adjustFallDistance(block, fallDistance);
+		var damageModifier = this.getDamageModifier(block);
 
 		if (entity.hasTag(EXTRA_FALL_PARTICLES) && entity.getTag(EXTRA_FALL_PARTICLES) && fallDistance > 0.0) {
 			Vec position = landingPos.asVec().apply(Vec.Operator.FLOOR).add(0.5, 1, 0.5);
@@ -120,9 +133,9 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 		}
 
 		double safeFallDistance = entity.getAttributeValue(Attribute.SAFE_FALL_DISTANCE);
-		if (fallDistance > safeFallDistance) {
+		if (adjustedFallDistance > safeFallDistance) {
 			if (!block.isAir()) {
-				double damageDistance = Math.ceil(fallDistance - safeFallDistance);
+				double damageDistance = Math.floor(adjustedFallDistance + 1.0E-6 - safeFallDistance);
 				double particleMultiplier = Math.min(0.2 + damageDistance / 15.0, 2.5);
 				int particleCount = (int) (150 * particleMultiplier);
 
@@ -139,7 +152,7 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 		entity.setTag(FALL_DISTANCE, 0.0);
 
 		if (entity instanceof Player player && player.getGameMode().invulnerable()) return;
-		int damage = this.getFallDamage(entity, fallDistance);
+		int damage = this.getFallDamage(entity, adjustedFallDistance, damageModifier);
 		if (damage > 0) {
             this.playFallSound(entity, damage);
 			entity.damage(DamageType.FALL, damage);
@@ -160,8 +173,14 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 
 	@Override
 	public int getFallDamage(LivingEntity entity, double fallDistance) {
+		return this.getFallDamage(entity, fallDistance, 1.0);
+	}
+
+	protected int getFallDamage(LivingEntity entity, double fallDistance, double damageModifier) {
 		double safeFallDistance = entity.getAttributeValue(Attribute.SAFE_FALL_DISTANCE);
-		return (int) Math.ceil((fallDistance - safeFallDistance) * entity.getAttributeValue(Attribute.FALL_DAMAGE_MULTIPLIER));
+		return (int) Math.floor((fallDistance + 1.0E-6 - safeFallDistance)
+				* damageModifier
+				* entity.getAttributeValue(Attribute.FALL_DAMAGE_MULTIPLIER));
 	}
 
 	@Override
@@ -209,5 +228,40 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 		}
 
 		return offset;
+	}
+
+	private double adjustFallDistance(Block block, double fallDistance) {
+		if (this.isBed(block)) return fallDistance * 0.5;
+
+		return fallDistance;
+	}
+
+	private double getDamageModifier(Block block) {
+		if (block.compare(Block.SLIME_BLOCK)) return 0.0;
+		if (block.compare(Block.HAY_BLOCK) || block.compare(Block.HONEY_BLOCK)) return 0.2;
+
+		return 1.0;
+	}
+
+	private boolean isBed(Block block) {
+		return block.key().value().endsWith("_bed");
+	}
+
+	private boolean isTouchingLava(LivingEntity entity) {
+		return this.isTouchingBlock(entity, Block.LAVA);
+	}
+
+	private boolean isTouchingSweetBerryBush(LivingEntity entity) {
+		return this.isTouchingBlock(entity, Block.SWEET_BERRY_BUSH);
+	}
+
+	private boolean isTouchingBlock(LivingEntity entity, Block block) {
+		var instance = entity.getInstance();
+
+		if (instance == null) return false;
+
+		var position = entity.getPosition();
+
+		return instance.getBlock(position).compare(block);
 	}
 }
