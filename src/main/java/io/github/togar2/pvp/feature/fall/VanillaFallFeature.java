@@ -9,19 +9,23 @@ import io.github.togar2.pvp.utils.FluidUtil;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.MinecraftServer;
+import net.minestom.server.component.DataComponents;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
+import net.minestom.server.entity.EquipmentSlot;
 import net.minestom.server.entity.LivingEntity;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.entity.damage.DamageType;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.entity.EntityTickEvent;
+import net.minestom.server.event.player.PlayerStartFlyingWithElytraEvent;
 import net.minestom.server.event.player.PlayerMoveEvent;
 import net.minestom.server.event.trait.EntityInstanceEvent;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
+import net.minestom.server.item.ItemStack;
 import net.minestom.server.network.packet.server.play.ParticlePacket;
 import net.minestom.server.particle.Particle;
 import net.minestom.server.potion.PotionEffect;
@@ -61,6 +65,14 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 
 	@Override
 	public void init(EventNode<EntityInstanceEvent> node) {
+		node.addListener(PlayerStartFlyingWithElytraEvent.class, event -> {
+			var player = event.getPlayer();
+
+			if (!this.canGlide(player)) {
+				player.setFlyingWithElytra(false);
+			}
+		});
+
 		// For living non-player entities, handle fall damage every tick
 		node.addListener(EntityTickEvent.class, event -> {
 			if (!(event.getEntity() instanceof LivingEntity livingEntity)) return;
@@ -80,6 +92,43 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 					event.getNewPosition(), event.isOnGround()
 			);
 		});
+	}
+
+	private boolean canGlide(Player player) {
+		if (player.isFlying()
+				|| player.isOnGround()
+				|| player.getVehicle() != null
+				|| player.hasEffect(PotionEffect.LEVITATION)
+				|| FluidUtil.isTouchingWater(player)) {
+			return false;
+		}
+
+		for (var slot : EquipmentSlot.values()) {
+			if (this.canGlideUsing(player.getEquipment(slot), slot)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private boolean canGlideUsing(ItemStack stack, EquipmentSlot slot) {
+		var equippable = stack.get(DataComponents.EQUIPPABLE);
+
+		return stack.has(DataComponents.GLIDER)
+				&& equippable != null
+				&& slot == equippable.slot()
+				&& !this.nextDamageWillBreak(stack);
+	}
+
+	private boolean nextDamageWillBreak(ItemStack stack) {
+		if (stack.has(DataComponents.UNBREAKABLE)) return false;
+
+		var maxDamage = stack.get(DataComponents.MAX_DAMAGE, 0);
+
+		if (maxDamage <= 0) return false;
+
+		return stack.get(DataComponents.DAMAGE, 0) + 1 >= maxDamage;
 	}
 
 	public void handleFallDamage(LivingEntity entity, Pos currPos, Pos newPos, boolean onGround) {
