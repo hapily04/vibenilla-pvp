@@ -30,6 +30,7 @@ import net.minestom.server.entity.metadata.LivingEntityMeta;
 import net.minestom.server.entity.metadata.other.SlimeMeta;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.event.EventNode;
+import net.minestom.server.event.entity.EntityDamageEvent;
 import net.minestom.server.event.entity.EntityDeathEvent;
 import net.minestom.server.event.entity.EntityPotionAddEvent;
 import net.minestom.server.event.entity.EntityPotionRemoveEvent;
@@ -74,6 +75,9 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 	private static final int WEAVING_RADIUS = 1;
 	private static final int WEAVING_LEVEL_EVENT = 3018;
 	private static final double BLOCK_EVENT_DISTANCE = 64.0;
+	private static final double INFESTED_CHANCE = 0.1;
+	private static final double INFESTED_VELOCITY_SCALE = 0.3;
+	private static final double INFESTED_VERTICAL_VELOCITY_SCALE = 1.5;
 
 	private final FeatureConfiguration configuration;
 
@@ -102,6 +106,20 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 			}
 
 			event.getEntity().clearEffects();
+		});
+
+		node.addListener(EntityDamageEvent.class, event -> {
+			var entity = event.getEntity();
+
+			if (!entity.hasEffect(PotionEffect.INFESTED)) return;
+
+			var previousHealth = entity.getHealth();
+
+			entity.scheduler().scheduleNextProcess(() -> {
+				if (entity.isRemoved() || entity.getHealth() >= previousHealth) return;
+
+				this.spawnInfestedSilverfish(entity);
+			});
 		});
 
 		node.addListener(EntityTickEvent.class, event -> {
@@ -312,6 +330,38 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 		for (var position : positions) {
 			instance.setBlock(position, Block.COBWEB);
 			EffectUtil.sendNearby(instance, WorldEvent.fromId(WEAVING_LEVEL_EVENT), position.blockX(), position.blockY(), position.blockZ(), 0, BLOCK_EVENT_DISTANCE, false);
+		}
+	}
+
+	private void spawnInfestedSilverfish(LivingEntity entity) {
+		if (!entity.hasEffect(PotionEffect.INFESTED)) return;
+
+		var instance = entity.getInstance();
+
+		if (instance == null) return;
+
+		var random = ThreadLocalRandom.current();
+
+		if (random.nextDouble() > INFESTED_CHANCE) return;
+
+		var spawnCount = random.nextInt(1, 3);
+		var position = entity.getPosition();
+
+		for (var silverfishNumber = 0; silverfishNumber < spawnCount; silverfishNumber++) {
+			var silverfish = new Entity(EntityType.SILVERFISH);
+			var randomAngle = random.nextDouble(-Math.PI / 2.0, Math.PI / 2.0);
+			var velocity = position.direction()
+					.mul(INFESTED_VELOCITY_SCALE)
+					.mul(1.0, INFESTED_VERTICAL_VELOCITY_SCALE, 1.0)
+					.rotateAroundY(randomAngle);
+
+			silverfish.setVelocity(velocity.mul(ServerFlag.SERVER_TICKS_PER_SECOND));
+			silverfish.setInstance(instance, new Pos(position.x(), position.y() + entity.getBoundingBox().height() / 2.0, position.z(), random.nextFloat(360.0F), 0.0F));
+			entity.getViewersAsAudience().playSound(Sound.sound(
+					SoundEvent.ENTITY_SILVERFISH_HURT,
+					Sound.Source.HOSTILE,
+					1.0F, 1.0F
+			), silverfish);
 		}
 	}
 
