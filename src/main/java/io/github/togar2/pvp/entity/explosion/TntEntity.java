@@ -37,23 +37,30 @@ public class TntEntity extends Entity {
 	public void update(long time) {
 		if (this.onGround) this.velocity = this.velocity.mul(0.7, -0.5, 0.7);
 		int newFuse = this.getFuse() - 1;
-        this.setFuse(newFuse);
+		this.setFuse(newFuse);
 		if (newFuse <= 0) {
 			Instance instance = this.instance;
 			Pos position = this.position;
 			BoundingBox boundingBox = this.boundingBox;
 
-            this.remove();
-			if (instance.getExplosionSupplier() != null) instance.explode(
-					(float) position.x(),
-					(float) (position.y() + boundingBox.height() * 0.0625),
-					(float) position.z(),
-					4.0f,
-                    this.causingEntity == null ? null
-							: CompoundBinaryTag.builder()
-								.putString("causingEntity", this.causingEntity.getUuid().toString())
-								.build()
-			);
+			if (instance.getExplosionSupplier() != null) {
+				var additionalData = CompoundBinaryTag.builder()
+						.putString("sourceEntity", this.getUuid().toString());
+
+				if (this.causingEntity != null) {
+					additionalData.putString("causingEntity", this.causingEntity.getUuid().toString());
+				}
+
+				instance.explode(
+						(float) position.x(),
+						(float) (position.y() + boundingBox.height() * 0.0625),
+						(float) position.z(),
+						4.0f,
+						additionalData.build()
+				);
+			}
+
+			this.remove();
 		}
 	}
 
