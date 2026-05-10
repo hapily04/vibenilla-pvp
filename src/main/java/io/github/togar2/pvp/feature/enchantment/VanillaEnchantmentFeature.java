@@ -125,10 +125,7 @@ public class VanillaEnchantmentFeature implements EnchantmentFeature, Registrabl
 
 	@Override
 	public double getExplosionKnockback(LivingEntity entity, double strength) {
-		var level = this.getEquipmentLevel(entity, Enchantment.BLAST_PROTECTION);
-		var resistance = Math.min(level * 0.15, 1.0);
-
-		return strength * (1.0 - resistance);
+		return strength;
 	}
 
 	@Override
