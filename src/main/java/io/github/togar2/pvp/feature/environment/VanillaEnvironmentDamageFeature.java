@@ -6,7 +6,9 @@ import io.github.togar2.pvp.feature.config.DefinedFeature;
 import io.github.togar2.pvp.feature.config.FeatureConfiguration;
 import io.github.togar2.pvp.utils.FluidUtil;
 import io.github.togar2.pvp.utils.ViewUtil;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
+import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.CoordConversion;
 import net.minestom.server.entity.EquipmentSlot;
@@ -167,13 +169,16 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 					entity.getPosition().blockZ()
 			);
 
-			if (eyeBlock.compare(Block.BUBBLE_COLUMN)) {
+			if (eyeBlock.compare(Block.BUBBLE_COLUMN)
+					|| this.canBreatheUnderwater(entity)
+					|| this.hasWaterBreathing(entity)) {
 				airSupply = this.increaseAirSupply(airSupply);
-			} else if (!this.hasWaterBreathing(entity)) {
+			} else {
 				airSupply = this.decreaseAirSupply(entity, airSupply);
 
 				if (airSupply <= DROWN_THRESHOLD) {
 					airSupply = 0;
+					entity.triggerStatus((byte) 67);
 					entity.damage(DamageType.DROWN, 2.0F);
 				}
 			}
@@ -399,6 +404,16 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 	private boolean hasWaterBreathing(LivingEntity entity) {
 		return entity.hasEffect(PotionEffect.WATER_BREATHING)
 				|| entity.hasEffect(PotionEffect.CONDUIT_POWER);
+	}
+
+	private boolean canBreatheUnderwater(LivingEntity entity) {
+		var entityTypeTag = MinecraftServer.process().entityType().getTag(Key.key("minecraft:can_breathe_under_water"));
+
+		if (entityTypeTag == null) return false;
+
+		var key = entity.getEntityType().asKey();
+
+		return key != null && entityTypeTag.contains(key);
 	}
 
 	private boolean isFireImmune(LivingEntity entity) {
