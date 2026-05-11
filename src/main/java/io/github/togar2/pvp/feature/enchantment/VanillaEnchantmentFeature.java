@@ -82,6 +82,8 @@ public class VanillaEnchantmentFeature implements EnchantmentFeature, Registrabl
 
 			for (RegistryKey<Enchantment> enchantment : enchantments) {
 				CombatEnchantment combatEnchantment = CombatEnchantments.get(enchantment);
+				if (combatEnchantment == null) continue;
+
 				consumer.accept(combatEnchantment, enchantmentList.level(enchantment));
 			}
 		}
@@ -89,7 +91,10 @@ public class VanillaEnchantmentFeature implements EnchantmentFeature, Registrabl
 
 	@Override
 	public int getEquipmentLevel(LivingEntity entity, RegistryKey<Enchantment> enchantment) {
-		Iterator<ItemStack> iterator = CombatEnchantments.get(enchantment).getEquipment(entity).values().iterator();
+		var combatEnchantment = CombatEnchantments.get(enchantment);
+		if (combatEnchantment == null) return 0;
+
+		var iterator = combatEnchantment.getEquipment(entity).values().iterator();
 
 		int total = 0;
 		while (iterator.hasNext()) {
@@ -102,7 +107,10 @@ public class VanillaEnchantmentFeature implements EnchantmentFeature, Registrabl
 
 	@Override
 	public Map.Entry<EquipmentSlot, ItemStack> pickRandom(LivingEntity entity, RegistryKey<Enchantment> enchantment) {
-		Map<EquipmentSlot, ItemStack> equipmentMap = CombatEnchantments.get(enchantment).getEquipment(entity);
+		var combatEnchantment = CombatEnchantments.get(enchantment);
+		if (combatEnchantment == null) return null;
+
+		var equipmentMap = combatEnchantment.getEquipment(entity);
 		if (equipmentMap.isEmpty()) return null;
 
 		List<Map.Entry<EquipmentSlot, ItemStack>> possibleStacks = new ArrayList<>();
@@ -140,6 +148,8 @@ public class VanillaEnchantmentFeature implements EnchantmentFeature, Registrabl
 		AtomicReference<Float> result = new AtomicReference<>((float) 0);
 		stack.get(DataComponents.ENCHANTMENTS).enchantments().forEach((enchantment, level) -> {
 			CombatEnchantment combatEnchantment = CombatEnchantments.get(enchantment);
+			if (combatEnchantment == null) return;
+
 			result.updateAndGet(v -> v + combatEnchantment.getAttackDamage(level, group, this, this.configuration));
 		});
 

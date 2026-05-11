@@ -62,6 +62,7 @@ public class CombatEnchantments {
 				new CombatEnchantment(Enchantment.FROST_WALKER, EquipmentSlot.BOOTS),
 				new CombatEnchantment(Enchantment.BINDING_CURSE, ALL_ARMOR_SLOTS),
 				new CombatEnchantment(Enchantment.SOUL_SPEED, EquipmentSlot.BOOTS),
+				new CombatEnchantment(Enchantment.SWIFT_SNEAK, EquipmentSlot.LEGGINGS),
 				new DamageEnchantment(Enchantment.SHARPNESS, DamageEnchantment.Type.ALL, EquipmentSlot.MAIN_HAND),
 				new DamageEnchantment(Enchantment.SMITE, DamageEnchantment.Type.UNDEAD, EquipmentSlot.MAIN_HAND),
 				new DamageEnchantment(Enchantment.BANE_OF_ARTHROPODS, DamageEnchantment.Type.ARTHROPODS, EquipmentSlot.MAIN_HAND),
