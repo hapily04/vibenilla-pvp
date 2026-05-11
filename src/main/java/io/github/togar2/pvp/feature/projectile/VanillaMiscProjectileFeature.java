@@ -87,7 +87,7 @@ public class VanillaMiscProjectileFeature implements MiscProjectileFeature, Regi
 				projectile = new ThrownEnderpearl(player, this.fallFeature);
 			} else if (windCharge) {
 				soundEvent = SoundEvent.ENTITY_WIND_CHARGE_THROW;
-				projectile = new WindCharge(player);
+				projectile = new WindCharge(player, this.fallFeature);
 			} else {
 				soundEvent = SoundEvent.ENTITY_EGG_THROW;
 				projectile = new ThrownEgg(player);

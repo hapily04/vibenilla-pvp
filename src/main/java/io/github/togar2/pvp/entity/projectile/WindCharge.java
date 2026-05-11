@@ -1,6 +1,7 @@
 package io.github.togar2.pvp.entity.projectile;
 
 import io.github.togar2.pvp.feature.explosion.VanillaExplosionSupplier;
+import io.github.togar2.pvp.feature.fall.FallFeature;
 import io.github.togar2.pvp.utils.ViewUtil;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.ServerFlag;
@@ -26,10 +27,12 @@ public final class WindCharge extends CustomEntityProjectile {
 	private static final float DIRECT_DAMAGE = 1.0F;
 	private static final int NO_DEFLECT_TICKS = 5;
 
+	private final FallFeature fallFeature;
 	private int noDeflectTicks = NO_DEFLECT_TICKS;
 
-	public WindCharge(@Nullable Entity shooter) {
+	public WindCharge(@Nullable Entity shooter, FallFeature fallFeature) {
 		super(shooter, EntityType.WIND_CHARGE);
+		this.fallFeature = fallFeature;
 
 		this.setNoGravity(true);
 		this.setAerodynamics(new Aerodynamics(0.0, 1.0, 1.0));
@@ -169,6 +172,10 @@ public final class WindCharge extends CustomEntityProjectile {
 			player.setVelocity(player.getVelocity().add(knockbackVelocity));
 		} else {
 			entity.setVelocity(entity.getVelocity().add(knockbackVelocity));
+		}
+
+		if (entity instanceof Player player) {
+			this.fallFeature.setIgnoreFallDamageFromCurrentImpulse(player);
 		}
 	}
 
