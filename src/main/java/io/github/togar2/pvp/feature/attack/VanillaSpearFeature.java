@@ -7,6 +7,7 @@ import io.github.togar2.pvp.feature.RegistrableFeature;
 import io.github.togar2.pvp.feature.config.DefinedFeature;
 import io.github.togar2.pvp.feature.config.FeatureConfiguration;
 import io.github.togar2.pvp.feature.enchantment.EnchantmentFeature;
+import io.github.togar2.pvp.feature.fall.FallFeature;
 import io.github.togar2.pvp.feature.food.ExhaustionFeature;
 import io.github.togar2.pvp.feature.item.ItemDamageFeature;
 import io.github.togar2.pvp.feature.knockback.KnockbackFeature;
@@ -52,7 +53,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class VanillaSpearFeature implements SpearFeature, RegistrableFeature {
 	public static final DefinedFeature<VanillaSpearFeature> DEFINED = new DefinedFeature<>(
 			FeatureType.SPEAR, VanillaSpearFeature::new,
-			FeatureType.ITEM_DAMAGE, FeatureType.ENCHANTMENT, FeatureType.KNOCKBACK, FeatureType.EXHAUSTION
+			FeatureType.ITEM_DAMAGE, FeatureType.ENCHANTMENT, FeatureType.KNOCKBACK, FeatureType.EXHAUSTION, FeatureType.FALL
 	);
 
 	public static final Tag<Long> SPEAR_USE_START = Tag.Long("spearUseStart");
@@ -71,6 +72,7 @@ public class VanillaSpearFeature implements SpearFeature, RegistrableFeature {
 	private static final float STAB_KNOCKBACK_BONUS = 0.4F;
 	private static final float LUNGE_IMPULSE_PER_LEVEL = 0.458F;
 	private static final float LUNGE_EXHAUSTION_PER_LEVEL = 4.0F;
+	private static final int LUNGE_POST_IMPULSE_GRACE_TICKS = 10;
 
 	private record SpearProperties(
 			float damageMultiplier,
@@ -136,6 +138,7 @@ public class VanillaSpearFeature implements SpearFeature, RegistrableFeature {
 	private EnchantmentFeature enchantmentFeature;
 	private KnockbackFeature knockbackFeature;
 	private ExhaustionFeature exhaustionFeature;
+	private FallFeature fallFeature;
 
 	private final Map<UUID, Map<UUID, Long>> recentStabs = new HashMap<>();
 
@@ -149,6 +152,7 @@ public class VanillaSpearFeature implements SpearFeature, RegistrableFeature {
 		this.enchantmentFeature = this.configuration.get(FeatureType.ENCHANTMENT);
 		this.knockbackFeature = this.configuration.get(FeatureType.KNOCKBACK);
 		this.exhaustionFeature = this.configuration.get(FeatureType.EXHAUSTION);
+		this.fallFeature = this.configuration.get(FeatureType.FALL);
 	}
 
 	@Override
@@ -264,7 +268,7 @@ public class VanillaSpearFeature implements SpearFeature, RegistrableFeature {
 		if (attacker.getGameMode() != GameMode.CREATIVE && attacker.getFood() < 7) return;
 
 		Vec direction = attacker.getPosition().direction();
-		Vec horizontalDirection = new Vec(direction.x(), 0, direction.z()).normalize();
+		Vec horizontalDirection = new Vec(direction.x(), 0, direction.z());
 
 		double impulseMagnitude = LUNGE_IMPULSE_PER_LEVEL * lungeLevel;
 		Vec velocity = attacker.getVelocity();
@@ -275,6 +279,7 @@ public class VanillaSpearFeature implements SpearFeature, RegistrableFeature {
 				velocity.y(),
 				velocity.z() + horizontalDirection.z() * impulseMagnitude * tps
 		));
+		this.fallFeature.applyPostImpulseGraceTime(attacker, LUNGE_POST_IMPULSE_GRACE_TICKS);
 
 		this.exhaustionFeature.addExhaustion(attacker, LUNGE_EXHAUSTION_PER_LEVEL * lungeLevel);
         this.itemDamageFeature.damageEquipment(attacker, EquipmentSlot.MAIN_HAND, 1);
