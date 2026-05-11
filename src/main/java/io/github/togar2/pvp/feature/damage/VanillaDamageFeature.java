@@ -146,7 +146,7 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 			amount *= 5.0F;
 		}
 
-		if (typeInfo.damagesHelmet() && !entity.getEquipment(EquipmentSlot.HELMET).isAir()) {
+		if (entity instanceof Player && typeInfo.damagesHelmet() && !entity.getEquipment(EquipmentSlot.HELMET).isAir()) {
             this.itemDamageFeature.damageArmor(entity, damageType, amount, EquipmentSlot.HELMET);
 			amount *= 0.75F;
 		}
@@ -169,6 +169,13 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 		}
 
 		// Process armor and effects
+		if (entity instanceof Player && !typeInfo.bypassesArmor()) {
+			this.itemDamageFeature.damageArmor(
+					entity, damageType, amount,
+					EquipmentSlot.BOOTS, EquipmentSlot.LEGGINGS, EquipmentSlot.CHESTPLATE, EquipmentSlot.HELMET
+			);
+		}
+
 		amount = this.armorFeature.getDamageWithProtection(entity, damageType, amount,
 				attacker instanceof LivingEntity livingAttacker ? livingAttacker : null);
 
