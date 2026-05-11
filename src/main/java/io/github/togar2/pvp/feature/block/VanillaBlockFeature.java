@@ -85,21 +85,10 @@ public class VanillaBlockFeature implements BlockFeature {
 
 		if (this.version.legacy()) return true;
 
-		if (damage.getSource() != null) {
-			Pos attackerPos = damage.getSource().getPosition();
-			Pos entityPos = entity.getPosition();
+		var blockingAngle = this.getBlockingAngle(entity, damage);
+		if (blockingAngle == null) return false;
 
-			Vec attackerPosVector = attackerPos.asVec();
-			var yaw = Math.toRadians(entityPos.yaw());
-			var entityRotation = new Vec(-Math.sin(yaw), 0.0, Math.cos(yaw));
-			Vec attackerDirection = entityPos.asVec().sub(attackerPosVector).normalize();
-			attackerDirection = attackerDirection.withY(0);
-
-			// Dot product is lower than zero when the angle between the vectors is >90 degrees
-			return attackerDirection.dot(entityRotation) < 0.0;
-		}
-
-		return false;
+		return this.resolveBlockedDamage(blocksAttacks, damage, damage.getAmount(), blockingAngle) > 0.0F;
 	}
 
 	private boolean isBypassedBy(BlocksAttacks blocksAttacks, Damage damage) {
@@ -112,11 +101,13 @@ public class VanillaBlockFeature implements BlockFeature {
 		return tag != null && tag.contains(damage.getType());
 	}
 
-	private float resolveBlockedDamage(BlocksAttacks blocksAttacks, Damage damage, float amount) {
+	private float resolveBlockedDamage(BlocksAttacks blocksAttacks, Damage damage, float amount, double blockingAngle) {
 		var damageTypeKey = damage.getType();
 		float blocked = 0.0F;
 
 		for (var reduction : blocksAttacks.damageReductions()) {
+			if (blockingAngle > Math.toRadians(reduction.horizontalBlockingAngle())) continue;
+
 			var typeFilter = reduction.type();
 
 			if (typeFilter != null && !typeFilter.contains(damageTypeKey)) continue;
@@ -149,7 +140,8 @@ public class VanillaBlockFeature implements BlockFeature {
 			resultingDamage = Math.max(0, (amount + 1) * 0.5f);
 			blockedDamage = amount - resultingDamage;
 		} else if (blocksAttacks != null) {
-			blockedDamage = this.resolveBlockedDamage(blocksAttacks, damage, amount);
+			var blockingAngle = this.getBlockingAngle(entity, damage);
+			blockedDamage = blockingAngle == null ? 0.0F : this.resolveBlockedDamage(blocksAttacks, damage, amount, blockingAngle);
 			resultingDamage = amount - blockedDamage;
 		} else {
 			resultingDamage = 0;
@@ -193,6 +185,19 @@ public class VanillaBlockFeature implements BlockFeature {
             this.takeShieldHit(entity, attacker, blocksAttacks, damageBlockEvent.knockbackAttacker());
 
 		return resultingDamage == 0;
+	}
+
+	private @Nullable Double getBlockingAngle(LivingEntity entity, Damage damage) {
+		if (damage.getSource() == null) return null;
+
+		var attackerPos = damage.getSource().getPosition();
+		var entityPos = entity.getPosition();
+		var yaw = Math.toRadians(entityPos.yaw());
+		var entityRotation = new Vec(-Math.sin(yaw), 0.0, Math.cos(yaw));
+		var attackerDirection = attackerPos.asVec().sub(entityPos.asVec()).withY(0).normalize();
+		var dotProduct = Math.clamp(attackerDirection.dot(entityRotation), -1.0, 1.0);
+
+		return Math.acos(dotProduct);
 	}
 
 	protected void takeShieldHit(LivingEntity entity, LivingEntity attacker, @Nullable BlocksAttacks blocksAttacks, boolean applyKnockback) {
