@@ -36,6 +36,7 @@ import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.item.Material;
 import net.minestom.server.potion.Potion;
 import net.minestom.server.potion.PotionEffect;
+import net.minestom.server.registry.RegistryKey;
 import net.minestom.server.tag.Tag;
 import net.minestom.server.world.Difficulty;
 
@@ -55,6 +56,7 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 
 	private static final int MAX_AIR_SUPPLY = 300;
 	private static final int DROWN_THRESHOLD = -20;
+	private static final int DOLPHIN_MOISTNESS_MAX = 2400;
 	private static final int FREEZE_MAX_TICKS = 140;
 	private static final int FREEZE_DAMAGE_INTERVAL = 40;
 	private static final int FIRE_DAMAGE_INTERVAL = 20;
@@ -65,11 +67,19 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 	private static final double WORLD_BORDER_DAMAGE_PER_BLOCK = 0.2;
 
 	private static final Tag<Integer> AIR_SUPPLY = Tag.Integer("environmentAirSupply");
+	private static final Tag<Integer> DOLPHIN_MOISTNESS = Tag.Integer("environmentDolphinMoistness");
 	private static final Tag<Integer> FREEZE_TICKS = Tag.Integer("environmentFreezeTicks");
 
 	private static final Set<Material> FREEZE_IMMUNE_WEARABLES = Set.of(
 			Material.LEATHER_BOOTS, Material.LEATHER_LEGGINGS,
 			Material.LEATHER_CHESTPLATE, Material.LEATHER_HELMET
+	);
+	private static final Set<EntityType> WATER_ANIMAL_DROWN_TYPES = Set.of(
+			EntityType.COD, EntityType.GLOW_SQUID, EntityType.PUFFERFISH, EntityType.SALMON,
+			EntityType.SQUID, EntityType.TADPOLE, EntityType.TROPICAL_FISH
+	);
+	private static final Set<EntityType> DRY_OUT_AIR_SUPPLY_TYPES = Set.of(
+			EntityType.AXOLOTL, EntityType.NAUTILUS
 	);
 
 	@SuppressWarnings("unused")
@@ -318,6 +328,8 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 
 		if (instance == null) return;
 
+		if (this.handleAquaticOutOfWaterDamage(instance, entity)) return;
+
 		int airSupply = entity.hasTag(AIR_SUPPLY) ? entity.getTag(AIR_SUPPLY) : MAX_AIR_SUPPLY;
 
 		if (this.isEyeInWater(entity)) {
@@ -342,6 +354,64 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 			}
 		} else if (airSupply < MAX_AIR_SUPPLY) {
 			airSupply = this.increaseAirSupply(airSupply);
+		}
+
+		entity.setTag(AIR_SUPPLY, airSupply);
+		entity.getEntityMeta().setAirTicks(Math.max(airSupply, 0));
+	}
+
+	private boolean handleAquaticOutOfWaterDamage(Instance instance, LivingEntity entity) {
+		var entityType = entity.getEntityType();
+
+		if (entityType == EntityType.DOLPHIN) {
+			this.handleDolphinMoistness(instance, entity);
+			return true;
+		}
+
+		if (WATER_ANIMAL_DROWN_TYPES.contains(entityType)) {
+			this.handleAirSupplyOutOfWater(entity, !this.isTouchingWater(entity), DamageType.DROWN, 2.0F);
+			return true;
+		}
+
+		if (DRY_OUT_AIR_SUPPLY_TYPES.contains(entityType)) {
+			var shouldDecreaseAir = !this.isTouchingWater(entity) && !this.isInRain(instance, entity);
+			this.handleAirSupplyOutOfWater(entity, shouldDecreaseAir, DamageType.DRY_OUT, 2.0F);
+			return true;
+		}
+
+		return false;
+	}
+
+	private void handleDolphinMoistness(Instance instance, LivingEntity entity) {
+		if (this.isTouchingWater(entity) || this.isInRain(instance, entity)) {
+			entity.setTag(DOLPHIN_MOISTNESS, DOLPHIN_MOISTNESS_MAX);
+			return;
+		}
+
+		int moistness = entity.hasTag(DOLPHIN_MOISTNESS) ? entity.getTag(DOLPHIN_MOISTNESS) : DOLPHIN_MOISTNESS_MAX;
+		moistness--;
+		entity.setTag(DOLPHIN_MOISTNESS, moistness);
+
+		if (moistness <= 0) {
+			entity.damage(DamageType.DRY_OUT, 1.0F);
+		}
+	}
+
+	private void handleAirSupplyOutOfWater(LivingEntity entity, boolean shouldDecreaseAir,
+	                                       RegistryKey<DamageType> damageType, float damageAmount) {
+		int airSupply = entity.hasTag(AIR_SUPPLY) ? entity.getTag(AIR_SUPPLY) : MAX_AIR_SUPPLY;
+
+		if (entity.isDead()) return;
+
+		if (shouldDecreaseAir) {
+			airSupply--;
+
+			if (airSupply <= DROWN_THRESHOLD) {
+				airSupply = 0;
+				entity.damage(damageType, damageAmount);
+			}
+		} else {
+			airSupply = MAX_AIR_SUPPLY;
 		}
 
 		entity.setTag(AIR_SUPPLY, airSupply);
