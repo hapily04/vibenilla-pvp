@@ -5,6 +5,7 @@ import io.github.togar2.pvp.feature.FeatureType;
 import io.github.togar2.pvp.feature.config.DefinedFeature;
 import io.github.togar2.pvp.feature.config.FeatureConfiguration;
 import io.github.togar2.pvp.feature.enchantment.EnchantmentFeature;
+import io.github.togar2.pvp.feature.explosion.VanillaExplosionSupplier;
 import io.github.togar2.pvp.feature.fall.FallFeature;
 import io.github.togar2.pvp.utils.ViewUtil;
 import net.kyori.adventure.sound.Sound;
@@ -39,6 +40,8 @@ public class VanillaSmashAttackFeature implements SmashAttackFeature {
 	private static final double SMASH_ATTACK_VERTICAL_KNOCKBACK = 0.7;
 	private static final float DENSITY_DAMAGE_PER_LEVEL = 0.5F;
 	private static final float[] WIND_BURST_POWER_BY_LEVEL = {1.2F, 1.75F, 2.2F};
+	private static final float WIND_BURST_FALLBACK_BASE_POWER = 1.5F;
+	private static final float WIND_BURST_FALLBACK_POWER_PER_LEVEL = 0.35F;
 	private static final double WIND_BURST_RADIUS = 3.5;
 
 	private final FeatureConfiguration configuration;
@@ -127,15 +130,7 @@ public class VanillaSmashAttackFeature implements SmashAttackFeature {
 		if (windBurstLevel <= 0) return;
 		if (attacker instanceof Player player && player.isFlying()) return;
 
-		float power = WIND_BURST_POWER_BY_LEVEL[Math.min(windBurstLevel, WIND_BURST_POWER_BY_LEVEL.length) - 1];
-
-		int tps = ServerFlag.SERVER_TICKS_PER_SECOND;
-		Vec velocity = attacker.getVelocity();
-		attacker.setVelocity(new Vec(
-				velocity.x(),
-				velocity.y() + power * tps,
-				velocity.z()
-		));
+		float power = this.getWindBurstPower(windBurstLevel);
 
 		Pos attackerPosition = attacker.getPosition();
 		attacker.sendPacketToViewersAndSelf(new ParticlePacket(
@@ -157,33 +152,50 @@ public class VanillaSmashAttackFeature implements SmashAttackFeature {
 		), attacker);
 
 		assert attacker.getInstance() != null;
-		for (Entity nearbyEntity : attacker.getInstance().getNearbyEntities(attackerPosition, WIND_BURST_RADIUS)) {
+		var radius = WIND_BURST_RADIUS * 2.0;
+
+		this.applyWindBurstKnockback(attackerPosition, power, attacker);
+
+		for (Entity nearbyEntity : attacker.getInstance().getNearbyEntities(attackerPosition, radius)) {
+			if (nearbyEntity == attacker) continue;
 			if (nearbyEntity instanceof Player) continue;
 
-			this.applyWindBurstKnockback(attacker, attackerPosition, power, tps, nearbyEntity);
+			this.applyWindBurstKnockback(attackerPosition, power, nearbyEntity);
 		}
 		for (var player : attacker.getInstance().getPlayers()) {
-			this.applyWindBurstKnockback(attacker, attackerPosition, power, tps, player);
+			if (player == attacker) continue;
+
+			this.applyWindBurstKnockback(attackerPosition, power, player);
 		}
 	}
 
-	private void applyWindBurstKnockback(LivingEntity attacker, Pos attackerPosition, float power, int tps, Entity nearbyEntity) {
-		if (nearbyEntity == attacker) return;
+	private float getWindBurstPower(int windBurstLevel) {
+		if (windBurstLevel <= WIND_BURST_POWER_BY_LEVEL.length) {
+			return WIND_BURST_POWER_BY_LEVEL[windBurstLevel - 1];
+		}
+
+		return WIND_BURST_FALLBACK_BASE_POWER + WIND_BURST_FALLBACK_POWER_PER_LEVEL * (windBurstLevel - 1);
+	}
+
+	private void applyWindBurstKnockback(Pos attackerPosition, float power, Entity nearbyEntity) {
 		if (!(nearbyEntity instanceof LivingEntity nearbyLiving)) return;
 		if (this.isMarkerArmorStand(nearbyEntity)) return;
+		if (nearbyEntity instanceof Player player && player.getGameMode() == GameMode.SPECTATOR) return;
+		if (nearbyEntity instanceof Player player && player.getGameMode() == GameMode.CREATIVE && player.isFlying()) return;
 
-		Vec direction = nearbyEntity.getPosition().asVec().sub(attackerPosition.asVec());
-		double directionLength = direction.length();
-		if (directionLength <= 0 || directionLength > WIND_BURST_RADIUS) return;
+		var originY = nearbyEntity.getPosition().y() + nearbyEntity.getEyeHeight();
+		var origin = new Vec(nearbyEntity.getPosition().x(), originY, nearbyEntity.getPosition().z());
+		var direction = origin.sub(attackerPosition.asVec());
+		var directionLength = direction.length();
+		var radius = WIND_BURST_RADIUS * 2.0;
+		if (directionLength <= 0 || directionLength > radius) return;
 
-		double knockbackFactor = (1.0 - directionLength / WIND_BURST_RADIUS) * power;
-		Vec knockbackVector = direction.normalize().mul(knockbackFactor);
-		Vec nearbyVelocity = nearbyLiving.getVelocity();
-		nearbyLiving.setVelocity(new Vec(
-				nearbyVelocity.x() + knockbackVector.x() * tps,
-				nearbyVelocity.y() + Math.abs(knockbackVector.y() + 0.3) * tps,
-				nearbyVelocity.z() + knockbackVector.z() * tps
-		));
+		var exposure = VanillaExplosionSupplier.getExposure(attackerPosition, nearbyEntity);
+		var knockbackFactor = (1.0 - directionLength / radius) * exposure * power;
+		knockbackFactor *= 1.0 - nearbyLiving.getAttributeValue(Attribute.EXPLOSION_KNOCKBACK_RESISTANCE);
+		var knockbackVector = direction.normalize().mul(knockbackFactor);
+		var nearbyVelocity = nearbyLiving.getVelocity();
+		nearbyLiving.setVelocity(nearbyVelocity.add(knockbackVector.mul(ServerFlag.SERVER_TICKS_PER_SECOND)));
 	}
 
 	private void applySmashKnockback(LivingEntity attacker, LivingEntity target, boolean heavySmash) {
