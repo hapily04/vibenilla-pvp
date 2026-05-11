@@ -160,7 +160,8 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 
 		if (block.compare(Block.FIRE) || block.compare(Block.SOUL_FIRE)) {
 			this.setFireTicks(entity, FIRE_IGNITE_TICKS);
-			entity.damage(DamageType.IN_FIRE, 1.0F);
+			var fireDamage = block.compare(Block.SOUL_FIRE) ? 2.0F : 1.0F;
+			entity.damage(DamageType.IN_FIRE, fireDamage);
 			return;
 		}
 
