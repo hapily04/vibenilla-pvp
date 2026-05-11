@@ -167,6 +167,8 @@ public class VanillaSmashAttackFeature implements SmashAttackFeature {
 
 			this.applyWindBurstKnockback(attackerPosition, power, player);
 		}
+
+		this.fallFeature.clearCurrentImpulseContext(attacker);
 	}
 
 	private float getWindBurstPower(int windBurstLevel) {
