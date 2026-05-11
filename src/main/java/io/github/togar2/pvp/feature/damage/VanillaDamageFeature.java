@@ -9,6 +9,7 @@ import io.github.togar2.pvp.feature.armor.ArmorFeature;
 import io.github.togar2.pvp.feature.block.BlockFeature;
 import io.github.togar2.pvp.feature.config.DefinedFeature;
 import io.github.togar2.pvp.feature.config.FeatureConfiguration;
+import io.github.togar2.pvp.feature.enchantment.EnchantmentFeature;
 import io.github.togar2.pvp.feature.food.ExhaustionFeature;
 import io.github.togar2.pvp.feature.item.ItemDamageFeature;
 import io.github.togar2.pvp.feature.knockback.KnockbackFeature;
@@ -30,6 +31,7 @@ import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.entity.EntityDamageEvent;
 import net.minestom.server.event.trait.EntityInstanceEvent;
+import net.minestom.server.item.enchant.Enchantment;
 import net.minestom.server.network.packet.server.play.DamageEventPacket;
 import net.minestom.server.network.packet.server.play.SoundEffectPacket;
 import net.minestom.server.potion.PotionEffect;
@@ -48,7 +50,7 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 			FeatureType.DAMAGE, VanillaDamageFeature::new,
 			FeatureType.DIFFICULTY, FeatureType.BLOCK, FeatureType.ARMOR, FeatureType.TOTEM,
 			FeatureType.EXHAUSTION, FeatureType.KNOCKBACK, FeatureType.TRACKING,
-			FeatureType.ITEM_DAMAGE, FeatureType.VERSION
+			FeatureType.ITEM_DAMAGE, FeatureType.ENCHANTMENT, FeatureType.VERSION
 	);
 
 	public static final Tag<Long> NEW_DAMAGE_TIME = Tag.Long("newDamageTime");
@@ -65,6 +67,7 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 	private KnockbackFeature knockbackFeature;
 	private TrackingFeature trackingFeature;
 	private ItemDamageFeature itemDamageFeature;
+	private EnchantmentFeature enchantmentFeature;
 
 	private CombatVersion version;
 
@@ -82,6 +85,7 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 		this.knockbackFeature = this.configuration.get(FeatureType.KNOCKBACK);
 		this.trackingFeature = this.configuration.get(FeatureType.TRACKING);
 		this.itemDamageFeature = this.configuration.get(FeatureType.ITEM_DAMAGE);
+		this.enchantmentFeature = this.configuration.get(FeatureType.ENCHANTMENT);
 		this.version = this.configuration.get(FeatureType.VERSION);
 	}
 
@@ -109,6 +113,11 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 		if (entity instanceof Player player
 				&& player.isInvulnerable()
 				&& !this.bypassesInvulnerability(damageType)) {
+			event.setCancelled(true);
+			return;
+		}
+
+		if (this.isImmuneToDamageFromEnchantments(entity, damage, damageType)) {
 			event.setCancelled(true);
 			return;
 		}
@@ -323,6 +332,15 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 		var noKnockback = MinecraftServer.process().damageType().getTag(Key.key("minecraft:no_knockback"));
 
 		return noKnockback != null && noKnockback.contains(damage.getType());
+	}
+
+	private boolean isImmuneToDamageFromEnchantments(LivingEntity entity, Damage damage, DamageType damageType) {
+		var burnFromStepping = MinecraftServer.process().damageType().getTag(Key.key("minecraft:burn_from_stepping"));
+
+		return burnFromStepping != null
+				&& burnFromStepping.contains(damage.getType())
+				&& !this.bypassesInvulnerability(damageType)
+				&& this.enchantmentFeature.getEquipmentLevel(entity, Enchantment.FROST_WALKER) > 0;
 	}
 
 	private boolean bypassesInvulnerability(DamageType damageType) {
