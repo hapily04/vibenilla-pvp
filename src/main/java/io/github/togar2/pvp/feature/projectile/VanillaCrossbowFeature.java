@@ -5,9 +5,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 
+import net.minestom.server.ServerFlag;
 import net.minestom.server.component.DataComponents;
 import net.minestom.server.event.item.PlayerCancelItemUseEvent;
 import net.minestom.server.event.item.PlayerFinishItemUseEvent;
+import net.minestom.server.item.enchant.EffectComponent;
 import net.minestom.server.utils.Unit;
 import org.jetbrains.annotations.Nullable;
 
@@ -188,7 +190,7 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 		}
 
 		stack = this.loadCrossbowProjectiles(player, stack);
-		if (stack == null) return;
+		if (stack == null || stack.isAir()) return;
 
 		this.playCrossbowLoadingEndSound(player);
 
@@ -255,8 +257,8 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 	}
 
 	protected int getCrossbowChargeDuration(ItemStack stack) {
-		int quickCharge = stack.get(DataComponents.ENCHANTMENTS).level(Enchantment.QUICK_CHARGE);
-		return quickCharge == 0 ? 25 : 25 - 5 * quickCharge;
+		var duration = this.enchantmentFeature.modifyValue(stack, EffectComponent.CROSSBOW_CHARGE_TIME, 1.25F);
+		return (int) Math.floor(Math.max(0.0F, duration) * ServerFlag.SERVER_TICKS_PER_SECOND);
 	}
 
 	protected SoundEvent getCrossbowStartSound(int quickCharge) {
@@ -269,8 +271,10 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 	}
 
 	protected ItemStack loadCrossbowProjectiles(Player player, ItemStack stack) {
-		var multishotLevel = stack.get(DataComponents.ENCHANTMENTS).level(Enchantment.MULTISHOT);
-		var projectileCount = 1 + 2 * multishotLevel;
+		var projectileCount = Math.max(0, (int) this.enchantmentFeature.modifyConditionalValue(
+				stack, EffectComponent.PROJECTILE_COUNT, 1.0F
+		));
+		if (projectileCount == 0) return ItemStack.AIR;
 
 		ItemStack projectileItem;
 		int projectileSlot;
@@ -313,8 +317,8 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 		List<ItemStack> projectiles = stack.get(DataComponents.CHARGED_PROJECTILES);
 		if (projectiles == null || projectiles.isEmpty()) return ItemStack.AIR;
 
-		var multishotLevel = stack.get(DataComponents.ENCHANTMENTS).level(Enchantment.MULTISHOT);
-		var maxAngle = 10.0F * multishotLevel;
+		var maxAngle = this.enchantmentFeature.modifyConditionalValue(stack, EffectComponent.PROJECTILE_SPREAD, 0.0F);
+		maxAngle = Math.max(0.0F, maxAngle);
 		var angleStep = projectiles.size() == 1 ? 0.0F : 2.0F * maxAngle / (projectiles.size() - 1);
 		var angleOffset = (projectiles.size() - 1) % 2 * angleStep / 2.0F;
 		var direction = 1.0F;
@@ -407,7 +411,9 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 		arrow.setCritical(true); // Player shooter is always critical
 		arrow.setSound(SoundEvent.ITEM_CROSSBOW_HIT);
 
-		int piercing = crossbowStack.get(DataComponents.ENCHANTMENTS).level(Enchantment.PIERCING);
+		var piercing = Math.max(0, (int) this.enchantmentFeature.modifyConditionalValue(
+				crossbowStack, EffectComponent.PROJECTILE_PIERCING, 0.0F
+		));
 		if (piercing > 0) {
 			arrow.setPiercingLevel((byte) piercing);
 		}

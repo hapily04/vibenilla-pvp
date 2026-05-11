@@ -8,6 +8,8 @@ import io.github.togar2.pvp.feature.FeatureType;
 import io.github.togar2.pvp.feature.RegistrableFeature;
 import io.github.togar2.pvp.feature.config.DefinedFeature;
 import io.github.togar2.pvp.feature.config.FeatureConfiguration;
+import net.minestom.server.MinecraftServer;
+import net.minestom.server.component.DataComponent;
 import net.minestom.server.component.DataComponents;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.EquipmentSlot;
@@ -19,7 +21,9 @@ import net.minestom.server.event.entity.EntitySetFireEvent;
 import net.minestom.server.event.trait.EntityInstanceEvent;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.component.EnchantmentList;
+import net.minestom.server.item.enchant.ConditionalEffect;
 import net.minestom.server.item.enchant.Enchantment;
+import net.minestom.server.item.enchant.ValueEffect;
 import net.minestom.server.registry.RegistryKey;
 import net.minestom.server.tag.Tag;
 
@@ -165,6 +169,46 @@ public class VanillaEnchantmentFeature implements EnchantmentFeature, Registrabl
 	@Override
 	public int getFireAspect(LivingEntity entity) {
 		return this.getEquipmentLevel(entity, Enchantment.FIRE_ASPECT);
+	}
+
+	@Override
+	public float modifyConditionalValue(ItemStack stack, DataComponent<List<ConditionalEffect<ValueEffect>>> component, float base) {
+		var value = base;
+		var enchantmentRegistry = MinecraftServer.getEnchantmentRegistry();
+
+		for (var entry : stack.get(DataComponents.ENCHANTMENTS).enchantments().entrySet()) {
+			var enchantment = enchantmentRegistry.get(entry.getKey());
+			if (enchantment == null) continue;
+
+			var effects = enchantment.effects().get(component);
+			if (effects == null) continue;
+
+			for (var effect : effects) {
+				if (effect.requirements() != null) continue;
+
+				value = effect.effect().apply(value, entry.getValue());
+			}
+		}
+
+		return value;
+	}
+
+	@Override
+	public float modifyValue(ItemStack stack, DataComponent<ValueEffect> component, float base) {
+		var value = base;
+		var enchantmentRegistry = MinecraftServer.getEnchantmentRegistry();
+
+		for (var entry : stack.get(DataComponents.ENCHANTMENTS).enchantments().entrySet()) {
+			var enchantment = enchantmentRegistry.get(entry.getKey());
+			if (enchantment == null) continue;
+
+			var effect = enchantment.effects().get(component);
+			if (effect == null) continue;
+
+			value = effect.apply(value, entry.getValue());
+		}
+
+		return value;
 	}
 
 	@Override
