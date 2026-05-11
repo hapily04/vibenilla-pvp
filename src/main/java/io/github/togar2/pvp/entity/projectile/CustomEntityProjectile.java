@@ -30,7 +30,7 @@ public class CustomEntityProjectile extends Entity {
 	private static final BoundingBox POINT_BOX = new BoundingBox(0, 0, 0);
 	private static final BoundingBox UNSTUCK_BOX = new BoundingBox(0.12, 0.6, 0.12);
 
-	private final Entity shooter;
+	private Entity shooter;
 	protected boolean noClip;
 
 	protected Vec collisionDirection;
@@ -62,6 +62,14 @@ public class CustomEntityProjectile extends Entity {
 
 	public @Nullable Entity getShooter() {
 		return this.shooter;
+	}
+
+	public void setShooter(@Nullable Entity shooter) {
+		this.shooter = shooter;
+
+		if (this.getEntityMeta() instanceof ProjectileMeta projectileMeta) {
+			projectileMeta.setShooter(shooter);
+		}
 	}
 
 	/**

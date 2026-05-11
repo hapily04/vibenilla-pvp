@@ -2,6 +2,7 @@ package io.github.togar2.pvp.feature.attack;
 
 import io.github.togar2.pvp.enchantment.EntityGroup;
 import io.github.togar2.pvp.entity.explosion.CrystalEntity;
+import io.github.togar2.pvp.entity.projectile.WindCharge;
 import io.github.togar2.pvp.events.FinalAttackEvent;
 import io.github.togar2.pvp.events.PrepareAttackEvent;
 import io.github.togar2.pvp.feature.FeatureType;
@@ -120,6 +121,17 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 		if (prepareAttackEvent.isCancelled()) return false;
 		AttackValues.Final attack = this.prepareAttack(attacker, target);
 		if (attack == null) return false; // Event canceled
+
+		if (target instanceof WindCharge windCharge && windCharge.deflect(attacker)) {
+			if (attack.sounds() && attack.playSoundsOnFail()) {
+				ViewUtil.viewersAndSelf(attacker).playSound(Sound.sound(
+						SoundEvent.ENTITY_PLAYER_ATTACK_NODAMAGE, Sound.Source.PLAYER,
+						1.0f, 1.0f
+				), attacker);
+			}
+
+			return true;
+		}
 
 		boolean smashAttack = target instanceof LivingEntity
 				&& this.smashAttackFeature.canSmashAttack(attacker);

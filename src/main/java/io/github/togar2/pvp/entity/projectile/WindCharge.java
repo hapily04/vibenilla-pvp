@@ -24,12 +24,38 @@ public final class WindCharge extends CustomEntityProjectile {
 	private static final double RADIUS = 1.2;
 	private static final double KNOCKBACK_MULTIPLIER = 1.22;
 	private static final float DIRECT_DAMAGE = 1.0F;
+	private static final int NO_DEFLECT_TICKS = 5;
+
+	private int noDeflectTicks = NO_DEFLECT_TICKS;
 
 	public WindCharge(@Nullable Entity shooter) {
 		super(shooter, EntityType.WIND_CHARGE);
 
 		this.setNoGravity(true);
 		this.setAerodynamics(new Aerodynamics(0.0, 1.0, 1.0));
+	}
+
+	@Override
+	public void tick(long time) {
+		super.tick(time);
+
+		if (this.noDeflectTicks > 0) {
+			this.noDeflectTicks--;
+		}
+	}
+
+	public boolean deflect(Entity entity) {
+		if (this.noDeflectTicks > 0) return false;
+
+		var direction = entity.getPosition().direction();
+		this.setShooter(entity);
+		this.setVelocity(direction.mul(ServerFlag.SERVER_TICKS_PER_SECOND));
+		this.setView(
+				(float) Math.toDegrees(Math.atan2(direction.x(), direction.z())),
+				(float) Math.toDegrees(Math.atan2(direction.y(), Math.sqrt(direction.x() * direction.x() + direction.z() * direction.z())))
+		);
+
+		return true;
 	}
 
 	@Override
