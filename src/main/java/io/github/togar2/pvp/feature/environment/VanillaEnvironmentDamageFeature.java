@@ -313,7 +313,18 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 	}
 
 	private void setFireTicks(LivingEntity entity, int fireTicks) {
-		entity.setFireTicks(this.enchantmentFeature.getFireDuration(entity, fireTicks));
+		var adjustedFireTicks = this.enchantmentFeature.getFireDuration(entity, fireTicks);
+
+		if (entity.getFireTicks() < adjustedFireTicks) {
+			entity.setFireTicks(adjustedFireTicks);
+		}
+
+		this.clearFreeze(entity);
+	}
+
+	private void clearFreeze(LivingEntity entity) {
+		entity.setTag(FREEZE_TICKS, 0);
+		entity.getEntityMeta().setTickFrozen(0);
 	}
 
 	private boolean isInLava(LivingEntity entity) {
