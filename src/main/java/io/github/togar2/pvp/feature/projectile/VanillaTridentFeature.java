@@ -1,11 +1,14 @@
 package io.github.togar2.pvp.feature.projectile;
 
 import io.github.togar2.pvp.entity.projectile.ThrownTrident;
+import io.github.togar2.pvp.enchantment.EntityGroup;
 import io.github.togar2.pvp.feature.FeatureType;
 import io.github.togar2.pvp.feature.RegistrableFeature;
 import io.github.togar2.pvp.feature.config.DefinedFeature;
 import io.github.togar2.pvp.feature.config.FeatureConfiguration;
+import io.github.togar2.pvp.feature.cooldown.AttackCooldownFeature;
 import io.github.togar2.pvp.feature.enchantment.EnchantmentFeature;
+import io.github.togar2.pvp.feature.food.ExhaustionFeature;
 import io.github.togar2.pvp.feature.item.ItemDamageFeature;
 import io.github.togar2.pvp.player.CombatPlayer;
 import io.github.togar2.pvp.utils.FluidUtil;
@@ -16,9 +19,9 @@ import net.minestom.server.component.DataComponents;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.*;
-import net.minestom.server.event.EventDispatcher;
+import net.minestom.server.entity.damage.Damage;
+import net.minestom.server.entity.damage.DamageType;
 import net.minestom.server.event.EventNode;
-import net.minestom.server.event.entity.EntityAttackEvent;
 import net.minestom.server.event.item.PlayerCancelItemUseEvent;
 import net.minestom.server.event.player.PlayerTickEvent;
 import net.minestom.server.event.player.PlayerUseItemEvent;
@@ -39,15 +42,20 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class VanillaTridentFeature implements TridentFeature, RegistrableFeature {
 	public static final DefinedFeature<VanillaTridentFeature> DEFINED = new DefinedFeature<>(
 			FeatureType.TRIDENT, VanillaTridentFeature::new,
-			FeatureType.ITEM_DAMAGE, FeatureType.ENCHANTMENT
+			FeatureType.ITEM_DAMAGE, FeatureType.ENCHANTMENT, FeatureType.ATTACK_COOLDOWN, FeatureType.EXHAUSTION
 	);
 
 	private final FeatureConfiguration configuration;
 
 	private ItemDamageFeature itemDamageFeature;
 	private EnchantmentFeature enchantmentFeature;
+	private AttackCooldownFeature attackCooldownFeature;
+	private ExhaustionFeature exhaustionFeature;
 
 	public static final Tag<Long> RIPTIDE_START = Tag.Long("riptideStart");
+	public static final Tag<Boolean> RIPTIDE_OFF_HAND = Tag.Boolean("riptideOffHand");
+	public static final Tag<ItemStack> RIPTIDE_ITEM = Tag.Transient("riptideItem");
+	private static final float RIPTIDE_SPIN_ATTACK_DAMAGE = 8.0F;
 
 	public VanillaTridentFeature(FeatureConfiguration configuration) {
 		this.configuration = configuration;
@@ -57,6 +65,8 @@ public class VanillaTridentFeature implements TridentFeature, RegistrableFeature
 	public void initDependencies() {
 		this.itemDamageFeature = this.configuration.get(FeatureType.ITEM_DAMAGE);
 		this.enchantmentFeature = this.configuration.get(FeatureType.ENCHANTMENT);
+		this.attackCooldownFeature = this.configuration.get(FeatureType.ATTACK_COOLDOWN);
+		this.exhaustionFeature = this.configuration.get(FeatureType.EXHAUSTION);
 	}
 
 	@Override
@@ -87,11 +97,13 @@ public class VanillaTridentFeature implements TridentFeature, RegistrableFeature
 			if (riptide > 0 && !this.isInWaterOrRain(player)) return;
 			if (riptide > 0 && player.getVehicle() != null) return;
 
-            this.itemDamageFeature.damageEquipment(player, event.getHand() == PlayerHand.MAIN ?
+			this.itemDamageFeature.damageEquipment(player, event.getHand() == PlayerHand.MAIN ?
 					EquipmentSlot.MAIN_HAND : EquipmentSlot.OFF_HAND, 1);
 
 			if (riptide > 0) {
-                this.applyRiptide(player, riptide);
+				player.setTag(RIPTIDE_OFF_HAND, event.getHand() == PlayerHand.OFF);
+				player.setTag(RIPTIDE_ITEM, stack);
+				this.applyRiptide(player, riptide);
 				event.setRiptideSpinAttack(true);
 			} else {
 				ThrownTrident trident = new ThrownTrident(player, stack, this.enchantmentFeature);
@@ -125,8 +137,7 @@ public class VanillaTridentFeature implements TridentFeature, RegistrableFeature
 									&& entity.getBoundingBox().intersectEntity(entity.getPosition(), player)) {
 								stopRiptide.set(true);
 
-								var attackEvent = new EntityAttackEvent(player, entity);
-								EventDispatcher.call(attackEvent);
+								this.applyRiptideHit(player, (LivingEntity) entity);
 								if (player instanceof CombatPlayer combatPlayer)
 									combatPlayer.setVelocityNoUpdate(velocity -> velocity.mul(-0.2));
 							}
@@ -140,6 +151,34 @@ public class VanillaTridentFeature implements TridentFeature, RegistrableFeature
 					event.getPlayer().refreshActiveHand(false, false, false);
 			}
 		});
+	}
+
+	private void applyRiptideHit(Player player, LivingEntity target) {
+		var offHand = Boolean.TRUE.equals(player.getTag(RIPTIDE_OFF_HAND));
+		var hand = offHand ? PlayerHand.OFF : PlayerHand.MAIN;
+		var slot = offHand ? EquipmentSlot.OFF_HAND : EquipmentSlot.MAIN_HAND;
+		var stack = player.getTag(RIPTIDE_ITEM);
+		if (stack == null) {
+			stack = player.getItemInHand(hand);
+		}
+
+		var cooldownProgress = this.attackCooldownFeature.getAttackCooldownProgress(player);
+		this.attackCooldownFeature.resetCooldownProgress(player);
+
+		var baseDamage = RIPTIDE_SPIN_ATTACK_DAMAGE * (0.2F + (float) (cooldownProgress * cooldownProgress) * 0.8F);
+		var magicalDamage = this.enchantmentFeature.getAttackDamage(stack, EntityGroup.ofEntity(target)) * (float) cooldownProgress;
+		var damage = baseDamage + magicalDamage;
+		var damaged = target.damage(new Damage(DamageType.PLAYER_ATTACK, player, player, null, damage));
+		if (!damaged) return;
+
+		this.enchantmentFeature.onUserDamaged(target, player);
+		this.enchantmentFeature.onTargetDamaged(player, target);
+		var weapon = stack.get(DataComponents.WEAPON);
+		if (weapon != null) {
+			this.itemDamageFeature.damageEquipment(player, slot, weapon.itemDamagePerAttack());
+		}
+
+		this.exhaustionFeature.addAttackExhaustion(player);
 	}
 
 	@Override
