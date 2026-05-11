@@ -135,6 +135,8 @@ public class VanillaExplosiveFeature implements ExplosiveFeature, RegistrableFea
 				return;
 
 			ItemStack stack = player.getItemInHand(event.getHand());
+			if (player.isSneaking() && stack.material().isBlock()) return;
+
 			int charges = Integer.parseInt(block.getProperty("charges"));
 			if (stack.material() == Material.GLOWSTONE && charges < 4) {
 				var anchorChargeEvent = new AnchorChargeEvent(player, event.getBlockPosition());
