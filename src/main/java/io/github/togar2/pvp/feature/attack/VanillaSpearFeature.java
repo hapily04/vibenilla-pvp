@@ -248,7 +248,7 @@ public class VanillaSpearFeature implements SpearFeature, RegistrableFeature {
 
 			if (damaged) {
 				this.enchantmentFeature.onUserDamaged(target, attacker);
-				this.enchantmentFeature.onTargetDamaged(attacker, target);
+				this.enchantmentFeature.onTargetDamaged(attacker, target, weapon);
 			}
 
 			hitSomething = true;
@@ -301,6 +301,7 @@ public class VanillaSpearFeature implements SpearFeature, RegistrableFeature {
 	private void performKineticStab(Player attacker, Tool tool, SpearProperties properties, int ticksUsed, PlayerHand hand, Vec attackerKnownMotion) {
 		Vec attackerLook = attacker.getPosition().direction();
 		double attackerSpeedProjection = attackerLook.dot(attackerKnownMotion);
+		ItemStack weapon = attacker.getItemInHand(hand);
 
 		List<LivingEntity> entities = this.findEntitiesAlongRay(attacker);
 		boolean affected = false;
@@ -330,7 +331,7 @@ public class VanillaSpearFeature implements SpearFeature, RegistrableFeature {
 			float baseMobDamage = (float) attacker.getAttribute(Attribute.ATTACK_DAMAGE).getBaseValue();
 			float damageDealt = baseMobDamage + (float) Math.floor(relativeSpeed * properties.damageMultiplier());
 
-			boolean stabAffected = this.applyStabAttack(attacker, target, damageDealt, dealsDamage, dealsKnockback, dealsDismount);
+			boolean stabAffected = this.applyStabAttack(attacker, target, weapon, damageDealt, dealsDamage, dealsKnockback, dealsDismount);
 			if (stabAffected) {
 				affected = true;
 				this.itemDamageFeature.damageEquipment(attacker,
@@ -348,7 +349,7 @@ public class VanillaSpearFeature implements SpearFeature, RegistrableFeature {
 		}
 	}
 
-	private boolean applyStabAttack(Player attacker, LivingEntity target, float damage,
+	private boolean applyStabAttack(Player attacker, LivingEntity target, ItemStack weapon, float damage,
 	                                boolean dealsDamage, boolean dealsKnockback, boolean dealsDismount) {
 		boolean dealtDamage = false;
 		if (dealsDamage) {
@@ -373,7 +374,7 @@ public class VanillaSpearFeature implements SpearFeature, RegistrableFeature {
 
 		if (dealtDamage) {
 			this.enchantmentFeature.onUserDamaged(target, attacker);
-			this.enchantmentFeature.onTargetDamaged(attacker, target);
+			this.enchantmentFeature.onTargetDamaged(attacker, target, weapon);
 		}
 
 		return affected;

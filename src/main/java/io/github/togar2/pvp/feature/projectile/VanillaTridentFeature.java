@@ -173,7 +173,7 @@ public class VanillaTridentFeature implements TridentFeature, RegistrableFeature
 		if (!damaged) return;
 
 		this.enchantmentFeature.onUserDamaged(target, player);
-		this.enchantmentFeature.onTargetDamaged(player, target);
+		this.enchantmentFeature.onTargetDamaged(player, target, stack);
 		var weapon = stack.get(DataComponents.WEAPON);
 		if (weapon != null) {
 			this.itemDamageFeature.damageEquipment(player, slot, weapon.itemDamagePerAttack());
