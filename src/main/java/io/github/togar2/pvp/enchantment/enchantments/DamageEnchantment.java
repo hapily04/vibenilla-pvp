@@ -43,8 +43,10 @@ public class DamageEnchantment extends CombatEnchantment {
 	                            EnchantmentFeature feature, FeatureConfiguration configuration) {
 		if (target instanceof LivingEntity livingEntity) {
 			if (this.type == Type.ARTHROPODS && EntityGroup.ofEntity(livingEntity) == EntityGroup.ARTHROPOD) {
-				int i = 20 + ThreadLocalRandom.current().nextInt(10 * level);
-				livingEntity.addEffect(new Potion(PotionEffect.SLOWNESS, (byte) 3, i, PotionFlags.defaultFlags()));
+				var maxDurationSeconds = 1.5F + 0.5F * (level - 1);
+				var durationSeconds = 1.5F + ThreadLocalRandom.current().nextFloat() * (maxDurationSeconds - 1.5F);
+				var durationTicks = Math.round(durationSeconds * 20.0F);
+				livingEntity.addEffect(new Potion(PotionEffect.SLOWNESS, (byte) 3, durationTicks, PotionFlags.defaultFlags()));
 			}
 		}
 	}
