@@ -106,7 +106,7 @@ public class VanillaBowFeature implements BowFeature, RegistrableFeature {
 
 			int powerEnchantment = enchantmentList.level(Enchantment.POWER);
 			if (powerEnchantment > 0)
-				arrow.setDamageBonus(arrow.getDamageBonus() + (double) powerEnchantment * 0.5 + 0.5);
+				arrow.setBaseDamage(arrow.getBaseDamage() + (double) powerEnchantment * 0.5 + 0.5);
 
 			int punchEnchantment = enchantmentList.level(Enchantment.PUNCH);
 			if (punchEnchantment > 0) arrow.setKnockback(punchEnchantment);
