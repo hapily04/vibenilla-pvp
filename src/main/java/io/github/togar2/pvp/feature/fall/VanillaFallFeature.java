@@ -36,6 +36,7 @@ import net.minestom.server.registry.Registries;
 import net.minestom.server.registry.RegistryKey;
 import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.tag.Tag;
+import net.minestom.server.utils.block.BlockIterator;
 
 import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
@@ -205,6 +206,11 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 		double fallDistance = this.getFallDistance(entity);
 		this.tickCurrentImpulseContext(entity);
 
+		if (this.shouldResetFallDistanceAlongMovement(entity, currPos, newPos, fallDistance)) {
+			fallDistance = 0.0;
+			entity.setTag(FALL_DISTANCE, fallDistance);
+		}
+
 		if (FluidUtil.isTouchingWater(entity, newPos) || this.isTouchingSweetBerryBush(entity, newPos)) {
 			entity.setTag(FALL_DISTANCE, 0.0);
 			return;
@@ -290,6 +296,33 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 				this.playHoneyBlockFallSound(entity);
 			}
 		}
+	}
+
+	private boolean shouldResetFallDistanceAlongMovement(LivingEntity entity, Pos currentPosition, Pos newPosition, double fallDistance) {
+		if (fallDistance == 0.0) return false;
+
+		var instance = entity.getInstance();
+
+		if (instance == null) return false;
+
+		var movement = newPosition.asVec().sub(currentPosition.asVec());
+		var movementLength = movement.length();
+
+		if (movementLength < 1.0) return false;
+
+		var maxDistance = Math.min(movementLength, 8.0);
+		var iterator = new BlockIterator(currentPosition.asVec(), movement, 0.0, maxDistance);
+
+		while (iterator.hasNext()) {
+			var blockPosition = iterator.next();
+			var block = instance.getBlock(blockPosition);
+
+			if (this.isFallDamageResetting(block) || this.isWaterFluidBlock(block)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	public void playFallSound(LivingEntity entity, int damage) {
@@ -502,6 +535,22 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 
 	private boolean isTouchingSweetBerryBush(LivingEntity entity, Pos position) {
 		return this.isTouchingBlock(entity, position, Block.SWEET_BERRY_BUSH);
+	}
+
+	private boolean isFallDamageResetting(Block block) {
+		var tag = MinecraftServer.process().blocks().getTag(Key.key("minecraft:fall_damage_resetting"));
+
+		if (tag == null) return false;
+
+		var key = block.asKey();
+
+		return key != null && tag.contains(key);
+	}
+
+	private boolean isWaterFluidBlock(Block block) {
+		return block.compare(Block.WATER)
+				|| block.compare(Block.BUBBLE_COLUMN)
+				|| "true".equals(block.getProperty("waterlogged"));
 	}
 
 	private boolean isTouchingBlock(LivingEntity entity, Pos position, Block block) {
