@@ -419,7 +419,13 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 		int eyeBlockZ = entity.getPosition().blockZ();
 		var eyeBlock = instance.getBlock(eyeBlockX, eyeBlockY, eyeBlockZ);
 
-		return eyeBlock.compare(Block.WATER);
+		return this.isWaterFluidBlock(eyeBlock);
+	}
+
+	private boolean isWaterFluidBlock(Block block) {
+		return block.compare(Block.WATER)
+				|| block.compare(Block.BUBBLE_COLUMN)
+				|| "true".equals(block.getProperty("waterlogged"));
 	}
 
 	private boolean hasWaterBreathing(LivingEntity entity) {
