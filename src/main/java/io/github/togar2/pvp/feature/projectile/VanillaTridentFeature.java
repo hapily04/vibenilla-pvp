@@ -29,7 +29,7 @@ import net.minestom.server.event.trait.EntityInstanceEvent;
 import net.minestom.server.instance.EntityTracker;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
-import net.minestom.server.item.enchant.Enchantment;
+import net.minestom.server.item.enchant.EffectComponent;
 import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.tag.Tag;
 
@@ -76,10 +76,10 @@ public class VanillaTridentFeature implements TridentFeature, RegistrableFeature
 			var stack = event.getItemStack();
 			if (stack.material() != Material.TRIDENT) return;
 
-			var riptide = stack.get(DataComponents.ENCHANTMENTS).level(Enchantment.RIPTIDE);
+			var riptideStrength = this.getRiptideStrength(stack);
 
 			if (this.nextDamageWillBreak(stack)
-					|| (riptide > 0 && !this.isInWaterOrRain(player))) {
+					|| (riptideStrength > 0.0F && !this.isInWaterOrRain(player))) {
 				event.setCancelled(true);
 			}
 		});
@@ -93,17 +93,18 @@ public class VanillaTridentFeature implements TridentFeature, RegistrableFeature
 			if (ticks < 10) return;
 			if (this.nextDamageWillBreak(stack)) return;
 
-			int riptide = stack.get(DataComponents.ENCHANTMENTS).level(Enchantment.RIPTIDE);
-			if (riptide > 0 && !this.isInWaterOrRain(player)) return;
-			if (riptide > 0 && player.getVehicle() != null) return;
+			var riptideStrength = this.getRiptideStrength(stack);
+			var soundEvent = this.getTridentSound(stack);
+			if (riptideStrength > 0.0F && !this.isInWaterOrRain(player)) return;
+			if (riptideStrength > 0.0F && player.getVehicle() != null) return;
 
 			this.itemDamageFeature.damageEquipment(player, event.getHand() == PlayerHand.MAIN ?
 					EquipmentSlot.MAIN_HAND : EquipmentSlot.OFF_HAND, 1);
 
-			if (riptide > 0) {
+			if (riptideStrength > 0.0F) {
 				player.setTag(RIPTIDE_OFF_HAND, event.getHand() == PlayerHand.OFF);
 				player.setTag(RIPTIDE_ITEM, stack);
-				this.applyRiptide(player, riptide);
+				this.applyRiptide(player, riptideStrength, soundEvent);
 				event.setRiptideSpinAttack(true);
 			} else {
 				ThrownTrident trident = new ThrownTrident(player, stack, this.enchantmentFeature);
@@ -117,7 +118,7 @@ public class VanillaTridentFeature implements TridentFeature, RegistrableFeature
 						player.isOnGround() ? 0.0 : playerVel.y(), playerVel.z()));
 
 				ViewUtil.viewersAndSelf(player).playSound(Sound.sound(
-						SoundEvent.ITEM_TRIDENT_THROW, Sound.Source.PLAYER,
+						soundEvent, Sound.Source.PLAYER,
 						1.0f, 1.0f
 				), trident);
 				if (player.getGameMode() != GameMode.CREATIVE) player.setItemInHand(event.getHand(), stack.consume(1));
@@ -183,33 +184,49 @@ public class VanillaTridentFeature implements TridentFeature, RegistrableFeature
 
 	@Override
 	public void applyRiptide(Player player, int level) {
+		var strength = (float) (3.0 * ((1.0 + level) / 4.0));
+		var soundEvent = level >= 3 ? SoundEvent.ITEM_TRIDENT_RIPTIDE_3 :
+				(level == 2 ? SoundEvent.ITEM_TRIDENT_RIPTIDE_2 : SoundEvent.ITEM_TRIDENT_RIPTIDE_1);
+		this.applyRiptide(player, strength, soundEvent);
+	}
+
+	private void applyRiptide(Player player, float strength, SoundEvent soundEvent) {
 		float yaw = player.getPosition().yaw();
 		float pitch = player.getPosition().pitch();
 		double h = -Math.sin(Math.toRadians(yaw)) * Math.cos(Math.toRadians(pitch));
 		double k = -Math.sin(Math.toRadians(pitch));
 		double l = Math.cos(Math.toRadians(yaw)) * Math.cos(Math.toRadians(pitch));
 		double length = Math.sqrt(h * h + k * k + l * l);
-		double n = 3.0 * ((1.0 + level) / 4.0);
 
 		player.setTag(RIPTIDE_START, player.getAliveTicks());
 		player.setVelocity(player.getVelocity().add(new Vec(
-				h * (n / length),
-				k * (n / length),
-				l * (n / length)
+				h * (strength / length),
+				k * (strength / length),
+				l * (strength / length)
 		).mul(ServerFlag.SERVER_TICKS_PER_SECOND)));
 
 		if (player.isOnGround()) {
 			player.refreshPosition(player.getPosition().add(0.0, 1.1999999, 0.0));
 		}
 
-		SoundEvent soundEvent = level >= 3 ? SoundEvent.ITEM_TRIDENT_RIPTIDE_3 :
-				(level == 2 ? SoundEvent.ITEM_TRIDENT_RIPTIDE_2 : SoundEvent.ITEM_TRIDENT_RIPTIDE_1);
 		ViewUtil.viewersAndSelf(player).playSound(Sound.sound(
 				soundEvent, Sound.Source.PLAYER,
 				1.0f, 1.0f
 		), player);
 
 		player.refreshActiveHand(false, false, true);
+	}
+
+	private float getRiptideStrength(ItemStack stack) {
+		return Math.max(0.0F, this.enchantmentFeature.modifyValue(
+				stack, EffectComponent.TRIDENT_SPIN_ATTACK_STRENGTH, 0.0F
+		));
+	}
+
+	private SoundEvent getTridentSound(ItemStack stack) {
+		return this.enchantmentFeature.pickHighestLevel(
+				stack, EffectComponent.TRIDENT_SOUND, SoundEvent.ITEM_TRIDENT_THROW
+		);
 	}
 
 	private boolean isInWaterOrRain(Player player) {
