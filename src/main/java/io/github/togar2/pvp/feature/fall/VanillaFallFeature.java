@@ -287,6 +287,10 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 		entity.setTag(FALL_DISTANCE, 0.0);
 
 		if (entity instanceof Player player && player.getGameMode().invulnerable()) return;
+		if (this.isFallDamageImmune(entity)) return;
+
+		this.propagateFallDamageToPassengers(entity, effectiveFallDistance, damageModifier, damageType);
+
 		int damage = this.getFallDamage(entity, effectiveFallDistance, damageModifier);
 		if (damage > 0) {
             this.playFallSound(entity, damage);
@@ -323,6 +327,29 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 		}
 
 		return false;
+	}
+
+	private void propagateFallDamageToPassengers(LivingEntity entity, double fallDistance, double damageModifier, RegistryKey<DamageType> damageType) {
+		for (var passenger : entity.getPassengers()) {
+			if (passenger instanceof Player player && player.getGameMode().invulnerable()) {
+				continue;
+			}
+
+			if (!(passenger instanceof LivingEntity livingPassenger)) {
+				continue;
+			}
+
+			this.propagateFallDamageToPassengers(livingPassenger, fallDistance, damageModifier, damageType);
+
+			var damage = this.getFallDamage(livingPassenger, fallDistance, damageModifier);
+
+			if (damage <= 0) {
+				continue;
+			}
+
+			this.playFallSound(livingPassenger, damage);
+			livingPassenger.damage(damageType, damage);
+		}
 	}
 
 	public void playFallSound(LivingEntity entity, int damage) {
