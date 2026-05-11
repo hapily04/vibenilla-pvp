@@ -4,6 +4,7 @@ Combat for Minestom
 ## What does this have over MinestomPvP?
 - Maces
 - Spears
+- Accurate crystal PVP
 - Wind charges
 - Lingering potions
 - Crossbows with firework rockets
