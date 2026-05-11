@@ -97,6 +97,7 @@ public class VanillaSmashAttackFeature implements SmashAttackFeature {
 
 		Vec velocity = attacker.getVelocity();
 		attacker.setVelocity(new Vec(velocity.x(), 0.01 * tps, velocity.z()));
+		this.fallFeature.setIgnoreFallDamageFromCurrentImpulse(attacker);
 
 		boolean heavySmash = fallDistance > SMASH_ATTACK_HEAVY_THRESHOLD;
 		if (target.isOnGround()) {

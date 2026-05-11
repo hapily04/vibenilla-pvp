@@ -53,6 +53,10 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 	public static final Tag<Double> FALL_DISTANCE = Tag.Transient("fallDistance");
 	public static final Tag<Boolean> EXTRA_FALL_PARTICLES = Tag.Transient("extraFallParticles");
 	public static final Tag<Integer> FALL_FLYING_TICKS = Tag.Integer("fallFlyingTicks");
+	public static final Tag<Double> CURRENT_IMPULSE_IMPACT_Y = Tag.Transient("currentImpulseImpactY");
+	public static final Tag<Integer> CURRENT_IMPULSE_CONTEXT_RESET_GRACE_TIME = Tag.Transient("currentImpulseContextResetGraceTime");
+
+	private static final int CURRENT_IMPULSE_CONTEXT_RESET_GRACE_TICKS = 40;
 
 	private final FeatureConfiguration configuration;
 
@@ -72,6 +76,7 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 	public static void initPlayer(Player player, boolean firstInit) {
 		player.setTag(FALL_DISTANCE, 0.0);
 		player.setTag(FALL_FLYING_TICKS, 0);
+		player.setTag(CURRENT_IMPULSE_CONTEXT_RESET_GRACE_TIME, 0);
 	}
 
 	@Override
@@ -198,6 +203,7 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 	public void handleFallDamage(LivingEntity entity, Pos currPos, Pos newPos, boolean onGround) {
 		double dy = newPos.y() - currPos.y();
 		double fallDistance = this.getFallDistance(entity);
+		this.tickCurrentImpulseContext(entity);
 
 		if (FluidUtil.isTouchingWater(entity, newPos) || this.isTouchingSweetBerryBush(entity, newPos)) {
 			entity.setTag(FALL_DISTANCE, 0.0);
@@ -231,6 +237,7 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 		var adjustedFallDistance = this.adjustFallDistance(block, fallDistance);
 		var damageModifier = this.getDamageModifier(block);
 		var damageType = this.getDamageType(block);
+		var effectiveFallDistance = this.getEffectiveFallDistance(entity, adjustedFallDistance, newPos);
 
 		if (entity.hasTag(EXTRA_FALL_PARTICLES) && entity.getTag(EXTRA_FALL_PARTICLES) && fallDistance > 0.0) {
 			Vec position = landingPos.asVec().apply(Vec.Operator.FLOOR).add(0.5, 1, 0.5);
@@ -255,9 +262,9 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 		}
 
 		double safeFallDistance = entity.getAttributeValue(Attribute.SAFE_FALL_DISTANCE);
-		if (adjustedFallDistance > safeFallDistance) {
+		if (effectiveFallDistance > safeFallDistance) {
 			if (!block.isAir()) {
-				double damageDistance = Math.floor(adjustedFallDistance + 1.0E-6 - safeFallDistance);
+				double damageDistance = Math.floor(effectiveFallDistance + 1.0E-6 - safeFallDistance);
 				double particleMultiplier = Math.min(0.2 + damageDistance / 15.0, 2.5);
 				int particleCount = (int) (150 * particleMultiplier);
 
@@ -274,7 +281,7 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 		entity.setTag(FALL_DISTANCE, 0.0);
 
 		if (entity instanceof Player player && player.getGameMode().invulnerable()) return;
-		int damage = this.getFallDamage(entity, adjustedFallDistance, damageModifier);
+		int damage = this.getFallDamage(entity, effectiveFallDistance, damageModifier);
 		if (damage > 0) {
             this.playFallSound(entity, damage);
 			var damaged = entity.damage(damageType, damage);
@@ -364,6 +371,56 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 	public void setExtraFallParticles(LivingEntity entity, boolean extraFallParticles) {
 		if (extraFallParticles) entity.setTag(EXTRA_FALL_PARTICLES, true);
 		else entity.removeTag(EXTRA_FALL_PARTICLES);
+	}
+
+	@Override
+	public void setIgnoreFallDamageFromCurrentImpulse(LivingEntity entity) {
+		var impactY = this.calculateCurrentImpulseImpactY(entity);
+		entity.setTag(CURRENT_IMPULSE_IMPACT_Y, impactY);
+		entity.setTag(CURRENT_IMPULSE_CONTEXT_RESET_GRACE_TIME, Math.max(
+				entity.hasTag(CURRENT_IMPULSE_CONTEXT_RESET_GRACE_TIME) ? entity.getTag(CURRENT_IMPULSE_CONTEXT_RESET_GRACE_TIME) : 0,
+				CURRENT_IMPULSE_CONTEXT_RESET_GRACE_TICKS
+		));
+	}
+
+	private double calculateCurrentImpulseImpactY(LivingEntity entity) {
+		if (entity.hasTag(CURRENT_IMPULSE_IMPACT_Y) && entity.getTag(CURRENT_IMPULSE_IMPACT_Y) <= entity.getPosition().y()) {
+			return entity.getTag(CURRENT_IMPULSE_IMPACT_Y);
+		}
+
+		return entity.getPosition().y();
+	}
+
+	private void tickCurrentImpulseContext(LivingEntity entity) {
+		if (!entity.hasTag(CURRENT_IMPULSE_CONTEXT_RESET_GRACE_TIME)) return;
+
+		var graceTime = entity.getTag(CURRENT_IMPULSE_CONTEXT_RESET_GRACE_TIME);
+		if (graceTime <= 0) return;
+
+		entity.setTag(CURRENT_IMPULSE_CONTEXT_RESET_GRACE_TIME, graceTime - 1);
+	}
+
+	private double getEffectiveFallDistance(LivingEntity entity, double fallDistance, Pos position) {
+		if (!entity.hasTag(CURRENT_IMPULSE_IMPACT_Y)) return fallDistance;
+
+		var effectiveFallDistance = Math.min(fallDistance, entity.getTag(CURRENT_IMPULSE_IMPACT_Y) - position.y());
+
+		if (effectiveFallDistance <= 0.0) {
+			this.resetCurrentImpulseContext(entity);
+			return effectiveFallDistance;
+		}
+
+		var graceTime = entity.hasTag(CURRENT_IMPULSE_CONTEXT_RESET_GRACE_TIME) ? entity.getTag(CURRENT_IMPULSE_CONTEXT_RESET_GRACE_TIME) : 0;
+		if (graceTime <= 0) {
+			this.resetCurrentImpulseContext(entity);
+		}
+
+		return effectiveFallDistance;
+	}
+
+	private void resetCurrentImpulseContext(LivingEntity entity) {
+		entity.removeTag(CURRENT_IMPULSE_IMPACT_Y);
+		entity.setTag(CURRENT_IMPULSE_CONTEXT_RESET_GRACE_TIME, 0);
 	}
 
 	protected Point getLandingPos(LivingEntity livingEntity, Pos position) {
