@@ -7,6 +7,9 @@ import io.github.togar2.pvp.feature.RegistrableFeature;
 import io.github.togar2.pvp.feature.config.DefinedFeature;
 import io.github.togar2.pvp.feature.config.FeatureConfiguration;
 import io.github.togar2.pvp.utils.CombatVersion;
+import io.github.togar2.pvp.utils.ViewUtil;
+import net.kyori.adventure.sound.Sound;
+import net.minestom.server.component.DataComponents;
 import net.minestom.server.entity.EquipmentSlot;
 import net.minestom.server.entity.LivingEntity;
 import net.minestom.server.event.EventNode;
@@ -58,5 +61,22 @@ public class VanillaEquipmentFeature implements EquipmentFeature, RegistrableFea
 		} else if (slot.isHand()) {
 			Tool.updateEquipmentAttributes(entity, entity.getEquipment(slot), event.getEquippedItem(), slot, this.version);
 		}
+
+		this.playEquipSound(entity, entity.getEquipment(slot), event.getEquippedItem(), slot);
+	}
+
+	private void playEquipSound(LivingEntity entity, ItemStack oldStack, ItemStack newStack, EquipmentSlot slot) {
+		if (entity.isSilent()) return;
+		if (entity.getAliveTicks() <= 0) return;
+		if (newStack.isSimilar(oldStack)) return;
+
+		var equippable = newStack.get(DataComponents.EQUIPPABLE);
+		if (equippable == null) return;
+		if (equippable.slot() != slot) return;
+
+		ViewUtil.viewersAndSelf(entity).playSound(Sound.sound(
+				equippable.equipSound(), Sound.Source.PLAYER,
+				1.0F, 1.0F
+		), entity);
 	}
 }
