@@ -299,7 +299,7 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 		// Calculate attacks
 		boolean strongAttack = cooldownProgress > 0.9;
 		boolean sprintAttack = attacker.isSprinting() && strongAttack;
-		int knockback = this.enchantmentFeature.getKnockback(attacker);
+		double knockback = this.enchantmentFeature.getKnockback(attacker);
 		int fireAspect = this.enchantmentFeature.getFireAspect(attacker);
 
 		// Use features to determine critical and sweeping

@@ -55,7 +55,12 @@ public interface EnchantmentFeature extends CombatFeature {
 		}
 
 		@Override
-		public int getKnockback(LivingEntity entity) {
+		public double getKnockback(LivingEntity entity) {
+			return 0;
+		}
+
+		@Override
+		public double getKnockback(LivingEntity entity, ItemStack weapon) {
 			return 0;
 		}
 
@@ -130,7 +135,9 @@ public interface EnchantmentFeature extends CombatFeature {
 
 	int getFireDuration(LivingEntity entity, int duration);
 
-	int getKnockback(LivingEntity entity);
+	double getKnockback(LivingEntity entity);
+
+	double getKnockback(LivingEntity entity, ItemStack weapon);
 
 	int getSweeping(LivingEntity entity);
 

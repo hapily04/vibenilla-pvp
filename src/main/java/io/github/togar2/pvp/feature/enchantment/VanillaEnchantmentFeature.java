@@ -16,6 +16,7 @@ import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.EquipmentSlot;
 import net.minestom.server.entity.LivingEntity;
 import net.minestom.server.entity.Player;
+import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.entity.damage.DamageType;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.entity.EntitySetFireEvent;
@@ -170,8 +171,17 @@ public class VanillaEnchantmentFeature implements EnchantmentFeature, Registrabl
 	}
 
 	@Override
-	public int getKnockback(LivingEntity entity) {
-		return this.getEquipmentLevel(entity, Enchantment.KNOCKBACK);
+	public double getKnockback(LivingEntity entity) {
+		return this.getKnockback(entity, entity.getItemInMainHand());
+	}
+
+	@Override
+	public double getKnockback(LivingEntity entity, ItemStack weapon) {
+		var baseKnockback = (float) entity.getAttributeValue(Attribute.ATTACK_KNOCKBACK);
+
+		return this.modifyConditionalValue(
+				weapon, EffectComponent.KNOCKBACK, baseKnockback
+		);
 	}
 
 	@Override
