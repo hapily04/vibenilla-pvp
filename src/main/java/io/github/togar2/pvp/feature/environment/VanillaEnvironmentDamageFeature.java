@@ -6,7 +6,9 @@ import io.github.togar2.pvp.feature.config.DefinedFeature;
 import io.github.togar2.pvp.feature.config.FeatureConfiguration;
 import io.github.togar2.pvp.feature.enchantment.EnchantmentFeature;
 import io.github.togar2.pvp.feature.enchantment.VanillaEnchantmentFeature;
+import io.github.togar2.pvp.feature.provider.DifficultyProvider;
 import io.github.togar2.pvp.utils.FluidUtil;
+import io.github.togar2.pvp.utils.PotionFlags;
 import io.github.togar2.pvp.utils.ViewUtil;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
@@ -32,8 +34,10 @@ import net.minestom.server.instance.WorldBorder;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.item.Material;
+import net.minestom.server.potion.Potion;
 import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.tag.Tag;
+import net.minestom.server.world.Difficulty;
 
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
@@ -45,7 +49,8 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 	public static final DefinedFeature<VanillaEnvironmentDamageFeature> DEFINED = new DefinedFeature<>(
 			FeatureType.ENVIRONMENT_DAMAGE, VanillaEnvironmentDamageFeature::new,
 			VanillaEnvironmentDamageFeature::initPlayer,
-			FeatureType.ENCHANTMENT
+			FeatureType.ENCHANTMENT,
+			FeatureType.DIFFICULTY
 	);
 
 	private static final int MAX_AIR_SUPPLY = 300;
@@ -70,9 +75,11 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 	@SuppressWarnings("unused")
 	public VanillaEnvironmentDamageFeature(FeatureConfiguration configuration) {
 		this.enchantmentFeature = configuration.get(FeatureType.ENCHANTMENT);
+		this.difficultyProvider = configuration.get(FeatureType.DIFFICULTY);
 	}
 
 	private final EnchantmentFeature enchantmentFeature;
+	private final DifficultyProvider difficultyProvider;
 
 	public static void initPlayer(Player player, boolean firstInit) {
 		player.setTag(AIR_SUPPLY, MAX_AIR_SUPPLY);
@@ -367,6 +374,8 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 						this.handleBerryBushDamage(entity, block);
 					} else if (block.compare(Block.CAMPFIRE) || block.compare(Block.SOUL_CAMPFIRE)) {
 						this.handleCampfireDamage(entity, block);
+					} else if (block.compare(Block.WITHER_ROSE)) {
+						this.handleWitherRoseEffect(entity);
 					}
 				}
 			}
@@ -379,6 +388,13 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 				entity.damage(DamageType.HOT_FLOOR, 1.0F);
 			}
 		}
+	}
+
+	private void handleWitherRoseEffect(LivingEntity entity) {
+		if (this.difficultyProvider.getValue(entity) == Difficulty.PEACEFUL) return;
+		if (entity instanceof Player player && player.getGameMode().invulnerable()) return;
+
+		entity.addEffect(new Potion(PotionEffect.WITHER, 0, 40, PotionFlags.defaultFlags()));
 	}
 
 	private void handleBerryBushDamage(LivingEntity entity, Block block) {
