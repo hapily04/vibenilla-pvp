@@ -11,12 +11,16 @@ import io.github.togar2.pvp.utils.ViewUtil;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.component.DataComponents;
 import net.minestom.server.entity.EquipmentSlot;
+import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.LivingEntity;
 import net.minestom.server.event.EventNode;
+import net.minestom.server.event.inventory.InventoryPreClickEvent;
 import net.minestom.server.event.item.EntityEquipEvent;
 import net.minestom.server.event.player.PlayerChangeHeldSlotEvent;
 import net.minestom.server.event.trait.EntityInstanceEvent;
 import net.minestom.server.item.ItemStack;
+import net.minestom.server.item.enchant.EffectComponent;
+import net.minestom.server.utils.inventory.PlayerInventoryUtils;
 
 /**
  * Vanilla implementation of {@link EquipmentFeature}
@@ -44,12 +48,32 @@ public class VanillaEquipmentFeature implements EquipmentFeature, RegistrableFea
 
 	@Override
 	public void init(EventNode<EntityInstanceEvent> node) {
+		node.addListener(InventoryPreClickEvent.class, this::onInventoryPreClick);
 		node.addListener(EntityEquipEvent.class, this::onEquip);
 		node.addListener(PlayerChangeHeldSlotEvent.class, event -> {
 			LivingEntity entity = event.getPlayer();
 			ItemStack newItem = event.getPlayer().getInventory().getItemStack(event.getNewSlot());
 			Tool.updateEquipmentAttributes(entity, entity.getEquipment(EquipmentSlot.MAIN_HAND), newItem, EquipmentSlot.MAIN_HAND, this.version);
 		});
+	}
+
+	private void onInventoryPreClick(InventoryPreClickEvent event) {
+		var player = event.getPlayer();
+
+		if (player.getGameMode() == GameMode.CREATIVE) return;
+		if (event.getInventory() != player.getInventory()) return;
+		if (!this.isArmorSlot(event.getSlot())) return;
+
+		var clickedItem = event.getClickedItem();
+
+		if (clickedItem.has(EffectComponent.PREVENT_ARMOR_CHANGE)) {
+			event.setCancelled(true);
+		}
+	}
+
+	private boolean isArmorSlot(int slot) {
+		return slot >= PlayerInventoryUtils.HELMET_SLOT
+				&& slot <= PlayerInventoryUtils.BOOTS_SLOT;
 	}
 
 	protected void onEquip(EntityEquipEvent event) {
