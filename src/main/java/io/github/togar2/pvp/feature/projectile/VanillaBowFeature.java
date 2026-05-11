@@ -86,8 +86,9 @@ public class VanillaBowFeature implements BowFeature, RegistrableFeature {
 			int projectileSlot;
 
 			ProjectileItemFeature.ProjectileItem projectile = this.projectileItemFeature.getBowProjectile(player);
-			if (!infinite && projectile == null) return;
 			if (projectile == null) {
+				if (player.getGameMode() != GameMode.CREATIVE) return;
+
 				projectileItem = Arrow.DEFAULT_ARROW;
 				projectileSlot = -1;
 			} else {
