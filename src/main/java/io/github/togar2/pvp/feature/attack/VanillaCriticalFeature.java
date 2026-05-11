@@ -3,6 +3,7 @@ package io.github.togar2.pvp.feature.attack;
 import io.github.togar2.pvp.feature.FeatureType;
 import io.github.togar2.pvp.feature.config.DefinedFeature;
 import io.github.togar2.pvp.feature.config.FeatureConfiguration;
+import io.github.togar2.pvp.feature.fall.FallFeature;
 import io.github.togar2.pvp.feature.state.PlayerStateFeature;
 import io.github.togar2.pvp.utils.CombatVersion;
 import io.github.togar2.pvp.utils.FluidUtil;
@@ -17,12 +18,13 @@ import java.util.concurrent.ThreadLocalRandom;
 public class VanillaCriticalFeature implements CriticalFeature {
 	public static final DefinedFeature<VanillaCriticalFeature> DEFINED = new DefinedFeature<>(
 			FeatureType.CRITICAL, VanillaCriticalFeature::new,
-			FeatureType.PLAYER_STATE, FeatureType.VERSION
+			FeatureType.PLAYER_STATE, FeatureType.FALL, FeatureType.VERSION
 	);
 
 	private final FeatureConfiguration configuration;
 
 	private PlayerStateFeature playerStateFeature;
+	private FallFeature fallFeature;
 	private CombatVersion version;
 
 	public VanillaCriticalFeature(FeatureConfiguration configuration) {
@@ -32,13 +34,14 @@ public class VanillaCriticalFeature implements CriticalFeature {
 	@Override
 	public void initDependencies() {
 		this.playerStateFeature = this.configuration.get(FeatureType.PLAYER_STATE);
+		this.fallFeature = this.configuration.get(FeatureType.FALL);
 		this.version = this.configuration.get(FeatureType.VERSION);
 	}
 
 	@Override
 	public boolean shouldCrit(LivingEntity attacker, AttackValues.PreCritical values) {
 		boolean critical = values.strong() && !this.playerStateFeature.isClimbing(attacker)
-				&& attacker.getVelocity().y() < 0 && !attacker.isOnGround()
+				&& this.fallFeature.getFallDistance(attacker) > 0.0 && !attacker.isOnGround()
 				&& !FluidUtil.isTouchingWater(attacker)
 				&& !attacker.hasEffect(PotionEffect.BLINDNESS)
 				&& attacker.getVehicle() == null;
