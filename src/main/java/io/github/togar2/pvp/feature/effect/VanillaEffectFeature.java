@@ -556,7 +556,7 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 			var block = instance.getBlock(blockPosition);
 			var below = blockPosition.sub(0, 1, 0);
 
-			if (!block.isAir() || !instance.getBlock(below).isSolid()) {
+			if (!block.registry().isReplaceable() || !instance.getBlock(below).isSolid()) {
 				continue;
 			}
 
