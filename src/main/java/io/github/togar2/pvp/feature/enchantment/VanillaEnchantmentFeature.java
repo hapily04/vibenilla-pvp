@@ -283,12 +283,11 @@ public class VanillaEnchantmentFeature implements EnchantmentFeature, Registrabl
 		int unbreakingLevel = stack.get(DataComponents.ENCHANTMENTS).level(Enchantment.UNBREAKING);
 		if (unbreakingLevel <= 0) return false;
 
-		ThreadLocalRandom random = ThreadLocalRandom.current();
-		if (ArmorMaterial.fromMaterial(stack.material()) != null && random.nextFloat() < 0.6f) {
-			return false;
-		} else {
-			return random.nextInt(unbreakingLevel + 1) > 0;
-		}
+		var chance = ArmorMaterial.fromMaterial(stack.material()) == null
+				? (double) unbreakingLevel / (2.0 * unbreakingLevel + 1.0)
+				: (2.0 * unbreakingLevel) / (5.0 * unbreakingLevel + 10.0);
+
+		return ThreadLocalRandom.current().nextDouble() < chance;
 	}
 
 	@Override
