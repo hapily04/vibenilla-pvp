@@ -253,9 +253,11 @@ public class VanillaSpearFeature implements SpearFeature, RegistrableFeature {
 		}
 
 		this.playPiercingSounds(attacker, tool, hitSomething);
-        this.itemDamageFeature.damageEquipment(attacker, EquipmentSlot.MAIN_HAND, 1);
 
-		if (hitSomething) this.applyLungeEffect(attacker);
+		if (hitSomething) {
+            this.itemDamageFeature.damageEquipment(attacker, EquipmentSlot.MAIN_HAND, 1);
+			this.applyLungeEffect(attacker);
+		}
 	}
 
 	private void applyLungeEffect(Player attacker) {
