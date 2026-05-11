@@ -166,7 +166,7 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 				stack = this.loadCrossbowProjectiles(player, stack);
 				if (stack == null || stack.isAir()) return;
 
-				this.playCrossbowLoadingEndSound(player);
+				this.playCrossbowLoadingEndSound(player, stack);
 				player.setItemInHand(hand, stack);
 				player.setTag(LOADED_DURING_USE, true);
 			}
@@ -199,15 +199,18 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 		stack = this.loadCrossbowProjectiles(player, stack);
 		if (stack == null || stack.isAir()) return;
 
-		this.playCrossbowLoadingEndSound(player);
+		this.playCrossbowLoadingEndSound(player, stack);
 
 		player.setItemInHand(hand, stack);
 	}
 
-	protected void playCrossbowLoadingEndSound(Player player) {
+	protected void playCrossbowLoadingEndSound(Player player, ItemStack stack) {
+		var chargingSounds = this.getCrossbowChargingSounds(stack);
+		if (chargingSounds.end() == null) return;
+
 		ThreadLocalRandom random = ThreadLocalRandom.current();
 		ViewUtil.viewersAndSelf(player).playSound(Sound.sound(
-				SoundEvent.ITEM_CROSSBOW_LOADING_END, Sound.Source.PLAYER,
+				chargingSounds.end(), Sound.Source.PLAYER,
 				1.0f, 1.0f / (random.nextFloat() * 0.5f + 1.0f) + 0.2f
 		), player);
 	}
