@@ -15,6 +15,7 @@ import net.minestom.server.collision.BoundingBox;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.CoordConversion;
 import net.minestom.server.coordinate.Vec;
+import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.EquipmentSlot;
 import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.GameMode;
@@ -54,6 +55,7 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 	private static final int FIRE_DAMAGE_INTERVAL = 20;
 	private static final int FIRE_IGNITE_TICKS = 8 * 20;
 	private static final int LAVA_IGNITE_TICKS = 15 * 20;
+	private static final int DEFAULT_MAX_ENTITY_CRAMMING = 24;
 	private static final double WORLD_BORDER_SAFE_ZONE = 5.0;
 	private static final double WORLD_BORDER_DAMAGE_PER_BLOCK = 0.2;
 
@@ -96,6 +98,7 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 		this.handleVoidDamage(player);
 		this.handleSuffocation(player);
 		this.handleWorldBorderDamage(player);
+		this.handleCrammingDamage(player);
 		this.handleDrowning(player);
 		this.handleBlockContactDamage(player);
 		this.handleFreezeDamage(player);
@@ -107,6 +110,7 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 		this.handleLavaDamage(entity);
 		this.handleVoidDamage(entity);
 		this.handleSuffocation(entity);
+		this.handleCrammingDamage(entity);
 		this.handleDrowning(entity);
 		this.handleBlockContactDamage(entity);
 		this.handleFreezeDamage(entity);
@@ -211,6 +215,37 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 				}
 			}
 		}
+	}
+
+	private void handleCrammingDamage(LivingEntity entity) {
+		if (ThreadLocalRandom.current().nextInt(4) != 0) return;
+
+		var instance = entity.getInstance();
+
+		if (instance == null) return;
+
+		var position = entity.getPosition();
+		var boundingBox = entity.getBoundingBox();
+		var pushableEntities = instance.getEntities()
+				.stream()
+				.filter(nearbyEntity -> nearbyEntity != entity)
+				.filter(nearbyEntity -> boundingBox.intersectEntity(position, nearbyEntity))
+				.filter(this::isCrammingPushable)
+				.limit(DEFAULT_MAX_ENTITY_CRAMMING)
+				.count();
+
+		if (pushableEntities > DEFAULT_MAX_ENTITY_CRAMMING - 1) {
+			entity.damage(DamageType.CRAMMING, 6.0F);
+		}
+	}
+
+	private boolean isCrammingPushable(Entity entity) {
+		if (!(entity instanceof LivingEntity livingEntity)) return false;
+		if (livingEntity.isDead() || livingEntity.isRemoved()) return false;
+		if (livingEntity.getVehicle() != null) return false;
+		if (livingEntity instanceof Player player && player.getGameMode() == GameMode.SPECTATOR) return false;
+
+		return true;
 	}
 
 	private void handleWorldBorderDamage(Player player) {
