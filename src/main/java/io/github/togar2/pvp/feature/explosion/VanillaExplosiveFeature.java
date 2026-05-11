@@ -135,7 +135,7 @@ public class VanillaExplosiveFeature implements ExplosiveFeature, RegistrableFea
 				return;
 
 			ItemStack stack = player.getItemInHand(event.getHand());
-			if (player.isSneaking() && stack.material().isBlock()) return;
+			if (this.shouldSuppressAnchorUse(player)) return;
 
 			int charges = Integer.parseInt(block.getProperty("charges"));
 			if (stack.material() == Material.GLOWSTONE && charges < 4) {
@@ -209,5 +209,10 @@ public class VanillaExplosiveFeature implements ExplosiveFeature, RegistrableFea
 		if (explosionSupplier == null) return;
 
 		instance.setExplosionSupplier(explosionSupplier);
+	}
+
+	private boolean shouldSuppressAnchorUse(Player player) {
+		return (player.isSneaking() || player.inputs().shift())
+				&& (!player.getItemInMainHand().isAir() || !player.getItemInOffHand().isAir());
 	}
 }
