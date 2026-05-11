@@ -29,7 +29,7 @@ public class ThornsEnchantment extends CombatEnchantment {
 		Map.Entry<EquipmentSlot, ItemStack> entry = feature.pickRandom(user, Enchantment.THORNS);
 
 		if (attacker != null) {
-			attacker.damage(new Damage(DamageType.THORNS, user, user, null, getDamageAmount(level, random)));
+			attacker.damage(new Damage(DamageType.THORNS, user, user, null, getDamageAmount(random)));
 		}
 
 		if (entry != null) {
@@ -42,7 +42,7 @@ public class ThornsEnchantment extends CombatEnchantment {
 		return random.nextFloat() < 0.15f * level;
 	}
 
-	private static int getDamageAmount(int level, ThreadLocalRandom random) {
-		return level > 10 ? level - 10 : 1 + random.nextInt(4);
+	private static float getDamageAmount(ThreadLocalRandom random) {
+		return 1.0F + random.nextFloat() * 4.0F;
 	}
 }
