@@ -298,12 +298,18 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 			return ItemStack.AIR;
 		}
 
+		var ammoUse = projectileItem.material() == Material.ARROW
+				? (int) this.enchantmentFeature.modifyConditionalValue(
+						stack, EffectComponent.AMMO_USE, 1.0F, true)
+				: 1;
+		if (player.getGameMode() != GameMode.CREATIVE && ammoUse > projectileItem.amount()) return ItemStack.AIR;
+
 		var loadedProjectiles = new ArrayList<ItemStack>(projectileCount);
 
 		for (var projectileIndex = 0; projectileIndex < projectileCount; projectileIndex++) {
 			var loadedProjectile = projectileItem.withAmount(1);
 
-			if (projectileIndex > 0 || player.getGameMode() == GameMode.CREATIVE) {
+			if (projectileIndex > 0 || player.getGameMode() == GameMode.CREATIVE || ammoUse <= 0) {
 				loadedProjectile = loadedProjectile.with(DataComponents.INTANGIBLE_PROJECTILE, Unit.INSTANCE);
 			}
 
@@ -313,7 +319,7 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 		stack = this.setCrossbowProjectiles(stack, loadedProjectiles);
 
 		if (player.getGameMode() != GameMode.CREATIVE && projectileSlot >= 0) {
-			player.getInventory().setItemStack(projectileSlot, projectileItem.withAmount(projectileItem.amount() - 1));
+			player.getInventory().setItemStack(projectileSlot, projectileItem.withAmount(projectileItem.amount() - ammoUse));
 		}
 
 		return stack;
