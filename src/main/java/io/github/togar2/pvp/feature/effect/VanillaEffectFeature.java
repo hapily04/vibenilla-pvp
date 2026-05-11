@@ -6,6 +6,7 @@ import io.github.togar2.pvp.feature.FeatureType;
 import io.github.togar2.pvp.feature.RegistrableFeature;
 import io.github.togar2.pvp.feature.config.DefinedFeature;
 import io.github.togar2.pvp.feature.config.FeatureConfiguration;
+import io.github.togar2.pvp.feature.explosion.VanillaExplosionSupplier;
 import io.github.togar2.pvp.feature.food.ExhaustionFeature;
 import io.github.togar2.pvp.feature.food.FoodFeature;
 import io.github.togar2.pvp.potion.effect.CombatPotionEffect;
@@ -22,11 +23,13 @@ import net.minestom.server.ServerFlag;
 import net.minestom.server.coordinate.BlockVec;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.LivingEntity;
 import net.minestom.server.entity.Player;
+import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.entity.metadata.LivingEntityMeta;
 import net.minestom.server.entity.metadata.other.SlimeMeta;
 import net.minestom.server.event.EventDispatcher;
@@ -449,7 +452,9 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 				1.0F, 1.0F
 		), entity);
 
-		for (var nearbyEntity : instance.getNearbyEntities(position, power)) {
+		var radius = power * 2.0;
+
+		for (var nearbyEntity : instance.getNearbyEntities(position, radius)) {
 			if (nearbyEntity == entity) {
 				continue;
 			}
@@ -460,34 +465,43 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 				continue;
 			}
 
-			this.applyWindChargedKnockback(position, power, nearbyLiving);
+			this.applyWindChargedKnockback(position, radius, nearbyLiving);
 		}
 		for (var player : instance.getPlayers()) {
 			if (player == entity) {
 				continue;
 			}
 
-			this.applyWindChargedKnockback(position, power, player);
+			this.applyWindChargedKnockback(position, radius, player);
 		}
 	}
 
-	private void applyWindChargedKnockback(Point position, double power, LivingEntity nearbyLiving) {
-		var direction = nearbyLiving.getPosition().asVec().sub(position.asVec());
-		var distance = direction.length();
-
-		if (distance <= 0.0 || distance > power) {
+	private void applyWindChargedKnockback(Point position, double radius, LivingEntity nearbyLiving) {
+		if (nearbyLiving instanceof Player player && !this.shouldApplyWindChargedKnockback(player)) {
 			return;
 		}
 
-		var knockback = (1.0 - distance / power) * power;
+		var originY = nearbyLiving.getPosition().y() + nearbyLiving.getEyeHeight();
+		var origin = new Vec(nearbyLiving.getPosition().x(), originY, nearbyLiving.getPosition().z());
+		var direction = origin.sub(position.asVec());
+		var distance = direction.length();
+
+		if (distance <= 0.0 || distance > radius) {
+			return;
+		}
+
+		var exposure = VanillaExplosionSupplier.getExposure(position, nearbyLiving);
+		var knockback = (1.0 - distance / radius) * exposure;
+		knockback *= 1.0 - nearbyLiving.getAttributeValue(Attribute.EXPLOSION_KNOCKBACK_RESISTANCE);
 		var knockbackVector = direction.normalize().mul(knockback);
 		var velocity = nearbyLiving.getVelocity();
 
-		nearbyLiving.setVelocity(velocity.add(
-				knockbackVector.x() * ServerFlag.SERVER_TICKS_PER_SECOND,
-				Math.abs(knockbackVector.y() + 0.3) * ServerFlag.SERVER_TICKS_PER_SECOND,
-				knockbackVector.z() * ServerFlag.SERVER_TICKS_PER_SECOND
-		));
+		nearbyLiving.setVelocity(velocity.add(knockbackVector.mul(ServerFlag.SERVER_TICKS_PER_SECOND)));
+	}
+
+	private boolean shouldApplyWindChargedKnockback(Player player) {
+		return player.getGameMode() != GameMode.SPECTATOR
+				&& (player.getGameMode() != GameMode.CREATIVE || !player.isFlying());
 	}
 
 	private void spawnOozingSlimes(LivingEntity entity) {
