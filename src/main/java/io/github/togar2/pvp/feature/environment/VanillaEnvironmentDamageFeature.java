@@ -81,6 +81,9 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 	private static final Set<EntityType> DRY_OUT_AIR_SUPPLY_TYPES = Set.of(
 			EntityType.AXOLOTL, EntityType.NAUTILUS
 	);
+	private static final Set<EntityType> WATER_SENSITIVE_TYPES = Set.of(
+			EntityType.BLAZE, EntityType.ENDERMAN, EntityType.SNOW_GOLEM, EntityType.STRIDER
+	);
 
 	@SuppressWarnings("unused")
 	public VanillaEnvironmentDamageFeature(FeatureConfiguration configuration) {
@@ -119,6 +122,7 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 		this.handleDrowning(player);
 		this.handleBlockContactDamage(player);
 		this.handleFreezeDamage(player);
+		this.handleWaterSensitiveDamage(player);
 	}
 
 	private void handleEntityTick(LivingEntity entity) {
@@ -131,6 +135,7 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 		this.handleDrowning(entity);
 		this.handleBlockContactDamage(entity);
 		this.handleFreezeDamage(entity);
+		this.handleWaterSensitiveDamage(entity);
 	}
 
 	private void handleExtinguishing(LivingEntity entity) {
@@ -517,6 +522,17 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 				&& canFreeze) {
 			entity.damage(DamageType.FREEZE, 1.0F);
 		}
+	}
+
+	private void handleWaterSensitiveDamage(LivingEntity entity) {
+		if (!WATER_SENSITIVE_TYPES.contains(entity.getEntityType())) return;
+
+		var instance = entity.getInstance();
+
+		if (instance == null) return;
+		if (!this.isTouchingWater(entity) && !this.isInRain(instance, entity)) return;
+
+		entity.damage(DamageType.DROWN, 1.0F);
 	}
 
 	private boolean canFreeze(LivingEntity entity) {
