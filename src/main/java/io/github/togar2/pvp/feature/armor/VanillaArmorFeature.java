@@ -10,7 +10,7 @@ import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.LivingEntity;
 import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.entity.damage.DamageType;
-import net.minestom.server.item.enchant.Enchantment;
+import net.minestom.server.item.enchant.EffectComponent;
 import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.potion.TimedPotion;
 import net.minestom.server.utils.MathUtils;
@@ -58,10 +58,9 @@ public class VanillaArmorFeature implements ArmorFeature {
 
 		float armorEffectiveness = 1.0F;
 		if (attacker != null) {
-			int breachLevel = this.enchantmentFeature.getEquipmentLevel(attacker, Enchantment.BREACH);
-			if (breachLevel > 0) {
-				armorEffectiveness = Math.max(0.0F, 1.0F - 0.15F * breachLevel);
-			}
+			armorEffectiveness = Math.max(0.0F, this.enchantmentFeature.modifyConditionalValue(
+					attacker.getItemInMainHand(), EffectComponent.ARMOR_EFFECTIVENESS, 1.0F
+			));
 		}
 
 		if (this.version.legacy()) {

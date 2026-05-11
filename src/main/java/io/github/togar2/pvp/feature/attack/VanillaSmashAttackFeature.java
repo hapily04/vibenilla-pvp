@@ -19,6 +19,7 @@ import net.minestom.server.entity.LivingEntity;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.entity.metadata.other.ArmorStandMeta;
+import net.minestom.server.item.enchant.EffectComponent;
 import net.minestom.server.item.enchant.Enchantment;
 import net.minestom.server.network.packet.server.play.ParticlePacket;
 import net.minestom.server.particle.Particle;
@@ -38,7 +39,6 @@ public class VanillaSmashAttackFeature implements SmashAttackFeature {
 	private static final double SMASH_ATTACK_KNOCKBACK_RADIUS = 3.5;
 	private static final double SMASH_ATTACK_KNOCKBACK_POWER = 0.7;
 	private static final double SMASH_ATTACK_VERTICAL_KNOCKBACK = 0.7;
-	private static final float DENSITY_DAMAGE_PER_LEVEL = 0.5F;
 	private static final float[] WIND_BURST_POWER_BY_LEVEL = {1.2F, 1.75F, 2.2F};
 	private static final float WIND_BURST_FALLBACK_BASE_POWER = 1.5F;
 	private static final float WIND_BURST_FALLBACK_POWER_PER_LEVEL = 0.35F;
@@ -83,10 +83,10 @@ public class VanillaSmashAttackFeature implements SmashAttackFeature {
 			damage = 22.0 + (fallDistance - 8.0);
 		}
 
-		int densityLevel = this.enchantmentFeature.getEquipmentLevel(attacker, Enchantment.DENSITY);
-		if (densityLevel > 0) {
-			damage += DENSITY_DAMAGE_PER_LEVEL * densityLevel * fallDistance;
-		}
+		var densityDamage = this.enchantmentFeature.modifyConditionalValue(
+				attacker.getItemInMainHand(), EffectComponent.SMASH_DAMAGE_PER_FALLEN_BLOCK, 0.0F
+		);
+		damage += densityDamage * fallDistance;
 
 		return (float) damage;
 	}
