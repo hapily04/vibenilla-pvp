@@ -85,6 +85,11 @@ public interface EnchantmentFeature extends CombatFeature {
 		}
 
 		@Override
+		public int getProjectileIgniteTicks(ItemStack stack) {
+			return 0;
+		}
+
+		@Override
 		public boolean shouldUnbreakingPreventDamage(ItemStack stack) {
 			return false;
 		}
@@ -133,6 +138,8 @@ public interface EnchantmentFeature extends CombatFeature {
 	float modifyValue(ItemStack stack, DataComponent<ValueEffect> component, float base);
 
 	<T> T pickHighestLevel(ItemStack stack, DataComponent<List<T>> component, T fallback);
+
+	int getProjectileIgniteTicks(ItemStack stack);
 
 	boolean shouldUnbreakingPreventDamage(ItemStack stack);
 

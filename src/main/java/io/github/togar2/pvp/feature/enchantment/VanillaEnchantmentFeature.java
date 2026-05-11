@@ -9,6 +9,7 @@ import io.github.togar2.pvp.feature.RegistrableFeature;
 import io.github.togar2.pvp.feature.config.DefinedFeature;
 import io.github.togar2.pvp.feature.config.FeatureConfiguration;
 import net.minestom.server.MinecraftServer;
+import net.minestom.server.ServerFlag;
 import net.minestom.server.component.DataComponent;
 import net.minestom.server.component.DataComponents;
 import net.minestom.server.entity.Entity;
@@ -22,6 +23,8 @@ import net.minestom.server.event.trait.EntityInstanceEvent;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.component.EnchantmentList;
 import net.minestom.server.item.enchant.ConditionalEffect;
+import net.minestom.server.item.enchant.EffectComponent;
+import net.minestom.server.item.enchant.EntityEffect;
 import net.minestom.server.item.enchant.Enchantment;
 import net.minestom.server.item.enchant.ValueEffect;
 import net.minestom.server.registry.RegistryKey;
@@ -233,6 +236,46 @@ public class VanillaEnchantmentFeature implements EnchantmentFeature, Registrabl
 		if (pickedEffects == null) return fallback;
 
 		return pickedEffects.get(Math.min(pickedLevel, pickedEffects.size()) - 1);
+	}
+
+	@Override
+	public int getProjectileIgniteTicks(ItemStack stack) {
+		var ticks = 0;
+		var enchantmentRegistry = MinecraftServer.getEnchantmentRegistry();
+
+		for (var entry : stack.get(DataComponents.ENCHANTMENTS).enchantments().entrySet()) {
+			var enchantment = enchantmentRegistry.get(entry.getKey());
+			if (enchantment == null) continue;
+
+			var effects = enchantment.effects().get(EffectComponent.PROJECTILE_SPAWNED);
+			if (effects == null) continue;
+
+			for (var effect : effects) {
+				if (effect.requirements() != null) continue;
+
+				ticks = Math.max(ticks, this.getProjectileIgniteTicks(effect.effect(), entry.getValue()));
+			}
+		}
+
+		return ticks;
+	}
+
+	private int getProjectileIgniteTicks(EntityEffect effect, int level) {
+		if (effect instanceof EntityEffect.Ignite ignite) {
+			return (int) Math.floor(ignite.duration().calc(level) * ServerFlag.SERVER_TICKS_PER_SECOND);
+		}
+
+		if (effect instanceof EntityEffect.AllOf allOf) {
+			var ticks = 0;
+
+			for (var nestedEffect : allOf.effect()) {
+				ticks = Math.max(ticks, this.getProjectileIgniteTicks(nestedEffect, level));
+			}
+
+			return ticks;
+		}
+
+		return 0;
 	}
 
 	@Override

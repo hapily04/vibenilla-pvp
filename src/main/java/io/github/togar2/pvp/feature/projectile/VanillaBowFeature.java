@@ -111,8 +111,10 @@ public class VanillaBowFeature implements BowFeature, RegistrableFeature {
 			int punchEnchantment = enchantmentList.level(Enchantment.PUNCH);
 			if (punchEnchantment > 0) arrow.setKnockback(punchEnchantment);
 
-			if (enchantmentList.level(Enchantment.FLAME) > 0)
-				arrow.setFireTicksLeft(100 * ServerFlag.SERVER_TICKS_PER_SECOND); // 100 seconds
+			var projectileFireTicks = this.enchantmentFeature.getProjectileIgniteTicks(stack);
+			if (projectileFireTicks > 0) {
+				arrow.setFireTicksLeft(projectileFireTicks);
+			}
 
             this.itemDamageFeature.damageEquipment(player, event.getHand() == PlayerHand.MAIN ?
 					EquipmentSlot.MAIN_HAND : EquipmentSlot.OFF_HAND, 1);
