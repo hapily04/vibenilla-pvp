@@ -20,6 +20,7 @@ import net.minestom.server.event.entity.projectile.ProjectileCollideWithBlockEve
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.item.ItemStack;
+import net.minestom.server.item.enchant.EffectComponent;
 import net.minestom.server.item.enchant.Enchantment;
 import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.utils.time.TimeUnit;
@@ -38,7 +39,10 @@ public class ThrownTrident extends AbstractArrow {
 		this.tridentItem = tridentItem;
 
 		ThrownTridentMeta meta = ((ThrownTridentMeta) this.getEntityMeta());
-		meta.setLoyaltyLevel((byte) tridentItem.get(DataComponents.ENCHANTMENTS).level(Enchantment.LOYALTY));
+		var loyalty = (int) this.enchantmentFeature.modifyConditionalValue(
+				tridentItem, EffectComponent.TRIDENT_RETURN_ACCELERATION, 0.0F
+		);
+		meta.setLoyaltyLevel((byte) Math.min(Math.max(loyalty, 0), 127));
 
 		meta.setHasEnchantmentGlint(!Objects.requireNonNull(tridentItem.get(DataComponents.ENCHANTMENTS))
 				.enchantments().isEmpty());
