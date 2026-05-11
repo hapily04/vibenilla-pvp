@@ -21,6 +21,7 @@ import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.component.EnchantmentList;
 import net.minestom.server.item.enchant.Enchantment;
 import net.minestom.server.registry.RegistryKey;
+import net.minestom.server.tag.Tag;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -38,6 +39,7 @@ public class VanillaEnchantmentFeature implements EnchantmentFeature, Registrabl
 			FeatureType.ENCHANTMENT, VanillaEnchantmentFeature::new,
 			CombatEnchantments.getAllFeatureDependencies()
 	);
+	public static final Tag<Boolean> FIRE_DURATION_ALREADY_SCALED = Tag.Transient("fireDurationAlreadyScaled");
 
 	private final FeatureConfiguration configuration;
 
@@ -49,7 +51,13 @@ public class VanillaEnchantmentFeature implements EnchantmentFeature, Registrabl
 	public void init(EventNode<EntityInstanceEvent> node) {
 		node.addListener(EntitySetFireEvent.class, event -> {
 			if (event.getEntity() instanceof LivingEntity living) {
-				var fireTicks = this.getFireDuration(living, event.getFireTicks());
+				var fireTicks = event.getFireTicks();
+
+				if (living.hasTag(FIRE_DURATION_ALREADY_SCALED)) {
+					living.removeTag(FIRE_DURATION_ALREADY_SCALED);
+				} else {
+					fireTicks = this.getFireDuration(living, fireTicks);
+				}
 
 				if (living instanceof Player player && player.getGameMode().invulnerable()) {
 					fireTicks = Math.min(fireTicks, 1);

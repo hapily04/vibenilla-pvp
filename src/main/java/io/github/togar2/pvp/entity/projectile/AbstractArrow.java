@@ -3,6 +3,7 @@ package io.github.togar2.pvp.entity.projectile;
 import io.github.togar2.pvp.entity.explosion.CrystalEntity;
 import io.github.togar2.pvp.events.PickupEntityEvent;
 import io.github.togar2.pvp.feature.enchantment.EnchantmentFeature;
+import io.github.togar2.pvp.feature.enchantment.VanillaEnchantmentFeature;
 import io.github.togar2.pvp.utils.EntityUtil;
 import io.github.togar2.pvp.utils.FluidUtil;
 import net.kyori.adventure.sound.Sound;
@@ -384,6 +385,11 @@ public abstract class AbstractArrow extends CustomEntityProjectile {
 	}
 
 	protected void setFireTicks(LivingEntity entity, int fireTicks) {
-		entity.setFireTicks(this.enchantmentFeature.getFireDuration(entity, fireTicks));
+		var adjustedFireTicks = this.enchantmentFeature.getFireDuration(entity, fireTicks);
+
+		if (entity.getFireTicks() < adjustedFireTicks) {
+			entity.setTag(VanillaEnchantmentFeature.FIRE_DURATION_ALREADY_SCALED, true);
+			entity.setFireTicks(adjustedFireTicks);
+		}
 	}
 }

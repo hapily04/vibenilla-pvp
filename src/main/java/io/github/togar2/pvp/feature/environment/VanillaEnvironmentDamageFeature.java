@@ -5,6 +5,7 @@ import io.github.togar2.pvp.feature.RegistrableFeature;
 import io.github.togar2.pvp.feature.config.DefinedFeature;
 import io.github.togar2.pvp.feature.config.FeatureConfiguration;
 import io.github.togar2.pvp.feature.enchantment.EnchantmentFeature;
+import io.github.togar2.pvp.feature.enchantment.VanillaEnchantmentFeature;
 import io.github.togar2.pvp.utils.FluidUtil;
 import io.github.togar2.pvp.utils.ViewUtil;
 import net.kyori.adventure.key.Key;
@@ -366,6 +367,7 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 		var adjustedFireTicks = this.enchantmentFeature.getFireDuration(entity, fireTicks);
 
 		if (entity.getFireTicks() < adjustedFireTicks) {
+			entity.setTag(VanillaEnchantmentFeature.FIRE_DURATION_ALREADY_SCALED, true);
 			entity.setFireTicks(adjustedFireTicks);
 		}
 

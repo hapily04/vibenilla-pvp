@@ -11,6 +11,7 @@ import io.github.togar2.pvp.feature.config.DefinedFeature;
 import io.github.togar2.pvp.feature.config.FeatureConfiguration;
 import io.github.togar2.pvp.feature.cooldown.AttackCooldownFeature;
 import io.github.togar2.pvp.feature.enchantment.EnchantmentFeature;
+import io.github.togar2.pvp.feature.enchantment.VanillaEnchantmentFeature;
 import io.github.togar2.pvp.feature.food.ExhaustionFeature;
 import io.github.togar2.pvp.feature.item.ItemDamageFeature;
 import io.github.togar2.pvp.feature.knockback.KnockbackFeature;
@@ -209,7 +210,12 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 
 			if (attack.fireAspect() > 0) {
 				var fireTicks = attack.fireAspect() * 4 * ServerFlag.SERVER_TICKS_PER_SECOND;
-				affectedEntity.setFireTicks(this.enchantmentFeature.getFireDuration(affectedEntity, fireTicks));
+				var adjustedFireTicks = this.enchantmentFeature.getFireDuration(affectedEntity, fireTicks);
+
+				if (affectedEntity.getFireTicks() < adjustedFireTicks) {
+					affectedEntity.setTag(VanillaEnchantmentFeature.FIRE_DURATION_ALREADY_SCALED, true);
+					affectedEntity.setFireTicks(adjustedFireTicks);
+				}
 			}
 		}
 
