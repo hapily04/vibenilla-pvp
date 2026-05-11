@@ -85,10 +85,7 @@ public class VanillaBlockFeature implements BlockFeature {
 
 		if (this.version.legacy()) return true;
 
-		var blockingAngle = this.getBlockingAngle(entity, damage);
-		if (blockingAngle == null) return false;
-
-		return this.resolveBlockedDamage(blocksAttacks, damage, damage.getAmount(), blockingAngle) > 0.0F;
+		return this.resolveBlockedDamage(blocksAttacks, damage, damage.getAmount(), this.getBlockingAngle(entity, damage)) > 0.0F;
 	}
 
 	private boolean isBypassedBy(BlocksAttacks blocksAttacks, Damage damage) {
@@ -141,7 +138,7 @@ public class VanillaBlockFeature implements BlockFeature {
 			blockedDamage = amount - resultingDamage;
 		} else if (blocksAttacks != null) {
 			var blockingAngle = this.getBlockingAngle(entity, damage);
-			blockedDamage = blockingAngle == null ? 0.0F : this.resolveBlockedDamage(blocksAttacks, damage, amount, blockingAngle);
+			blockedDamage = this.resolveBlockedDamage(blocksAttacks, damage, amount, blockingAngle);
 			resultingDamage = amount - blockedDamage;
 		} else {
 			resultingDamage = 0;
@@ -187,8 +184,8 @@ public class VanillaBlockFeature implements BlockFeature {
 		return resultingDamage == 0;
 	}
 
-	private @Nullable Double getBlockingAngle(LivingEntity entity, Damage damage) {
-		if (damage.getSource() == null) return null;
+	private double getBlockingAngle(LivingEntity entity, Damage damage) {
+		if (damage.getSource() == null) return Math.PI;
 
 		var attackerPos = damage.getSource().getPosition();
 		var entityPos = entity.getPosition();
