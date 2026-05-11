@@ -40,6 +40,7 @@ public abstract class AbstractArrow extends CustomEntityProjectile {
 	private double baseDamage = ARROW_BASE_DAMAGE;
 	private double damageBonus = 0.0;
 	private int knockback;
+	private ItemStack weaponItem = ItemStack.AIR;
 	private SoundEvent soundEvent = getDefaultSound();
 
 	private final Set<Integer> piercingIgnore = new HashSet<>();
@@ -227,7 +228,7 @@ public abstract class AbstractArrow extends CustomEntityProjectile {
 
 			if (shooter instanceof LivingEntity livingShooter) {
 				enchantmentFeature.onUserDamaged(living, livingShooter);
-				enchantmentFeature.onTargetDamaged(livingShooter, living);
+				enchantmentFeature.onTargetDamaged(livingShooter, living, this.weaponItem);
 			}
 
 			onHurt(living);
@@ -326,6 +327,14 @@ public abstract class AbstractArrow extends CustomEntityProjectile {
 
 	public void setKnockback(int knockback) {
 		this.knockback = knockback;
+	}
+
+	public ItemStack getWeaponItem() {
+		return this.weaponItem;
+	}
+
+	public void setWeaponItem(ItemStack weaponItem) {
+		this.weaponItem = weaponItem;
 	}
 
 	public double getBaseDamage() {

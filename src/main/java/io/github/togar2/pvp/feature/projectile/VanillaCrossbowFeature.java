@@ -415,6 +415,7 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 
 	protected AbstractArrow getCrossbowArrow(Player player, ItemStack crossbowStack, ItemStack projectile) {
 		AbstractArrow arrow = this.createArrow(projectile.withAmount(1), player);
+		arrow.setWeaponItem(crossbowStack);
 		arrow.setCritical(true); // Player shooter is always critical
 		arrow.setSound(SoundEvent.ITEM_CROSSBOW_HIT);
 

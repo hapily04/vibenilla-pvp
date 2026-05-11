@@ -102,6 +102,7 @@ public class VanillaBowFeature implements BowFeature, RegistrableFeature {
 
 			// Arrow creation
 			AbstractArrow arrow = this.createArrow(projectileItem.withAmount(1), player);
+			arrow.setWeaponItem(stack);
 
 			if (power >= 1) arrow.setCritical(true);
 

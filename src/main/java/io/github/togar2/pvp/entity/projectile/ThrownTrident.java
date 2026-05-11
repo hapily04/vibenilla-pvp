@@ -122,7 +122,7 @@ public class ThrownTrident extends AbstractArrow {
 
 		if (damaged && shooter instanceof LivingEntity livingShooter) {
             this.enchantmentFeature.onUserDamaged(living, livingShooter);
-            this.enchantmentFeature.onTargetDamaged(livingShooter, living);
+            this.enchantmentFeature.onTargetDamaged(livingShooter, living, this.tridentItem);
 		}
 
 		if (damaged && this.canChannel(living)) {

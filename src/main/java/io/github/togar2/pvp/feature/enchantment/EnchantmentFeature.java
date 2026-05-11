@@ -99,6 +99,9 @@ public interface EnchantmentFeature extends CombatFeature {
 
 		@Override
 		public void onTargetDamaged(LivingEntity user, Entity target) {}
+
+		@Override
+		public void onTargetDamaged(LivingEntity user, Entity target, ItemStack weapon) {}
 	};
 
 	/**
@@ -159,4 +162,6 @@ public interface EnchantmentFeature extends CombatFeature {
 	 * @param target the target
 	 */
 	void onTargetDamaged(LivingEntity user, Entity target);
+
+	void onTargetDamaged(LivingEntity user, Entity target, ItemStack weapon);
 }

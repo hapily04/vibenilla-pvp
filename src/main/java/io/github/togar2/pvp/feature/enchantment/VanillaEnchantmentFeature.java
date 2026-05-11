@@ -311,10 +311,12 @@ public class VanillaEnchantmentFeature implements EnchantmentFeature, Registrabl
 
 	@Override
 	public void onTargetDamaged(LivingEntity user, Entity target) {
-		forEachEnchantment(Arrays.asList(
-				user.getBoots(), user.getLeggings(),
-				user.getChestplate(), user.getHelmet(),
-				user.getItemInMainHand(), user.getItemInOffHand()
-		), (enchantment, level) -> enchantment.onTargetDamaged(user, target, level, this, this.configuration));
+		this.onTargetDamaged(user, target, user.getItemInMainHand());
+	}
+
+	@Override
+	public void onTargetDamaged(LivingEntity user, Entity target, ItemStack weapon) {
+		forEachEnchantment(List.of(weapon), (enchantment, level) ->
+				enchantment.onTargetDamaged(user, target, level, this, this.configuration));
 	}
 }
