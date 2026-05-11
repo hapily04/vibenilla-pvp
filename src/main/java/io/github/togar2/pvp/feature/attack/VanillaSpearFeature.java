@@ -243,21 +243,21 @@ public class VanillaSpearFeature implements SpearFeature, RegistrableFeature {
 					null, totalDamage
 			));
 
+			this.knockbackFeature.applyAttackKnockback(attacker, target,
+					this.enchantmentFeature.getKnockback(attacker) + PIERCING_KNOCKBACK_BONUS);
+
 			if (damaged) {
-				hitSomething = true;
-                this.knockbackFeature.applyAttackKnockback(attacker, target,
-						Math.round(this.enchantmentFeature.getKnockback(attacker) + PIERCING_KNOCKBACK_BONUS));
-                this.enchantmentFeature.onUserDamaged(target, attacker);
-                this.enchantmentFeature.onTargetDamaged(attacker, target);
+				this.enchantmentFeature.onUserDamaged(target, attacker);
+				this.enchantmentFeature.onTargetDamaged(attacker, target);
 			}
+
+			hitSomething = true;
+			this.itemDamageFeature.damageEquipment(attacker, EquipmentSlot.MAIN_HAND, 1);
+			this.exhaustionFeature.addAttackExhaustion(attacker);
 		}
 
+		this.applyLungeEffect(attacker);
 		this.playPiercingSounds(attacker, tool, hitSomething);
-
-		if (hitSomething) {
-            this.itemDamageFeature.damageEquipment(attacker, EquipmentSlot.MAIN_HAND, 1);
-			this.applyLungeEffect(attacker);
-		}
 	}
 
 	private void applyLungeEffect(Player attacker) {
@@ -284,7 +284,7 @@ public class VanillaSpearFeature implements SpearFeature, RegistrableFeature {
 		this.fallFeature.applyPostImpulseGraceTime(attacker, LUNGE_POST_IMPULSE_GRACE_TICKS);
 
 		this.exhaustionFeature.addExhaustion(attacker, LUNGE_EXHAUSTION_PER_LEVEL * lungeLevel);
-        this.itemDamageFeature.damageEquipment(attacker, EquipmentSlot.MAIN_HAND, 1);
+		this.itemDamageFeature.damageEquipment(attacker, EquipmentSlot.MAIN_HAND, 1);
 
 		SoundEvent[] lungeSounds = {
 				SoundEvent.ITEM_SPEAR_LUNGE_1,
@@ -333,8 +333,9 @@ public class VanillaSpearFeature implements SpearFeature, RegistrableFeature {
 			boolean stabAffected = this.applyStabAttack(attacker, target, damageDealt, dealsDamage, dealsKnockback, dealsDismount);
 			if (stabAffected) {
 				affected = true;
-                this.itemDamageFeature.damageEquipment(attacker,
+				this.itemDamageFeature.damageEquipment(attacker,
 						hand == PlayerHand.MAIN ? EquipmentSlot.MAIN_HAND : EquipmentSlot.OFF_HAND, 1);
+				this.exhaustionFeature.addAttackExhaustion(attacker);
 			}
 		}
 
@@ -361,8 +362,8 @@ public class VanillaSpearFeature implements SpearFeature, RegistrableFeature {
 		boolean affected = dealsKnockback || dealtDamage;
 
 		if (dealsKnockback) {
-            this.knockbackFeature.applyAttackKnockback(attacker, target,
-					Math.round(this.enchantmentFeature.getKnockback(attacker) + STAB_KNOCKBACK_BONUS));
+			this.knockbackFeature.applyAttackKnockback(attacker, target,
+					this.enchantmentFeature.getKnockback(attacker) + STAB_KNOCKBACK_BONUS);
 		}
 
 		if (dealsDismount && target.getVehicle() != null) {
@@ -371,8 +372,8 @@ public class VanillaSpearFeature implements SpearFeature, RegistrableFeature {
 		}
 
 		if (dealtDamage) {
-            this.enchantmentFeature.onUserDamaged(target, attacker);
-            this.enchantmentFeature.onTargetDamaged(attacker, target);
+			this.enchantmentFeature.onUserDamaged(target, attacker);
+			this.enchantmentFeature.onTargetDamaged(attacker, target);
 		}
 
 		return affected;

@@ -15,7 +15,7 @@ public interface KnockbackFeature extends CombatFeature {
 		}
 
 		@Override
-		public boolean applyAttackKnockback(LivingEntity attacker, LivingEntity target, int knockback) {
+		public boolean applyAttackKnockback(LivingEntity attacker, LivingEntity target, double knockback) {
 			return false;
 		}
 
@@ -41,7 +41,7 @@ public interface KnockbackFeature extends CombatFeature {
 	 * @param target the entity that is receiving the knockback
 	 * @return true if the target entity was knocked back, false otherwise
 	 */
-	boolean applyAttackKnockback(LivingEntity attacker, LivingEntity target, int knockback);
+	boolean applyAttackKnockback(LivingEntity attacker, LivingEntity target, double knockback);
 
 	/**
 	 * Applies sweeping knockback to the target entity.

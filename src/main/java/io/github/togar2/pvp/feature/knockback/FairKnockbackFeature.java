@@ -54,7 +54,7 @@ public class FairKnockbackFeature extends VanillaKnockbackFeature {
 
 	@Override
 	protected boolean applyKnockback(LivingEntity target, Entity attacker, @Nullable Entity source,
-	                                 EntityKnockbackEvent.KnockbackType type, int extraKnockback,
+	                                 EntityKnockbackEvent.KnockbackType type, double extraKnockback,
 	                                 double dx, double dz, boolean legacy) {
 		if (!(target instanceof Player player) || player.getLatency() < PING_OFFSET)
 			return super.applyKnockback(target, attacker, source, type, extraKnockback, dx, dz, legacy);

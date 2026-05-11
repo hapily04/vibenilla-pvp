@@ -64,8 +64,8 @@ public class VanillaKnockbackFeature implements KnockbackFeature {
 	}
 
 	@Override
-	public boolean applyAttackKnockback(LivingEntity attacker, LivingEntity target, int knockback) {
-		if (knockback <= 0) return false;
+	public boolean applyAttackKnockback(LivingEntity attacker, LivingEntity target, double knockback) {
+		if (knockback <= 0.0) return false;
 
 		// If legacy, attacker velocity is reduced before the knockback
 		if (this.version.legacy() && attacker instanceof CombatPlayer custom)
@@ -107,7 +107,7 @@ public class VanillaKnockbackFeature implements KnockbackFeature {
 	) {}
 
 	protected @Nullable KnockbackValues prepareKnockback(LivingEntity target, Entity attacker, @Nullable Entity source,
-	                                                     EntityKnockbackEvent.KnockbackType type, int extraKnockback,
+	                                                     EntityKnockbackEvent.KnockbackType type, double extraKnockback,
 	                                                     double dx, double dz, boolean legacy) {
 		var animationType = legacy
 				? EntityKnockbackEvent.AnimationType.FIXED
@@ -122,7 +122,7 @@ public class VanillaKnockbackFeature implements KnockbackFeature {
 
 		double kbResistance = target.getAttributeValue(Attribute.KNOCKBACK_RESISTANCE);
 		double horizontal, vertical;
-		if (extraKnockback <= 0) {
+		if (extraKnockback <= 0.0) {
 			// Default knockback
 			horizontal = settings.horizontal();
 			vertical = settings.vertical();
@@ -145,7 +145,7 @@ public class VanillaKnockbackFeature implements KnockbackFeature {
 	}
 
 	protected boolean applyKnockback(LivingEntity target, Entity attacker, @Nullable Entity source,
-	                                 EntityKnockbackEvent.KnockbackType type, int extraKnockback,
+	                                 EntityKnockbackEvent.KnockbackType type, double extraKnockback,
 	                                 double dx, double dz, boolean legacy) {
 		KnockbackValues values = this.prepareKnockback(target, attacker, source, type, extraKnockback, dx, dz, legacy);
 		if (values == null) return false;
