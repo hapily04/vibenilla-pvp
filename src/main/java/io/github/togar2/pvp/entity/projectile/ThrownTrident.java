@@ -62,11 +62,17 @@ public class ThrownTrident extends AbstractArrow {
                 this.remove();
 			} else {
 				// Move towards owner
+				var ownerEyePosition = shooter.getPosition().add(0, shooter.getEyeHeight(), 0);
+				if (!(shooter instanceof Player) && this.getPosition().distance(ownerEyePosition) < shooter.getBoundingBox().width() + 1.0) {
+					this.remove();
+					return;
+				}
+
                 this.setNoClip(true);
                 this.setNoGravity(true);
 				this.collisionDirection = null;
 				((AbstractArrowMeta) this.getEntityMeta()).setInGround(false);
-				Vec vector = shooter.getPosition().add(0, shooter.getEyeHeight(), 0).asVec().sub(this.position);
+				var vector = ownerEyePosition.asVec().sub(this.position);
                 this.refreshPosition(this.position.add(0, vector.y() * 0.015 * loyalty, 0));
                 this.setVelocity(this.velocity.mul(0.95).add(vector.normalize().mul(0.05 * loyalty)
 						.mul(ServerFlag.SERVER_TICKS_PER_SECOND)));
