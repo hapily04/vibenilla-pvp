@@ -15,6 +15,7 @@ import net.minestom.server.component.DataComponents;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
+import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.EquipmentSlot;
 import net.minestom.server.entity.LivingEntity;
 import net.minestom.server.entity.Player;
@@ -400,11 +401,22 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 
 	protected int getFallDamage(LivingEntity entity, double fallDistance, double damageModifier) {
 		if (this.isFallDamageImmune(entity)) return 0;
+		if (this.isLlama(entity) && fallDistance < 6.0) return 0;
 
 		double safeFallDistance = entity.getAttributeValue(Attribute.SAFE_FALL_DISTANCE);
-		return (int) Math.floor((fallDistance + 1.0E-6 - safeFallDistance)
+		var damage = (int) Math.floor((fallDistance + 1.0E-6 - safeFallDistance)
 				* damageModifier
 				* entity.getAttributeValue(Attribute.FALL_DAMAGE_MULTIPLIER));
+
+		if (entity.getEntityType() == EntityType.GOAT) return damage - 10;
+		if (entity.getEntityType() == EntityType.FROG) return damage - 5;
+
+		return damage;
+	}
+
+	private boolean isLlama(LivingEntity entity) {
+		return entity.getEntityType() == EntityType.LLAMA
+				|| entity.getEntityType() == EntityType.TRADER_LLAMA;
 	}
 
 	private boolean isFallDamageImmune(LivingEntity entity) {
