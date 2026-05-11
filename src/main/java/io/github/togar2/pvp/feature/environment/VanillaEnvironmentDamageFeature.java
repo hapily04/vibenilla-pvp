@@ -364,7 +364,9 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 
 		if (chunk == null) return false;
 
-		var highestBlockY = chunk.motionBlockingHeightmap().getHeight(blockX, blockZ);
+		var localBlockX = CoordConversion.globalToSectionRelative(blockX);
+		var localBlockZ = CoordConversion.globalToSectionRelative(blockZ);
+		var highestBlockY = chunk.motionBlockingHeightmap().getHeight(localBlockX, localBlockZ);
 
 		return highestBlockY < blockY;
 	}
