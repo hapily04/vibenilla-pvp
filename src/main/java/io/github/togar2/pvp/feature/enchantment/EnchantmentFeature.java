@@ -80,6 +80,12 @@ public interface EnchantmentFeature extends CombatFeature {
 		}
 
 		@Override
+		public float modifyConditionalValue(ItemStack stack, DataComponent<List<ConditionalEffect<ValueEffect>>> component,
+		                                    float base, boolean includeConditionalEffects) {
+			return base;
+		}
+
+		@Override
 		public float modifyValue(ItemStack stack, DataComponent<ValueEffect> component, float base) {
 			return base;
 		}
@@ -144,6 +150,9 @@ public interface EnchantmentFeature extends CombatFeature {
 	int getFireAspect(LivingEntity entity);
 
 	float modifyConditionalValue(ItemStack stack, DataComponent<List<ConditionalEffect<ValueEffect>>> component, float base);
+
+	float modifyConditionalValue(ItemStack stack, DataComponent<List<ConditionalEffect<ValueEffect>>> component,
+	                             float base, boolean includeConditionalEffects);
 
 	float modifyValue(ItemStack stack, DataComponent<ValueEffect> component, float base);
 

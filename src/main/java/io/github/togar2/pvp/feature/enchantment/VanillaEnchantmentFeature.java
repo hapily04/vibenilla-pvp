@@ -196,6 +196,12 @@ public class VanillaEnchantmentFeature implements EnchantmentFeature, Registrabl
 
 	@Override
 	public float modifyConditionalValue(ItemStack stack, DataComponent<List<ConditionalEffect<ValueEffect>>> component, float base) {
+		return this.modifyConditionalValue(stack, component, base, false);
+	}
+
+	@Override
+	public float modifyConditionalValue(ItemStack stack, DataComponent<List<ConditionalEffect<ValueEffect>>> component,
+	                                    float base, boolean includeConditionalEffects) {
 		var value = base;
 		var enchantmentRegistry = MinecraftServer.getEnchantmentRegistry();
 
@@ -207,7 +213,7 @@ public class VanillaEnchantmentFeature implements EnchantmentFeature, Registrabl
 			if (effects == null) continue;
 
 			for (var effect : effects) {
-				if (effect.requirements() != null) continue;
+				if (!includeConditionalEffects && effect.requirements() != null) continue;
 
 				value = effect.effect().apply(value, entry.getValue());
 			}

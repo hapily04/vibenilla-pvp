@@ -107,12 +107,13 @@ public class VanillaBowFeature implements BowFeature, RegistrableFeature {
 
 			if (power >= 1) arrow.setCritical(true);
 
-			int powerEnchantment = enchantmentList.level(Enchantment.POWER);
-			if (powerEnchantment > 0)
-				arrow.setBaseDamage(arrow.getBaseDamage() + (double) powerEnchantment * 0.5 + 0.5);
+			var arrowDamage = this.enchantmentFeature.modifyConditionalValue(
+					stack, EffectComponent.DAMAGE, (float) arrow.getBaseDamage(), true
+			);
+			arrow.setBaseDamage(arrowDamage);
 
 			var punchKnockback = this.enchantmentFeature.modifyConditionalValue(
-					stack, EffectComponent.KNOCKBACK, 0.0F
+					stack, EffectComponent.KNOCKBACK, 0.0F, true
 			);
 			if (punchKnockback > 0.0F) arrow.setKnockback(punchKnockback);
 
