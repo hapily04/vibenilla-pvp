@@ -39,7 +39,7 @@ public abstract class AbstractArrow extends CustomEntityProjectile {
 	protected int ticks;
 	private double baseDamage = ARROW_BASE_DAMAGE;
 	private double damageBonus = 0.0;
-	private int knockback;
+	private double knockback;
 	private ItemStack weaponItem = ItemStack.AIR;
 	private SoundEvent soundEvent = getDefaultSound();
 
@@ -321,11 +321,11 @@ public abstract class AbstractArrow extends CustomEntityProjectile {
 		return 0.6;
 	}
 
-	public int getKnockback() {
+	public double getKnockback() {
 		return knockback;
 	}
 
-	public void setKnockback(int knockback) {
+	public void setKnockback(double knockback) {
 		this.knockback = knockback;
 	}
 

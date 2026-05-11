@@ -25,6 +25,7 @@ import net.minestom.server.item.ItemAnimation;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
 import net.minestom.server.item.component.EnchantmentList;
+import net.minestom.server.item.enchant.EffectComponent;
 import net.minestom.server.item.enchant.Enchantment;
 import net.minestom.server.sound.SoundEvent;
 import org.jetbrains.annotations.Nullable;
@@ -110,8 +111,10 @@ public class VanillaBowFeature implements BowFeature, RegistrableFeature {
 			if (powerEnchantment > 0)
 				arrow.setBaseDamage(arrow.getBaseDamage() + (double) powerEnchantment * 0.5 + 0.5);
 
-			int punchEnchantment = enchantmentList.level(Enchantment.PUNCH);
-			if (punchEnchantment > 0) arrow.setKnockback(punchEnchantment);
+			var punchKnockback = this.enchantmentFeature.modifyConditionalValue(
+					stack, EffectComponent.KNOCKBACK, 0.0F
+			);
+			if (punchKnockback > 0.0F) arrow.setKnockback(punchKnockback);
 
 			var projectileFireTicks = this.enchantmentFeature.getProjectileIgniteTicks(stack);
 			if (projectileFireTicks > 0) {
