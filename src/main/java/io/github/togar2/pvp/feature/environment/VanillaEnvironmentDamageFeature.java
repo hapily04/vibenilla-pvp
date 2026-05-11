@@ -521,6 +521,7 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 
 	private boolean canFreeze(LivingEntity entity) {
 		if (entity instanceof Player player && player.getGameMode() == GameMode.SPECTATOR) return false;
+		if (this.isFreezeImmuneEntityType(entity)) return false;
 
 		for (var slot : EquipmentSlot.armors()) {
 			var material = entity.getEquipment(slot).material();
@@ -529,6 +530,16 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 		}
 
 		return true;
+	}
+
+	private boolean isFreezeImmuneEntityType(LivingEntity entity) {
+		var entityTypeTag = MinecraftServer.process().entityType().getTag(Key.key("minecraft:freeze_immune_entity_types"));
+
+		if (entityTypeTag == null) return false;
+
+		var key = entity.getEntityType().asKey();
+
+		return key != null && entityTypeTag.contains(key);
 	}
 
 	private void extinguish(LivingEntity entity) {
