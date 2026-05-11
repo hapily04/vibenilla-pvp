@@ -12,6 +12,7 @@ import net.minestom.server.component.DataComponents;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.EquipmentSlot;
 import net.minestom.server.entity.LivingEntity;
+import net.minestom.server.entity.Player;
 import net.minestom.server.entity.damage.DamageType;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.entity.EntitySetFireEvent;
@@ -47,8 +48,15 @@ public class VanillaEnchantmentFeature implements EnchantmentFeature, Registrabl
 	@Override
 	public void init(EventNode<EntityInstanceEvent> node) {
 		node.addListener(EntitySetFireEvent.class, event -> {
-			if (event.getEntity() instanceof LivingEntity living)
-				event.setFireTicks(this.getFireDuration(living, event.getFireTicks()));
+			if (event.getEntity() instanceof LivingEntity living) {
+				var fireTicks = this.getFireDuration(living, event.getFireTicks());
+
+				if (living instanceof Player player && player.getGameMode().invulnerable()) {
+					fireTicks = Math.min(fireTicks, 1);
+				}
+
+				event.setFireTicks(fireTicks);
+			}
 		});
 	}
 
