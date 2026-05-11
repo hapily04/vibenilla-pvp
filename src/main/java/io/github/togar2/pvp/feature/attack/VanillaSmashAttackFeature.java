@@ -139,6 +139,12 @@ public class VanillaSmashAttackFeature implements SmashAttackFeature {
 
 		Pos attackerPosition = attacker.getPosition();
 		attacker.sendPacketToViewersAndSelf(new ParticlePacket(
+				Particle.GUST_EMITTER_SMALL, false, false,
+				attackerPosition.x(), attackerPosition.y() + 0.5, attackerPosition.z(),
+				0.0F, 0.0F, 0.0F,
+				0.0F, 1
+		));
+		attacker.sendPacketToViewersAndSelf(new ParticlePacket(
 				Particle.GUST_EMITTER_LARGE, false, false,
 				attackerPosition.x(), attackerPosition.y() + 0.5, attackerPosition.z(),
 				0.0F, 0.0F, 0.0F,
