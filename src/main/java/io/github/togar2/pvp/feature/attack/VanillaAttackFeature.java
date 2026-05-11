@@ -182,7 +182,8 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 		// Knockback and sweeping
         this.knockbackFeature.applyAttackKnockback(attacker, living, attack.knockback());
 		if (attack.sweeping()) {
-			affectedEntities = this.sweepingFeature.applySweeping(attacker, living, attack.damage());
+			affectedEntities = this.sweepingFeature.applySweeping(
+					attacker, living, attack.baseDamage(), attack.cooldownProgress());
 			affectedEntities.add(living);
 		}
 
@@ -332,12 +333,13 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 
 		// Apply critical damage and knockback
 		if (critical) damage = this.criticalFeature.applyToDamage(damage);
+		var baseDamage = damage;
 		damage += magicalDamage;
 
 		if (sprintAttack) knockback++;
 
 		return new AttackValues.Final(
-			damage, strongAttack, sprintAttack, knockback, critical,
+			damage, baseDamage, cooldownProgress, strongAttack, sprintAttack, knockback, critical,
 			magicalDamage > 0, fireAspect, sweeping,
 			finalAttackEvent.hasAttackSounds(),
 			finalAttackEvent.playSoundsOnFail()

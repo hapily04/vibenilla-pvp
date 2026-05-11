@@ -27,7 +27,7 @@ public class AttackValues {
 	                  boolean strong, boolean sprint, boolean critical, boolean sweeping,
 	                  int knockback, int fireAspect) {}
 
-	public record Final(float damage, boolean strong, boolean sprint,
+	public record Final(float damage, float baseDamage, double cooldownProgress, boolean strong, boolean sprint,
 	                    int knockback, boolean critical, boolean magical,
 	                    int fireAspect, boolean sweeping, boolean sounds,
 	                    boolean playSoundsOnFail) {}

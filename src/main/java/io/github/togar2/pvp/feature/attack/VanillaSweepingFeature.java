@@ -69,6 +69,12 @@ public class VanillaSweepingFeature implements SweepingFeature {
 
 	@Override
 	public Collection<LivingEntity> applySweeping(LivingEntity attacker, LivingEntity target, float damage) {
+		return this.applySweeping(attacker, target, damage, 1.0);
+	}
+
+	@Override
+	public Collection<LivingEntity> applySweeping(LivingEntity attacker, LivingEntity target, float damage,
+	                                              double cooldownProgress) {
 		float sweepingDamage = this.getSweepingDamage(attacker, damage);
 
 		// Loop and check for colliding entities
@@ -78,14 +84,16 @@ public class VanillaSweepingFeature implements SweepingFeature {
 		for (Entity nearbyEntity : target.getInstance().getNearbyEntities(target.getPosition(), 2)) {
 			if (nearbyEntity instanceof Player) continue;
 
-			var affectedEntity = this.applySweepingToEntity(attacker, target, sweepingDamage, boundingBox, nearbyEntity);
+			var affectedEntity = this.applySweepingToEntity(attacker, target, sweepingDamage, cooldownProgress,
+					boundingBox, nearbyEntity);
 
 			if (affectedEntity != null) {
 				affectedEntities.add(affectedEntity);
 			}
 		}
 		for (var player : target.getInstance().getPlayers()) {
-			var affectedEntity = this.applySweepingToEntity(attacker, target, sweepingDamage, boundingBox, player);
+			var affectedEntity = this.applySweepingToEntity(attacker, target, sweepingDamage, cooldownProgress,
+					boundingBox, player);
 
 			if (affectedEntity != null) {
 				affectedEntities.add(affectedEntity);
@@ -108,15 +116,15 @@ public class VanillaSweepingFeature implements SweepingFeature {
 	}
 
 	private LivingEntity applySweepingToEntity(LivingEntity attacker, LivingEntity target, float sweepingDamage,
-	                                           BoundingBox boundingBox, Entity nearbyEntity) {
+	                                           double cooldownProgress, BoundingBox boundingBox, Entity nearbyEntity) {
 		if (nearbyEntity == target || nearbyEntity == attacker) return null;
 		if (!(nearbyEntity instanceof LivingEntity living)) return null;
 		if (this.isMarkerArmorStand(nearbyEntity)) return null;
 		if (!boundingBox.intersectEntity(target.getPosition(), nearbyEntity)) return null;
 		if (attacker.getPosition().distanceSquared(nearbyEntity.getPosition()) >= 9.0) return null;
 
-		float currentDamage = sweepingDamage + this.enchantmentFeature.getAttackDamage(
-				attacker.getItemInMainHand(), EntityGroup.ofEntity(living));
+		float currentDamage = (sweepingDamage + this.enchantmentFeature.getAttackDamage(
+				attacker.getItemInMainHand(), EntityGroup.ofEntity(living))) * (float) cooldownProgress;
 
 		var damaged = living.damage(new Damage(
 				attacker instanceof Player ? DamageType.PLAYER_ATTACK : DamageType.MOB_ATTACK,

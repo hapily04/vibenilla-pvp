@@ -35,4 +35,9 @@ public interface SweepingFeature extends CombatFeature {
 	 * Should return a collection of the affected entities.
 	 */
 	Collection<LivingEntity> applySweeping(LivingEntity attacker, LivingEntity target, float damage);
+
+	default Collection<LivingEntity> applySweeping(LivingEntity attacker, LivingEntity target, float damage,
+	                                              double cooldownProgress) {
+		return this.applySweeping(attacker, target, damage);
+	}
 }
