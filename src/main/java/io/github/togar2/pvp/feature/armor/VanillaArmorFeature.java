@@ -13,6 +13,7 @@ import net.minestom.server.entity.damage.DamageType;
 import net.minestom.server.item.enchant.EffectComponent;
 import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.potion.TimedPotion;
+import net.minestom.server.registry.RegistryKey;
 import net.minestom.server.utils.MathUtils;
 import org.jetbrains.annotations.Nullable;
 
@@ -46,18 +47,20 @@ public class VanillaArmorFeature implements ArmorFeature {
 
 	@Override
 	public float getDamageWithProtection(LivingEntity entity, DamageType type, float amount, @Nullable LivingEntity attacker) {
-		DamageTypeInfo info = DamageTypeInfo.of(MinecraftServer.getDamageTypeRegistry().getKey(type));
-		amount = this.getDamageWithArmor(entity, info, amount, attacker);
+		var damageType = MinecraftServer.getDamageTypeRegistry().getKey(type);
+		DamageTypeInfo info = DamageTypeInfo.of(damageType);
+		amount = this.getDamageWithArmor(entity, info, amount, damageType, attacker);
 		return this.getDamageWithEnchantments(entity, type, amount);
 	}
 
-	protected float getDamageWithArmor(LivingEntity entity, DamageTypeInfo typeInfo, float amount, @Nullable LivingEntity attacker) {
+	protected float getDamageWithArmor(LivingEntity entity, DamageTypeInfo typeInfo, float amount,
+	                                   RegistryKey<DamageType> damageType, @Nullable LivingEntity attacker) {
 		if (typeInfo.bypassesArmor()) return amount;
 
 		double armorValue = entity.getAttributeValue(Attribute.ARMOR);
 
 		float armorEffectiveness = 1.0F;
-		if (attacker != null) {
+		if (attacker != null && this.isWeaponDamage(damageType)) {
 			armorEffectiveness = Math.max(0.0F, this.enchantmentFeature.modifyConditionalValue(
 					attacker.getItemInMainHand(), EffectComponent.ARMOR_EFFECTIVENESS, 1.0F
 			));
@@ -72,6 +75,14 @@ public class VanillaArmorFeature implements ArmorFeature {
 					(float) entity.getAttributeValue(Attribute.ARMOR_TOUGHNESS)
 			);
 		}
+	}
+
+	private boolean isWeaponDamage(RegistryKey<DamageType> damageType) {
+		return damageType.equals(DamageType.PLAYER_ATTACK)
+				|| damageType.equals(DamageType.MOB_ATTACK)
+				|| damageType.equals(DamageType.MOB_ATTACK_NO_AGGRO)
+				|| damageType.equals(DamageType.MACE_SMASH)
+				|| damageType.equals(DamageType.SPEAR);
 	}
 
 	protected float getDamageWithEnchantments(LivingEntity entity, DamageType damageType, float amount) {
