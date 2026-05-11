@@ -13,7 +13,6 @@ import io.github.togar2.pvp.feature.item.ItemDamageFeature;
 import io.github.togar2.pvp.utils.ViewUtil;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.ServerFlag;
-import net.minestom.server.component.DataComponents;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.*;
@@ -24,9 +23,7 @@ import net.minestom.server.event.trait.EntityInstanceEvent;
 import net.minestom.server.item.ItemAnimation;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
-import net.minestom.server.item.component.EnchantmentList;
 import net.minestom.server.item.enchant.EffectComponent;
-import net.minestom.server.item.enchant.Enchantment;
 import net.minestom.server.sound.SoundEvent;
 import org.jetbrains.annotations.Nullable;
 
@@ -77,12 +74,6 @@ public class VanillaBowFeature implements BowFeature, RegistrableFeature {
 			ItemStack stack = event.getItemStack();
 			if (stack.material() != Material.BOW) return;
 
-			EnchantmentList enchantmentList = stack.get(DataComponents.ENCHANTMENTS);
-			assert enchantmentList != null;
-
-			boolean infinite = player.getGameMode() == GameMode.CREATIVE
-					|| enchantmentList.level(Enchantment.INFINITY) > 0;
-
 			ItemStack projectileItem;
 			int projectileSlot;
 
@@ -100,6 +91,12 @@ public class VanillaBowFeature implements BowFeature, RegistrableFeature {
 			long useTicks = player.getCurrentItemUseTime();
 			double power = this.getBowPower(useTicks);
 			if (power < 0.1) return;
+
+			var ammoUse = projectileItem.material() == Material.ARROW
+					? (int) this.enchantmentFeature.modifyConditionalValue(
+							stack, EffectComponent.AMMO_USE, 1.0F, true)
+					: 1;
+			if (player.getGameMode() != GameMode.CREATIVE && ammoUse > projectileItem.amount()) return;
 
 			// Arrow creation
 			AbstractArrow arrow = this.createArrow(projectileItem.withAmount(1), player);
@@ -125,7 +122,7 @@ public class VanillaBowFeature implements BowFeature, RegistrableFeature {
             this.itemDamageFeature.damageEquipment(player, event.getHand() == PlayerHand.MAIN ?
 					EquipmentSlot.MAIN_HAND : EquipmentSlot.OFF_HAND, 1);
 
-			boolean reallyInfinite = infinite && projectileItem.material() == Material.ARROW;
+			boolean reallyInfinite = player.getGameMode() == GameMode.CREATIVE || ammoUse <= 0;
 			if (reallyInfinite || player.getGameMode() == GameMode.CREATIVE
 					&& (projectileItem.material() == Material.SPECTRAL_ARROW
 					|| projectileItem.material() == Material.TIPPED_ARROW)) {
@@ -148,7 +145,7 @@ public class VanillaBowFeature implements BowFeature, RegistrableFeature {
 
 			if (!reallyInfinite && player.getGameMode() != GameMode.CREATIVE && projectileSlot >= 0) {
 				player.getInventory().setItemStack(projectileSlot,
-						projectileItem.withAmount(projectileItem.amount() - 1));
+						projectileItem.withAmount(projectileItem.amount() - ammoUse));
 			}
 		});
 	}
