@@ -27,6 +27,7 @@ import net.minestom.server.event.entity.EntityTickEvent;
 import net.minestom.server.event.player.PlayerTickEvent;
 import net.minestom.server.event.trait.EntityInstanceEvent;
 import net.minestom.server.instance.Instance;
+import net.minestom.server.instance.WorldBorder;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.item.Material;
@@ -53,6 +54,8 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 	private static final int FIRE_DAMAGE_INTERVAL = 20;
 	private static final int FIRE_IGNITE_TICKS = 8 * 20;
 	private static final int LAVA_IGNITE_TICKS = 15 * 20;
+	private static final double WORLD_BORDER_SAFE_ZONE = 5.0;
+	private static final double WORLD_BORDER_DAMAGE_PER_BLOCK = 0.2;
 
 	private static final Tag<Integer> AIR_SUPPLY = Tag.Integer("environmentAirSupply");
 	private static final Tag<Integer> FREEZE_TICKS = Tag.Integer("environmentFreezeTicks");
@@ -92,6 +95,7 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 		this.handleLavaDamage(player);
 		this.handleVoidDamage(player);
 		this.handleSuffocation(player);
+		this.handleWorldBorderDamage(player);
 		this.handleDrowning(player);
 		this.handleBlockContactDamage(player);
 		this.handleFreezeDamage(player);
@@ -207,6 +211,62 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 				}
 			}
 		}
+	}
+
+	private void handleWorldBorderDamage(Player player) {
+		var instance = player.getInstance();
+
+		if (instance == null) return;
+
+		var worldBorder = instance.getWorldBorder();
+
+		if (this.isWithinWorldBorder(player, worldBorder)) return;
+
+		var distancePastSafeZone = -(this.getDistanceToWorldBorder(player, worldBorder) + WORLD_BORDER_SAFE_ZONE);
+
+		if (distancePastSafeZone <= 0.0) return;
+
+		var damage = (float) Math.max(1.0, Math.floor(distancePastSafeZone * WORLD_BORDER_DAMAGE_PER_BLOCK));
+		player.damage(DamageType.OUTSIDE_BORDER, damage);
+	}
+
+	private boolean isWithinWorldBorder(Player player, WorldBorder worldBorder) {
+		var position = player.getPosition();
+		var boundingBox = player.getBoundingBox();
+		var minX = position.x() + boundingBox.minX();
+		var maxX = position.x() + boundingBox.maxX() - 1.0E-5F;
+		var minZ = position.z() + boundingBox.minZ();
+		var maxZ = position.z() + boundingBox.maxZ() - 1.0E-5F;
+
+		return this.isWithinWorldBorder(minX, minZ, worldBorder)
+				&& this.isWithinWorldBorder(maxX, maxZ, worldBorder);
+	}
+
+	private boolean isWithinWorldBorder(double blockX, double blockZ, WorldBorder worldBorder) {
+		var radius = worldBorder.diameter() / 2.0;
+		var minX = worldBorder.centerX() - radius;
+		var maxX = worldBorder.centerX() + radius;
+		var minZ = worldBorder.centerZ() - radius;
+		var maxZ = worldBorder.centerZ() + radius;
+
+		return blockX >= minX && blockX < maxX && blockZ >= minZ && blockZ < maxZ;
+	}
+
+	private double getDistanceToWorldBorder(Player player, WorldBorder worldBorder) {
+		var position = player.getPosition();
+		var radius = worldBorder.diameter() / 2.0;
+		var minX = worldBorder.centerX() - radius;
+		var maxX = worldBorder.centerX() + radius;
+		var minZ = worldBorder.centerZ() - radius;
+		var maxZ = worldBorder.centerZ() + radius;
+		var distanceFromWest = position.x() - minX;
+		var distanceFromEast = maxX - position.x();
+		var distanceFromNorth = position.z() - minZ;
+		var distanceFromSouth = maxZ - position.z();
+		var distance = Math.min(distanceFromWest, distanceFromEast);
+		distance = Math.min(distance, distanceFromNorth);
+
+		return Math.min(distance, distanceFromSouth);
 	}
 
 	private void handleDrowning(LivingEntity entity) {
