@@ -212,6 +212,30 @@ public class VanillaEnchantmentFeature implements EnchantmentFeature, Registrabl
 	}
 
 	@Override
+	public <T> T pickHighestLevel(ItemStack stack, DataComponent<List<T>> component, T fallback) {
+		List<T> pickedEffects = null;
+		var pickedLevel = 0;
+		var enchantmentRegistry = MinecraftServer.getEnchantmentRegistry();
+
+		for (var entry : stack.get(DataComponents.ENCHANTMENTS).enchantments().entrySet()) {
+			if (pickedEffects != null && pickedLevel >= entry.getValue()) continue;
+
+			var enchantment = enchantmentRegistry.get(entry.getKey());
+			if (enchantment == null) continue;
+
+			var effects = enchantment.effects().get(component);
+			if (effects == null) continue;
+
+			pickedEffects = effects;
+			pickedLevel = entry.getValue();
+		}
+
+		if (pickedEffects == null) return fallback;
+
+		return pickedEffects.get(Math.min(pickedLevel, pickedEffects.size()) - 1);
+	}
+
+	@Override
 	public boolean shouldUnbreakingPreventDamage(ItemStack stack) {
 		int unbreakingLevel = stack.get(DataComponents.ENCHANTMENTS).level(Enchantment.UNBREAKING);
 		if (unbreakingLevel <= 0) return false;

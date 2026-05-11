@@ -80,6 +80,11 @@ public interface EnchantmentFeature extends CombatFeature {
 		}
 
 		@Override
+		public <T> T pickHighestLevel(ItemStack stack, DataComponent<List<T>> component, T fallback) {
+			return fallback;
+		}
+
+		@Override
 		public boolean shouldUnbreakingPreventDamage(ItemStack stack) {
 			return false;
 		}
@@ -126,6 +131,8 @@ public interface EnchantmentFeature extends CombatFeature {
 	float modifyConditionalValue(ItemStack stack, DataComponent<List<ConditionalEffect<ValueEffect>>> component, float base);
 
 	float modifyValue(ItemStack stack, DataComponent<ValueEffect> component, float base);
+
+	<T> T pickHighestLevel(ItemStack stack, DataComponent<List<T>> component, T fallback);
 
 	boolean shouldUnbreakingPreventDamage(ItemStack stack);
 

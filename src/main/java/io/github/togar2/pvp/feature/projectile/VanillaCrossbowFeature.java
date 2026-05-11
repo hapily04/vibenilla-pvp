@@ -9,6 +9,7 @@ import net.minestom.server.ServerFlag;
 import net.minestom.server.component.DataComponents;
 import net.minestom.server.event.item.PlayerCancelItemUseEvent;
 import net.minestom.server.event.item.PlayerFinishItemUseEvent;
+import net.minestom.server.item.crossbow.CrossbowChargingSounds;
 import net.minestom.server.item.enchant.EffectComponent;
 import net.minestom.server.utils.Unit;
 import org.jetbrains.annotations.Nullable;
@@ -41,7 +42,6 @@ import net.minestom.server.event.player.PlayerUseItemEvent;
 import net.minestom.server.event.trait.EntityInstanceEvent;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
-import net.minestom.server.item.enchant.Enchantment;
 import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.tag.Tag;
 
@@ -57,6 +57,11 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 	private static final Tag<Boolean> START_SOUND_PLAYED = Tag.Transient("StartSoundPlayed");
 	private static final Tag<Boolean> MID_LOAD_SOUND_PLAYED = Tag.Transient("MidLoadSoundPlayed");
 	private static final Tag<Boolean> LOADED_DURING_USE = Tag.Transient("LoadedDuringUse");
+	private static final CrossbowChargingSounds DEFAULT_CHARGING_SOUNDS = new CrossbowChargingSounds(
+			SoundEvent.ITEM_CROSSBOW_LOADING_START,
+			SoundEvent.ITEM_CROSSBOW_LOADING_MIDDLE,
+			SoundEvent.ITEM_CROSSBOW_LOADING_END
+	);
 
 	private final FeatureConfiguration configuration;
 
@@ -123,7 +128,7 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 			PlayerHand hand = player.getPlayerMeta().getActiveHand();
 			ItemStack stack = player.getItemInHand(hand);
 
-			int quickCharge = stack.get(DataComponents.ENCHANTMENTS).level(Enchantment.QUICK_CHARGE);
+			var chargingSounds = this.getCrossbowChargingSounds(stack);
 
 			long useTicks = player.getCurrentItemUseTime();
 			double progress = useTicks / (double) this.getCrossbowChargeDuration(stack);
@@ -134,22 +139,24 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 			if (midLoadSoundPlayed == null) midLoadSoundPlayed = false;
 
 			if (progress >= 0.2 && !startSoundPlayed) {
-				SoundEvent startSound = this.getCrossbowStartSound(quickCharge);
-				ViewUtil.viewersAndSelf(player).playSound(Sound.sound(
-						startSound, Sound.Source.PLAYER,
-						0.5f, 1.0f
-				), player);
+				if (chargingSounds.start() != null) {
+					ViewUtil.viewersAndSelf(player).playSound(Sound.sound(
+							chargingSounds.start(), Sound.Source.PLAYER,
+							0.5f, 1.0f
+					), player);
+				}
 
 				player.setTag(START_SOUND_PLAYED, true);
 				player.setItemInHand(hand, stack);
 			}
 
-			SoundEvent midLoadSound = quickCharge == 0 ? SoundEvent.ITEM_CROSSBOW_LOADING_MIDDLE : null;
-			if (progress >= 0.5F && midLoadSound != null && !midLoadSoundPlayed) {
-				ViewUtil.viewersAndSelf(player).playSound(Sound.sound(
-						midLoadSound, Sound.Source.PLAYER,
-						0.5f, 1.0f
-				), player);
+			if (progress >= 0.5F && !midLoadSoundPlayed) {
+				if (chargingSounds.mid() != null) {
+					ViewUtil.viewersAndSelf(player).playSound(Sound.sound(
+							chargingSounds.mid(), Sound.Source.PLAYER,
+							0.5f, 1.0f
+					), player);
+				}
 
 				player.setTag(MID_LOAD_SOUND_PLAYED, true);
 				player.setItemInHand(hand, stack);
@@ -182,10 +189,10 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 	}
 
 	protected void loadCrossbowOnRelease(Player player, PlayerHand hand, ItemStack stack, long useTicks) {
-		var quickCharge = stack.get(DataComponents.ENCHANTMENTS).level(Enchantment.QUICK_CHARGE);
+		var chargeDuration = this.getCrossbowChargeDuration(stack);
 
-		if (quickCharge < 6) {
-			var power = this.getCrossbowPowerForTime(useTicks, stack);
+		if (chargeDuration > 0) {
+			var power = this.getCrossbowPowerForTime(useTicks, chargeDuration);
 			if (!(power >= 1.0F) || this.isCrossbowCharged(stack)) return;
 		}
 
@@ -219,8 +226,8 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 		return this.crossbowContainsProjectile(stack, Material.FIREWORK_ROCKET) ? 1.6 : 3.15;
 	}
 
-	protected double getCrossbowPowerForTime(long ticks, ItemStack stack) {
-		double power = ticks / (double) this.getCrossbowChargeDuration(stack);
+	protected double getCrossbowPowerForTime(long ticks, int chargeDuration) {
+		double power = ticks / (double) chargeDuration;
 		if (power > 1) {
 			power = 1;
 		}
@@ -261,13 +268,10 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 		return (int) Math.floor(Math.max(0.0F, duration) * ServerFlag.SERVER_TICKS_PER_SECOND);
 	}
 
-	protected SoundEvent getCrossbowStartSound(int quickCharge) {
-		return switch (quickCharge) {
-			case 1 -> SoundEvent.ITEM_CROSSBOW_QUICK_CHARGE_1;
-			case 2 -> SoundEvent.ITEM_CROSSBOW_QUICK_CHARGE_2;
-			case 3 -> SoundEvent.ITEM_CROSSBOW_QUICK_CHARGE_3;
-			default -> SoundEvent.ITEM_CROSSBOW_LOADING_START;
-		};
+	protected CrossbowChargingSounds getCrossbowChargingSounds(ItemStack stack) {
+		return this.enchantmentFeature.pickHighestLevel(
+				stack, EffectComponent.CROSSBOW_CHARGING_SOUNDS, DEFAULT_CHARGING_SOUNDS
+		);
 	}
 
 	protected ItemStack loadCrossbowProjectiles(Player player, ItemStack stack) {
