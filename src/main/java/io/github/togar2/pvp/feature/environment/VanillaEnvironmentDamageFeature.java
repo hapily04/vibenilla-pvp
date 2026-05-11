@@ -31,6 +31,7 @@ import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.tag.Tag;
 
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Vanilla implementation of {@link EnvironmentDamageFeature}
@@ -145,7 +146,15 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 		if (!this.isInLava(entity)) return;
 
 		this.setFireTicks(entity, LAVA_IGNITE_TICKS);
-		entity.damage(DamageType.LAVA, 4.0F);
+		var damaged = entity.damage(DamageType.LAVA, 4.0F);
+
+		if (damaged && !entity.isSilent()) {
+			ViewUtil.viewersAndSelf(entity).playSound(Sound.sound(
+					SoundEvent.ENTITY_GENERIC_BURN,
+					entity instanceof Player ? Sound.Source.PLAYER : Sound.Source.HOSTILE,
+					0.4F, 2.0F + ThreadLocalRandom.current().nextFloat() * 0.4F
+			), entity);
+		}
 	}
 
 	private void handleVoidDamage(LivingEntity entity) {
