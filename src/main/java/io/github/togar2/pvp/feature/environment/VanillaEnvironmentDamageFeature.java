@@ -10,8 +10,10 @@ import io.github.togar2.pvp.utils.ViewUtil;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.MinecraftServer;
+import net.minestom.server.collision.BoundingBox;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.CoordConversion;
+import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.EquipmentSlot;
 import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.GameMode;
@@ -88,6 +90,7 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 		this.handleFireDamage(player);
 		this.handleLavaDamage(player);
 		this.handleVoidDamage(player);
+		this.handleSuffocation(player);
 		this.handleDrowning(player);
 		this.handleBlockContactDamage(player);
 		this.handleFreezeDamage(player);
@@ -98,6 +101,7 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 		this.handleFireDamage(entity);
 		this.handleLavaDamage(entity);
 		this.handleVoidDamage(entity);
+		this.handleSuffocation(entity);
 		this.handleDrowning(entity);
 		this.handleBlockContactDamage(entity);
 		this.handleFreezeDamage(entity);
@@ -165,6 +169,43 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 		if (!instance.isInVoid(entity.getPosition())) return;
 
 		entity.damage(DamageType.OUT_OF_WORLD, 4.0F);
+	}
+
+	private void handleSuffocation(LivingEntity entity) {
+		var instance = entity.getInstance();
+
+		if (instance == null) return;
+
+		var position = entity.getPosition();
+		var checkWidth = entity.getBoundingBox().width() * 0.8;
+		var checkBox = new BoundingBox(
+				checkWidth, 1.0E-6, checkWidth,
+				new Vec(-checkWidth / 2.0, -5.0E-7, -checkWidth / 2.0)
+		);
+		var eyePosition = position.add(0.0, entity.getEyeHeight(), 0.0);
+
+		var minX = (int) Math.floor(eyePosition.x() + checkBox.minX());
+		var maxX = (int) Math.floor(eyePosition.x() + checkBox.maxX());
+		var minY = (int) Math.floor(eyePosition.y() + checkBox.minY());
+		var maxY = (int) Math.floor(eyePosition.y() + checkBox.maxY());
+		var minZ = (int) Math.floor(eyePosition.z() + checkBox.minZ());
+		var maxZ = (int) Math.floor(eyePosition.z() + checkBox.maxZ());
+
+		for (var blockX = minX; blockX <= maxX; blockX++) {
+			for (var blockY = minY; blockY <= maxY; blockY++) {
+				for (var blockZ = minZ; blockZ <= maxZ; blockZ++) {
+					var block = instance.getBlock(blockX, blockY, blockZ);
+
+					if (block.isAir() || !block.isSolid()) continue;
+
+					var blockPosition = new Vec(blockX, blockY, blockZ);
+					if (block.registry().collisionShape().intersectBox(eyePosition.sub(blockPosition), checkBox)) {
+						entity.damage(DamageType.IN_WALL, 1.0F);
+						return;
+					}
+				}
+			}
+		}
 	}
 
 	private void handleDrowning(LivingEntity entity) {
