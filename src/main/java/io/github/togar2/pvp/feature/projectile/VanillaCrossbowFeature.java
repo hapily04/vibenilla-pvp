@@ -1,5 +1,6 @@
 package io.github.togar2.pvp.feature.projectile;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
@@ -7,6 +8,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import net.minestom.server.component.DataComponents;
 import net.minestom.server.event.item.PlayerCancelItemUseEvent;
 import net.minestom.server.event.item.PlayerFinishItemUseEvent;
+import net.minestom.server.utils.Unit;
 import org.jetbrains.annotations.Nullable;
 
 import io.github.togar2.pvp.entity.projectile.AbstractArrow;
@@ -233,9 +235,8 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 		return stack.with(DataComponents.CHARGED_PROJECTILES, projectile == null ? List.of() : List.of(projectile));
 	}
 
-	protected ItemStack setCrossbowProjectiles(ItemStack stack, ItemStack projectile1,
-	                                           ItemStack projectile2, ItemStack projectile3) {
-		return stack.with(DataComponents.CHARGED_PROJECTILES, List.of(projectile1, projectile2, projectile3));
+	protected ItemStack setCrossbowProjectiles(ItemStack stack, List<ItemStack> projectiles) {
+		return stack.with(DataComponents.CHARGED_PROJECTILES, projectiles);
 	}
 
 	protected boolean crossbowContainsProjectile(ItemStack stack, Material projectile) {
@@ -268,7 +269,8 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 	}
 
 	protected ItemStack loadCrossbowProjectiles(Player player, ItemStack stack) {
-		boolean multiShot = stack.get(DataComponents.ENCHANTMENTS).level(Enchantment.MULTISHOT) > 0;
+		var multishotLevel = stack.get(DataComponents.ENCHANTMENTS).level(Enchantment.MULTISHOT);
+		var projectileCount = 1 + 2 * multishotLevel;
 
 		ItemStack projectileItem;
 		int projectileSlot;
@@ -285,13 +287,19 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 			return ItemStack.AIR;
 		}
 
-		var loadedProjectile = projectileItem.withAmount(1);
+		var loadedProjectiles = new ArrayList<ItemStack>(projectileCount);
 
-		if (multiShot) {
-			stack = this.setCrossbowProjectiles(stack, loadedProjectile, loadedProjectile, loadedProjectile);
-		} else {
-			stack = this.setCrossbowProjectile(stack, loadedProjectile);
+		for (var projectileIndex = 0; projectileIndex < projectileCount; projectileIndex++) {
+			var loadedProjectile = projectileItem.withAmount(1);
+
+			if (projectileIndex > 0 || player.getGameMode() == GameMode.CREATIVE) {
+				loadedProjectile = loadedProjectile.with(DataComponents.INTANGIBLE_PROJECTILE, Unit.INSTANCE);
+			}
+
+			loadedProjectiles.add(loadedProjectile);
 		}
+
+		stack = this.setCrossbowProjectiles(stack, loadedProjectiles);
 
 		if (player.getGameMode() != GameMode.CREATIVE && projectileSlot >= 0) {
 			player.getInventory().setItemStack(projectileSlot, projectileItem.withAmount(projectileItem.amount() - 1));
@@ -305,25 +313,22 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 		List<ItemStack> projectiles = stack.get(DataComponents.CHARGED_PROJECTILES);
 		if (projectiles == null || projectiles.isEmpty()) return ItemStack.AIR;
 
-		ItemStack projectile = projectiles.getFirst();
-		if (!projectile.isAir()) {
-            this.shootCrossbowProjectile(player, hand, stack, projectile, 1.0F, power, spread, 0.0F);
-		}
+		var multishotLevel = stack.get(DataComponents.ENCHANTMENTS).level(Enchantment.MULTISHOT);
+		var maxAngle = 10.0F * multishotLevel;
+		var angleStep = projectiles.size() == 1 ? 0.0F : 2.0F * maxAngle / (projectiles.size() - 1);
+		var angleOffset = (projectiles.size() - 1) % 2 * angleStep / 2.0F;
+		var direction = 1.0F;
+		var random = ThreadLocalRandom.current();
 
-		if (projectiles.size() > 2) {
-			ThreadLocalRandom random = ThreadLocalRandom.current();
-			boolean firstHighPitch = random.nextBoolean();
-			float firstPitch = this.getRandomShotPitch(firstHighPitch, random);
-			float secondPitch = this.getRandomShotPitch(!firstHighPitch, random);
+		for (var projectileIndex = 0; projectileIndex < projectiles.size(); projectileIndex++) {
+			var projectile = projectiles.get(projectileIndex);
 
-			projectile = projectiles.get(1);
-			if (!projectile.isAir()) {
-                this.shootCrossbowProjectile(player, hand, stack, projectile, firstPitch, power, spread, -10.0F);
-			}
-			projectile = projectiles.get(2);
-			if (!projectile.isAir()) {
-                this.shootCrossbowProjectile(player, hand, stack, projectile, secondPitch, power, spread, 10.0F);
-			}
+			if (projectile.isAir()) continue;
+
+			var angle = angleOffset + direction * ((projectileIndex + 1) / 2) * angleStep;
+			direction = -direction;
+			var soundPitch = projectileIndex == 0 ? 1.0F : this.getRandomShotPitch((projectileIndex & 1) == 1, random);
+			this.shootCrossbowProjectile(player, hand, stack, projectile, soundPitch, power, spread, angle);
 		}
 
 		return this.setCrossbowProjectile(stack, ItemStack.AIR);
@@ -340,7 +345,7 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 			this.shootProjectileEntity(projectileEntity, player, position, yaw, power, spread);
 		} else {
 			var arrow = this.getCrossbowArrow(player, crossbowStack, projectile);
-			if (player.getGameMode() == GameMode.CREATIVE || yaw != 0.0) {
+			if (projectile.has(DataComponents.INTANGIBLE_PROJECTILE)) {
 				arrow.setPickupMode(AbstractArrow.PickupMode.CREATIVE_ONLY);
 			}
 
