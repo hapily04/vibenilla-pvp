@@ -6,6 +6,7 @@ import io.github.togar2.pvp.feature.config.DefinedFeature;
 import io.github.togar2.pvp.feature.config.FeatureConfiguration;
 import io.github.togar2.pvp.player.CombatPlayer;
 import io.github.togar2.pvp.utils.CombatVersion;
+import net.minestom.server.ServerFlag;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.LivingEntity;
@@ -126,14 +127,14 @@ public class VanillaKnockbackFeature implements KnockbackFeature {
 			// Default knockback
 			horizontal = settings.horizontal();
 			vertical = settings.vertical();
-		} else {
-			// Extra knockback
-			double baseVertical = legacy ?
-					settings.extraVertical() : // Legacy: defaults to 0.1
-					settings.vertical() + settings.extraVertical(); // Modern: defaults to 0.1 + 0.4 = 0.5
-
+		} else if (legacy) {
+			// Legacy 1.8 extra knockback: motion += direction * (sprint(1) + Knockback) * 0.5, motion.y += 0.1
 			horizontal = settings.extraHorizontal() * extraKnockback;
-			vertical = baseVertical * extraKnockback;
+			vertical = settings.extraVertical() * extraKnockback;
+		} else {
+			// Modern extra knockback: vanilla LivingEntity#knockback uses power directly with no scale
+			horizontal = extraKnockback * ServerFlag.SERVER_TICKS_PER_SECOND;
+			vertical = extraKnockback * ServerFlag.SERVER_TICKS_PER_SECOND;
 		}
 
 		horizontal *= (1 - kbResistance);

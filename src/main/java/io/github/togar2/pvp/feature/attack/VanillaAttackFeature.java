@@ -336,7 +336,7 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 		var baseDamage = damage;
 		damage += magicalDamage;
 
-		if (sprintAttack) knockback++;
+		if (sprintAttack) knockback += this.version.legacy() ? 1.0 : 0.5;
 
 		return new AttackValues.Final(
 			damage, baseDamage, cooldownProgress, strongAttack, sprintAttack, knockback, critical,
