@@ -3,6 +3,7 @@ package io.github.togar2.pvp.feature.explosion;
 import io.github.togar2.pvp.entity.explosion.CrystalEntity;
 import io.github.togar2.pvp.events.AnchorChargeEvent;
 import io.github.togar2.pvp.events.AnchorExplodeEvent;
+import io.github.togar2.pvp.events.BedExplodeEvent;
 import io.github.togar2.pvp.events.CrystalPlaceEvent;
 import io.github.togar2.pvp.feature.FeatureType;
 import io.github.togar2.pvp.feature.RegistrableFeature;
@@ -32,10 +33,12 @@ import net.minestom.server.instance.block.Block;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
 import net.minestom.server.sound.SoundEvent;
+import net.minestom.server.world.attribute.BedRule;
 import net.minestom.server.world.attribute.EnvironmentAttribute;
 import net.minestom.server.world.attribute.EnvironmentAttribute.Modifier;
 import net.minestom.server.world.attribute.EnvironmentAttributeMap;
 import net.minestom.server.world.biome.Biome;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Vanilla implementation of {@link ExplosiveFeature}
@@ -205,6 +208,110 @@ public class VanillaExplosiveFeature implements ExplosiveFeature, RegistrableFea
 
 			event.setBlockingItemUse(true);
 		});
+
+		node.addListener(PlayerBlockInteractEvent.class, event -> {
+			if (event.getHand() != PlayerHand.MAIN) return;
+
+			Instance instance = event.getInstance();
+			Point clickedPosition = event.getBlockPosition();
+			Block clickedBlock = instance.getBlock(clickedPosition);
+			if (!this.isBed(clickedBlock)) return;
+
+			Player player = event.getPlayer();
+			if (this.shouldSuppressBedUse(player)) return;
+
+			BedRule bedRule = this.resolveBedRule(instance, clickedPosition);
+			if (bedRule == null || !bedRule.explodes()) return;
+
+			Point headPosition = clickedPosition;
+			Block headBlock = clickedBlock;
+			if (!"head".equals(clickedBlock.getProperty("part"))) {
+				headPosition = this.offsetByFacing(clickedPosition, clickedBlock.getProperty("facing"));
+				headBlock = instance.getBlock(headPosition);
+				if (!this.isBed(headBlock)) return;
+			}
+
+			this.installExplosionSupplier(instance);
+			if (instance.getExplosionSupplier() == null) return;
+
+			Point finalHeadPosition = headPosition;
+			Block finalHeadBlock = headBlock;
+			var bedExplodeEvent = new BedExplodeEvent(player, finalHeadPosition);
+			EventDispatcher.callCancellable(bedExplodeEvent, () -> {
+				instance.setBlock(finalHeadPosition, Block.AIR);
+
+				String facing = finalHeadBlock.getProperty("facing");
+				Point footPosition = this.offsetByFacing(finalHeadPosition, this.opposite(facing));
+				if (this.isBed(instance.getBlock(footPosition))) {
+					instance.setBlock(footPosition, Block.AIR);
+				}
+
+				instance.explode(
+						(float) (finalHeadPosition.x() + 0.5),
+						(float) (finalHeadPosition.y() + 0.5),
+						(float) (finalHeadPosition.z() + 0.5),
+						5.0F,
+						CompoundBinaryTag.builder()
+								.putBoolean("fire", true)
+								.putBoolean("anchor", true)
+								.build()
+				);
+			});
+
+			event.setBlockingItemUse(true);
+		});
+	}
+
+	private boolean isBed(Block block) {
+		return block.key().value().endsWith("_bed");
+	}
+
+	private boolean shouldSuppressBedUse(Player player) {
+		return (player.isSneaking() || player.inputs().shift())
+				&& (!player.getItemInMainHand().isAir() || !player.getItemInOffHand().isAir());
+	}
+
+	private @Nullable BedRule resolveBedRule(Instance instance, Point position) {
+		EnvironmentAttributeMap dim = MinecraftServer.getDimensionTypeRegistry().get(instance.getDimensionType()).attributes();
+		var dimensionEntry = dim.entries().get(EnvironmentAttribute.BED_RULE);
+		if (dimensionEntry == null) return null;
+
+		BedRule dimensionBedRule = (BedRule) dimensionEntry.argument();
+
+		Biome biome = MinecraftServer.getBiomeRegistry().get(instance.getChunkAt(position).getBiome(position));
+		if (biome.attributes().entries().containsKey(EnvironmentAttribute.BED_RULE)) {
+			//noinspection unchecked
+			return ((Modifier<BedRule, BedRule>) biome.attributes().entries()
+					.get(EnvironmentAttribute.BED_RULE).modifier())
+					.modify(dimensionBedRule, (BedRule) biome.attributes().entries()
+							.get(EnvironmentAttribute.BED_RULE).argument());
+		}
+
+		return dimensionBedRule;
+	}
+
+	private Point offsetByFacing(Point position, String facing) {
+		if (facing == null) return position;
+
+		return switch (facing) {
+			case "north" -> position.add(0, 0, -1);
+			case "south" -> position.add(0, 0, 1);
+			case "east" -> position.add(1, 0, 0);
+			case "west" -> position.add(-1, 0, 0);
+			default -> position;
+		};
+	}
+
+	private String opposite(String facing) {
+		if (facing == null) return null;
+
+		return switch (facing) {
+			case "north" -> "south";
+			case "south" -> "north";
+			case "east" -> "west";
+			case "west" -> "east";
+			default -> facing;
+		};
 	}
 
 	private void installExplosionSupplier(Instance instance) {
