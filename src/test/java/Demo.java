@@ -1,7 +1,6 @@
 import io.github.togar2.pvp.MinestomPvP;
 import io.github.togar2.pvp.feature.CombatFeatures;
 import io.github.togar2.pvp.feature.FeatureType;
-import net.kyori.adventure.key.Key;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.command.builder.Command;
 import net.minestom.server.command.builder.arguments.ArgumentEnum;
@@ -18,15 +17,12 @@ import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
 import net.minestom.server.item.component.FireworkExplosion;
 import net.minestom.server.item.component.FireworkList;
-import net.minestom.server.registry.RegistryKey;
-import net.minestom.server.world.DimensionType;
-import net.minestom.server.world.attribute.EnvironmentAttribute;
 
 import java.util.List;
 
 void main() {
     var server = MinecraftServer.init();
-    var instance = MinecraftServer.getInstanceManager().createInstanceContainer(createDimension());
+    var instance = MinecraftServer.getInstanceManager().createInstanceContainer();
     instance.setExplosionSupplier(CombatFeatures.modernVanilla().get(FeatureType.EXPLOSION).getExplosionSupplier());
 
     MinecraftServer.getGlobalEventHandler()
@@ -67,13 +63,4 @@ private static ItemStack createExplodingFireworkRocket() {
     var fireworks = new FireworkList(1, List.of(explosion));
 
     return ItemStack.of(Material.FIREWORK_ROCKET).with(DataComponents.FIREWORKS, fireworks);
-}
-
-private static RegistryKey<DimensionType> createDimension() {
-    var dimension = DimensionType.builder()
-            .ambientLight(1.0F)
-            .setAttribute(EnvironmentAttribute.RESPAWN_ANCHOR_WORKS, true)
-            .build();
-
-    return MinecraftServer.getDimensionTypeRegistry().register(Key.key("vibenilla:pvp"), dimension);
 }

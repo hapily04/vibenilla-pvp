@@ -163,9 +163,12 @@ public class VanillaExplosiveFeature implements ExplosiveFeature, RegistrableFea
 
 			if (charges == 0) return;
 
-            EnvironmentAttributeMap dim = MinecraftServer.getDimensionTypeRegistry().get(instance.getDimensionType()).attributes();
+            EnvironmentAttributeMap dimension = MinecraftServer.getDimensionTypeRegistry().get(instance.getDimensionType()).attributes();
+			var respawnAnchorEntry = dimension.entries().get(EnvironmentAttribute.RESPAWN_ANCHOR_WORKS);
 
-			boolean worksInDimension = (Boolean) dim.entries().get(EnvironmentAttribute.RESPAWN_ANCHOR_WORKS).argument();
+			boolean worksInDimension = respawnAnchorEntry != null
+					? (Boolean) respawnAnchorEntry.argument()
+					: EnvironmentAttribute.RESPAWN_ANCHOR_WORKS.defaultValue();
 
 			Biome biome = MinecraftServer.getBiomeRegistry().get(instance.getChunkAt(event.getBlockPosition())
                 .getBiome(event.getBlockPosition()));
