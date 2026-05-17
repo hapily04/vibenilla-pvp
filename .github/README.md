@@ -2,11 +2,11 @@
 Combat for Minestom
 
 ## What does this have over MinestomPvP?
+- 26.1 support
 - Maces
 - Spears
 - Accurate crystal PVP
 - Wind charges
-- Lingering potions
 - Crossbows with firework rockets
 - Copper armor and tools
 - Elytra firework boosts
