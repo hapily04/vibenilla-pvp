@@ -12,7 +12,6 @@ import io.github.togar2.pvp.feature.item.ItemDamageFeature;
 import io.github.togar2.pvp.utils.CombatVersion;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
-import net.minestom.server.MinecraftServer;
 import net.minestom.server.ServerFlag;
 import net.minestom.server.component.DataComponents;
 import net.minestom.server.coordinate.Pos;
@@ -91,11 +90,7 @@ public class VanillaBlockFeature implements BlockFeature {
 	private boolean isBypassedBy(BlocksAttacks blocksAttacks, Damage damage) {
 		var bypassedBy = blocksAttacks.bypassedBy();
 
-		if (bypassedBy == null) return false;
-
-		var tag = MinecraftServer.process().damageType().getTag(bypassedBy.key());
-
-		return tag != null && tag.contains(damage.getType());
+		return bypassedBy != null && bypassedBy.contains(damage.getType());
 	}
 
 	private float resolveBlockedDamage(BlocksAttacks blocksAttacks, Damage damage, float amount, double blockingAngle) {
