@@ -60,12 +60,19 @@ public class ThrownEnderpearl extends CustomEntityProjectile implements ItemHold
 
 				player.teleport(position);
                 this.fallFeature.resetFallDistance(player);
+                this.fallFeature.clearCurrentImpulseContext(player);
 
 				player.damage(DamageType.ENDER_PEARL, 5.0F);
 				this.playTeleportSound(position);
 			}
 		} else if (shooter != null) {
 			shooter.teleport(position);
+
+			if (shooter instanceof LivingEntity livingShooter) {
+				this.fallFeature.resetFallDistance(livingShooter);
+				this.fallFeature.clearCurrentImpulseContext(livingShooter);
+			}
+
 			this.playTeleportSound(position);
 		}
 	}
