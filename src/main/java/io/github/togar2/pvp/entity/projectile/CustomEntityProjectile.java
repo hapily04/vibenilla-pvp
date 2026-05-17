@@ -185,7 +185,7 @@ public class CustomEntityProjectile extends Entity {
 
 	private boolean shouldUnstuck() {
 		Point collidedPoint = this.position.add(this.collisionDirection.mul(0.003)); // Move slightly inside the collided block
-		Point collidedBlockVec = new BlockVec(collidedPoint);
+		Point collidedBlockVec = collidedPoint.asBlockVec();
 		Block block = this.instance.getBlock(collidedPoint);
 
 		return !block.registry().collisionShape().intersectBox(collidedPoint.sub(collidedBlockVec).sub(0, 0.6, 0), UNSTUCK_BOX);
@@ -254,7 +254,7 @@ public class CustomEntityProjectile extends Entity {
 							return;
 						} else {
 							// If velocity has been changed because of bounce, prevent projectile from moving further
-							if (this.velocity != prevVelocity) newPosition = this.position.add(this.velocity.div(ServerFlag.SERVER_TICKS_PER_SECOND)).asPos();
+							if (this.velocity != prevVelocity) newPosition = this.position.add(this.velocity.div(ServerFlag.SERVER_TICKS_PER_SECOND));
 						}
 					}
 				}

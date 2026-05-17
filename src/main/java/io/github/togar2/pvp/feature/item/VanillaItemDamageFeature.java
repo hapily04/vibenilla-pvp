@@ -120,10 +120,10 @@ public class VanillaItemDamageFeature implements ItemDamageFeature {
             return true;
         }
 
-        var damageResistantTypes = MinecraftServer.getDamageTypeRegistry().getTag(damageResistant.types());
+        var damageResistantTypes = damageResistant.types();
+        var damageTypeKey = MinecraftServer.getDamageTypeRegistry().getKey(damageType);
 
-        return damageResistantTypes == null
-                || !damageResistantTypes.contains(MinecraftServer.getDamageTypeRegistry().getKey(damageType));
+        return damageTypeKey == null || !damageResistantTypes.contains(damageTypeKey);
     }
 
 	private static void triggerEquipmentBreak(LivingEntity entity, EquipmentSlot slot) {
