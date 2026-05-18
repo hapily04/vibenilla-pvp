@@ -13,6 +13,7 @@ import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.AsyncPlayerConfigurationEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
+import net.minestom.server.instance.anvil.AnvilLoader;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
 import net.minestom.server.item.component.FireworkExplosion;
@@ -23,6 +24,7 @@ import java.util.List;
 void main() {
     var server = MinecraftServer.init();
     var instance = MinecraftServer.getInstanceManager().createInstanceContainer();
+    instance.setChunkLoader(new AnvilLoader("world"));
     instance.setExplosionSupplier(CombatFeatures.modernVanilla().get(FeatureType.EXPLOSION).getExplosionSupplier());
 
     MinecraftServer.getGlobalEventHandler()
