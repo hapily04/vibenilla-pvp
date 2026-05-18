@@ -4,7 +4,9 @@ import io.github.togar2.pvp.enchantment.EntityGroup;
 import io.github.togar2.pvp.feature.food.ExhaustionFeature;
 import io.github.togar2.pvp.feature.food.FoodFeature;
 import io.github.togar2.pvp.utils.CombatVersion;
+import io.github.togar2.pvp.utils.ViewUtil;
 import net.kyori.adventure.key.Key;
+import net.kyori.adventure.sound.Sound;
 import net.minestom.server.color.AlphaColor;
 import net.minestom.server.color.Color;
 import net.minestom.server.entity.Entity;
@@ -19,6 +21,7 @@ import net.minestom.server.entity.damage.DamageType;
 import net.minestom.server.particle.Particle;
 import net.minestom.server.potion.Potion;
 import net.minestom.server.potion.PotionEffect;
+import net.minestom.server.sound.SoundEvent;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
@@ -30,6 +33,7 @@ public class CombatPotionEffect {
 	private Map<Attribute, AttributeModifier> legacyAttributeModifiers;
 	private final PotionEffect potionEffect;
 	private final Function<Potion, Particle> particleSupplier;
+	private @Nullable SoundEvent soundOnAdded;
 
 	public CombatPotionEffect(PotionEffect potionEffect) {
 		this.potionEffect = potionEffect;
@@ -63,6 +67,11 @@ public class CombatPotionEffect {
 		if (this.legacyAttributeModifiers == null)
             this.legacyAttributeModifiers = new HashMap<>();
         this.legacyAttributeModifiers.put(attribute, new AttributeModifier(id, amount, operation));
+		return this;
+	}
+
+	public CombatPotionEffect withSoundOnAdded(SoundEvent soundOnAdded) {
+		this.soundOnAdded = soundOnAdded;
 		return this;
 	}
 
@@ -169,6 +178,15 @@ public class CombatPotionEffect {
 			instance.removeModifier(modifier);
 			instance.addModifier(new AttributeModifier(modifier.id(), this.adjustModifierAmount(amplifier, modifier), modifier.operation()));
 		});
+
+		if (this.soundOnAdded != null) {
+			ViewUtil.viewersAndSelf(entity).playSound(Sound.sound(
+					this.soundOnAdded,
+					entity instanceof Player ? Sound.Source.PLAYER : Sound.Source.HOSTILE,
+					1.0F,
+					1.0F
+			), entity);
+		}
 	}
 
 	public void onRemoved(LivingEntity entity, int amplifier, CombatVersion version) {

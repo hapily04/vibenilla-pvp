@@ -5,6 +5,7 @@ import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.entity.attribute.AttributeOperation;
 import net.minestom.server.particle.Particle;
 import net.minestom.server.potion.PotionEffect;
+import net.minestom.server.sound.SoundEvent;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -54,15 +55,16 @@ public class CombatPotionEffects {
 				new CombatPotionEffect(PotionEffect.SLOW_FALLING),
 				new CombatPotionEffect(PotionEffect.CONDUIT_POWER),
 				new CombatPotionEffect(PotionEffect.DOLPHINS_GRACE),
-				new CombatPotionEffect(PotionEffect.BAD_OMEN),
+				new CombatPotionEffect(PotionEffect.BAD_OMEN).withSoundOnAdded(SoundEvent.EVENT_MOB_EFFECT_BAD_OMEN),
 				new CombatPotionEffect(PotionEffect.HERO_OF_THE_VILLAGE),
 				new CombatPotionEffect(PotionEffect.DARKNESS),
-				new CombatPotionEffect(PotionEffect.TRIAL_OMEN, potion -> Particle.TRIAL_OMEN),
-				new CombatPotionEffect(PotionEffect.RAID_OMEN, potion -> Particle.RAID_OMEN),
+				new CombatPotionEffect(PotionEffect.TRIAL_OMEN, potion -> Particle.TRIAL_OMEN).withSoundOnAdded(SoundEvent.EVENT_MOB_EFFECT_TRIAL_OMEN),
+				new CombatPotionEffect(PotionEffect.RAID_OMEN, potion -> Particle.RAID_OMEN).withSoundOnAdded(SoundEvent.EVENT_MOB_EFFECT_RAID_OMEN),
 				new CombatPotionEffect(PotionEffect.WIND_CHARGED, potion -> Particle.SMALL_GUST),
 				new CombatPotionEffect(PotionEffect.WEAVING, potion -> Particle.ITEM_COBWEB),
 				new CombatPotionEffect(PotionEffect.OOZING, potion -> Particle.ITEM_SLIME),
-				new CombatPotionEffect(PotionEffect.INFESTED, potion -> Particle.INFESTED)
+				new CombatPotionEffect(PotionEffect.INFESTED, potion -> Particle.INFESTED),
+				new CombatPotionEffect(PotionEffect.BREATH_OF_THE_NAUTILUS)
 		);
 	}
 }

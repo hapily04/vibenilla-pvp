@@ -16,6 +16,7 @@ import io.github.togar2.pvp.potion.item.CombatPotionTypes;
 import io.github.togar2.pvp.utils.CombatVersion;
 import io.github.togar2.pvp.utils.EffectUtil;
 import io.github.togar2.pvp.utils.PotionFlags;
+import io.github.togar2.pvp.utils.ViewUtil;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.util.RGBLike;
 import net.minestom.server.MinecraftServer;
@@ -41,6 +42,7 @@ import net.minestom.server.event.entity.EntityPotionRemoveEvent;
 import net.minestom.server.event.entity.EntityTickEvent;
 import net.minestom.server.event.trait.EntityInstanceEvent;
 import net.minestom.server.instance.block.Block;
+import net.minestom.server.instance.gamerule.GameRule;
 import net.minestom.server.network.packet.server.play.ParticlePacket;
 import net.minestom.server.item.component.PotionContents;
 import net.minestom.server.particle.Particle;
@@ -77,7 +79,6 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 	private static final int OOZING_SLIME_COUNT = 2;
 	private static final int OOZING_SLIME_SIZE = 2;
 	private static final int OOZING_SLIME_CHECK_RADIUS = 2;
-	private static final int DEFAULT_MAX_ENTITY_CRAMMING = 24;
 	private static final int WEAVING_POSITION_ATTEMPTS = 15;
 	private static final int WEAVING_RADIUS = 1;
 	private static final int WEAVING_LEVEL_EVENT = 3018;
@@ -120,10 +121,10 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 
 			if (!entity.hasEffect(PotionEffect.INFESTED)) return;
 
-			var previousHealth = entity.getHealth();
+			var previousLastDamage = entity.getLastDamageSource();
 
 			entity.scheduler().scheduleNextProcess(() -> {
-				if (entity.isRemoved() || entity.getHealth() >= previousHealth) return;
+				if (entity.isRemoved() || entity.getLastDamageSource() == previousLastDamage) return;
 
 				this.spawnInfestedSilverfish(entity);
 			});
@@ -446,8 +447,8 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 				0.0F, 0.0F, 0.0F,
 				0.0F, 1
 		));
-		entity.getViewersAsAudience().playSound(Sound.sound(
-				SoundEvent.ENTITY_WIND_CHARGE_WIND_BURST,
+		ViewUtil.viewersAndSelf(entity).playSound(Sound.sound(
+				SoundEvent.ENTITY_BREEZE_WIND_BURST,
 				entity instanceof Player ? Sound.Source.PLAYER : Sound.Source.HOSTILE,
 				1.0F, 1.0F
 		), entity);
@@ -461,11 +462,7 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 
 			if (nearbyEntity instanceof Player) continue;
 
-			if (!(nearbyEntity instanceof LivingEntity nearbyLiving)) {
-				continue;
-			}
-
-			this.applyWindChargedKnockback(position, radius, nearbyLiving);
+			this.applyWindChargedKnockback(position, radius, nearbyEntity);
 		}
 		for (var player : instance.getPlayers()) {
 			if (player == entity) {
@@ -476,13 +473,13 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 		}
 	}
 
-	private void applyWindChargedKnockback(Point position, double radius, LivingEntity nearbyLiving) {
-		if (nearbyLiving instanceof Player player && !this.shouldApplyWindChargedKnockback(player)) {
+	private void applyWindChargedKnockback(Point position, double radius, Entity nearbyEntity) {
+		if (nearbyEntity instanceof Player player && !this.shouldApplyWindChargedKnockback(player)) {
 			return;
 		}
 
-		var originY = nearbyLiving.getPosition().y() + nearbyLiving.getEyeHeight();
-		var origin = new Vec(nearbyLiving.getPosition().x(), originY, nearbyLiving.getPosition().z());
+		var originY = nearbyEntity.getPosition().y() + nearbyEntity.getEyeHeight();
+		var origin = new Vec(nearbyEntity.getPosition().x(), originY, nearbyEntity.getPosition().z());
 		var direction = origin.sub(position.asVec());
 		var distance = direction.length();
 
@@ -490,13 +487,17 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 			return;
 		}
 
-		var exposure = VanillaExplosionSupplier.getExposure(position, nearbyLiving);
+		var exposure = VanillaExplosionSupplier.getExposure(position, nearbyEntity);
 		var knockback = (1.0 - distance / radius) * exposure;
-		knockback *= 1.0 - nearbyLiving.getAttributeValue(Attribute.EXPLOSION_KNOCKBACK_RESISTANCE);
-		var knockbackVector = direction.normalize().mul(knockback);
-		var velocity = nearbyLiving.getVelocity();
 
-		nearbyLiving.setVelocity(velocity.add(knockbackVector.mul(ServerFlag.SERVER_TICKS_PER_SECOND)));
+		if (nearbyEntity instanceof LivingEntity nearbyLiving) {
+			knockback *= 1.0 - nearbyLiving.getAttributeValue(Attribute.EXPLOSION_KNOCKBACK_RESISTANCE);
+		}
+
+		var knockbackVector = direction.normalize().mul(knockback);
+		var velocity = nearbyEntity.getVelocity();
+
+		nearbyEntity.setVelocity(velocity.add(knockbackVector.mul(ServerFlag.SERVER_TICKS_PER_SECOND)));
 	}
 
 	private boolean shouldApplyWindChargedKnockback(Player player) {
@@ -511,11 +512,12 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 
 		if (instance == null) return;
 
-		var nearbySlimes = instance.getNearbyEntities(entity.getPosition(), OOZING_SLIME_CHECK_RADIUS).stream()
+		var maxEntityCramming = this.getMaxEntityCramming();
+		var nearbySlimes = maxEntityCramming < 1 ? 0 : instance.getNearbyEntities(entity.getPosition(), OOZING_SLIME_CHECK_RADIUS).stream()
 				.filter(nearbyEntity -> nearbyEntity.getEntityType() == EntityType.SLIME)
-				.limit(DEFAULT_MAX_ENTITY_CRAMMING)
+				.limit(maxEntityCramming)
 				.count();
-		var spawnCount = Math.clamp(DEFAULT_MAX_ENTITY_CRAMMING - (int) nearbySlimes, 0, OOZING_SLIME_COUNT);
+		var spawnCount = maxEntityCramming < 1 ? OOZING_SLIME_COUNT : Math.clamp(maxEntityCramming - (int) nearbySlimes, 0, OOZING_SLIME_COUNT);
 		var random = ThreadLocalRandom.current();
 
 		for (var slimeNumber = 0; slimeNumber < spawnCount; slimeNumber++) {
@@ -532,6 +534,7 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 
 	private void spawnWeavingCobwebs(LivingEntity entity) {
 		if (!entity.hasEffect(PotionEffect.WEAVING)) return;
+		if (!this.canWeavingPlaceCobwebs(entity)) return;
 
 		var instance = entity.getInstance();
 
@@ -603,6 +606,14 @@ public class VanillaEffectFeature implements EffectFeature, RegistrableFeature {
 					1.0F, 1.0F
 			), silverfish);
 		}
+	}
+
+	private int getMaxEntityCramming() {
+		return GameRule.MAX_ENTITY_CRAMMING.defaultValue();
+	}
+
+	private boolean canWeavingPlaceCobwebs(LivingEntity entity) {
+		return entity instanceof Player || GameRule.MOB_GRIEFING.defaultValue();
 	}
 
 	@Override
