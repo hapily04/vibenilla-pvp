@@ -62,8 +62,13 @@ dependencies {
     compileOnly("net.minestom:minestom:$minestomVersion")
     compileOnly("it.unimi.dsi:fastutil:8.5.12")
     testImplementation("net.minestom:minestom:$minestomVersion")
+    testImplementation("net.minestom:testing:$minestomVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.13.4")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 tasks.test {
+    useJUnitPlatform()
+    systemProperty("minestom.inside-test", "true")
     failOnNoDiscoveredTests = false
 }
