@@ -25,6 +25,7 @@ import net.minestom.server.entity.LivingEntity;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.entity.damage.DamageType;
+import net.minestom.server.component.DataComponents;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.entity.EntityTickEvent;
 import net.minestom.server.event.player.PlayerTickEvent;
@@ -62,6 +63,8 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 	private static final int FIRE_DAMAGE_INTERVAL = 20;
 	private static final int FIRE_IGNITE_TICKS = 8 * 20;
 	private static final int LAVA_IGNITE_TICKS = 15 * 20;
+	private static final int TURTLE_HELMET_WATER_BREATHING_TICKS = 200;
+	private static final byte TURTLE_HELMET_WATER_BREATHING_FLAGS = PotionFlags.create(false, false, true);
 	private static final int DEFAULT_MAX_ENTITY_CRAMMING = 24;
 	private static final double WORLD_BORDER_SAFE_ZONE = 5.0;
 	private static final double WORLD_BORDER_DAMAGE_PER_BLOCK = 0.2;
@@ -119,6 +122,7 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 		this.handleSuffocation(player);
 		this.handleWorldBorderDamage(player);
 		this.handleCrammingDamage(player);
+		this.handleTurtleHelmetBreathing(player);
 		this.handleDrowning(player);
 		this.handleBlockContactDamage(player);
 		this.handleFreezeDamage(player);
@@ -345,10 +349,13 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 					entity.getPosition().blockZ()
 			);
 
-			if (eyeBlock.compare(Block.BUBBLE_COLUMN)
-					|| this.canBreatheUnderwater(entity)
-					|| this.hasWaterBreathing(entity)) {
+			if (eyeBlock.compare(Block.BUBBLE_COLUMN)) {
 				airSupply = this.increaseAirSupply(airSupply);
+			} else if (this.canBreatheUnderwater(entity) || this.hasWaterBreathing(entity)) {
+
+				if (airSupply < MAX_AIR_SUPPLY && this.shouldEffectsRefillAirSupply(entity)) {
+					airSupply = this.increaseAirSupply(airSupply);
+				}
 			} else {
 				airSupply = this.decreaseAirSupply(entity, airSupply);
 
@@ -364,6 +371,34 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 
 		entity.setTag(AIR_SUPPLY, airSupply);
 		entity.getEntityMeta().setAirTicks(Math.max(airSupply, 0));
+	}
+
+	private void handleTurtleHelmetBreathing(Player player) {
+		if (this.isEyeInWater(player)) return;
+
+		if (!this.isEquipped(player, Material.TURTLE_HELMET)) return;
+
+		player.addEffect(new Potion(
+				PotionEffect.WATER_BREATHING,
+				0,
+				TURTLE_HELMET_WATER_BREATHING_TICKS,
+				TURTLE_HELMET_WATER_BREATHING_FLAGS
+		));
+	}
+
+	private boolean isEquipped(LivingEntity entity, Material material) {
+		for (var slot : EquipmentSlot.values()) {
+			var itemStack = entity.getEquipment(slot);
+
+			if (itemStack.material() != material) continue;
+
+			var equippable = itemStack.get(DataComponents.EQUIPPABLE);
+			if (equippable != null && equippable.slot() == slot) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	private boolean handleAquaticOutOfWaterDamage(Instance instance, LivingEntity entity) {
@@ -702,6 +737,13 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 
 	private boolean hasWaterBreathing(LivingEntity entity) {
 		return entity.hasEffect(PotionEffect.WATER_BREATHING)
+				|| entity.hasEffect(PotionEffect.CONDUIT_POWER)
+				|| entity.hasEffect(PotionEffect.BREATH_OF_THE_NAUTILUS);
+	}
+
+	private boolean shouldEffectsRefillAirSupply(LivingEntity entity) {
+		return !entity.hasEffect(PotionEffect.BREATH_OF_THE_NAUTILUS)
+				|| entity.hasEffect(PotionEffect.WATER_BREATHING)
 				|| entity.hasEffect(PotionEffect.CONDUIT_POWER);
 	}
 
