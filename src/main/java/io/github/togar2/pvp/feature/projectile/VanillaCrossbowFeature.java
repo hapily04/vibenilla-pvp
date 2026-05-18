@@ -11,7 +11,6 @@ import net.minestom.server.event.item.PlayerCancelItemUseEvent;
 import net.minestom.server.event.item.PlayerFinishItemUseEvent;
 import net.minestom.server.item.crossbow.CrossbowChargingSounds;
 import net.minestom.server.item.enchant.EffectComponent;
-import net.minestom.server.utils.Unit;
 import org.jetbrains.annotations.Nullable;
 
 import io.github.togar2.pvp.entity.projectile.AbstractArrow;
@@ -57,6 +56,7 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 	private static final Tag<Boolean> START_SOUND_PLAYED = Tag.Transient("StartSoundPlayed");
 	private static final Tag<Boolean> MID_LOAD_SOUND_PLAYED = Tag.Transient("MidLoadSoundPlayed");
 	private static final Tag<Boolean> LOADED_DURING_USE = Tag.Transient("LoadedDuringUse");
+	private static final Tag<Boolean> INTANGIBLE_PROJECTILE = Tag.Boolean("pvp_intangible_projectile");
 	private static final CrossbowChargingSounds DEFAULT_CHARGING_SOUNDS = new CrossbowChargingSounds(
 			SoundEvent.ITEM_CROSSBOW_LOADING_START,
 			SoundEvent.ITEM_CROSSBOW_LOADING_MIDDLE,
@@ -310,7 +310,7 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 			var loadedProjectile = projectileItem.withAmount(1);
 
 			if (projectileIndex > 0 || player.getGameMode() == GameMode.CREATIVE || ammoUse <= 0) {
-				loadedProjectile = loadedProjectile.with(DataComponents.INTANGIBLE_PROJECTILE, Unit.INSTANCE);
+				loadedProjectile = this.markIntangibleProjectile(loadedProjectile);
 			}
 
 			loadedProjectiles.add(loadedProjectile);
@@ -354,6 +354,8 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 	protected void shootCrossbowProjectile(Player player, PlayerHand hand, ItemStack crossbowStack,
 	                                       ItemStack projectile, float soundPitch,
 	                                       double power, double spread, float yaw) {
+		var intangibleProjectile = this.isIntangibleProjectile(projectile);
+		projectile = this.removeIntangibleProjectile(projectile);
 		var firework = projectile.material() == Material.FIREWORK_ROCKET;
 
 		if (firework) {
@@ -362,7 +364,7 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 			this.shootProjectileEntity(projectileEntity, player, position, yaw, power, spread);
 		} else {
 			var arrow = this.getCrossbowArrow(player, crossbowStack, projectile);
-			if (projectile.has(DataComponents.INTANGIBLE_PROJECTILE)) {
+			if (intangibleProjectile) {
 				arrow.setPickupMode(AbstractArrow.PickupMode.CREATIVE_ONLY);
 			}
 
@@ -406,6 +408,20 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 				Math.cos(pitch),
 				Math.cos(yaw) * Math.sin(pitch)
 		);
+	}
+
+	private ItemStack markIntangibleProjectile(ItemStack projectile) {
+		return projectile.withTag(INTANGIBLE_PROJECTILE, true);
+	}
+
+	private boolean isIntangibleProjectile(ItemStack projectile) {
+		return Boolean.TRUE.equals(projectile.getTag(INTANGIBLE_PROJECTILE));
+	}
+
+	private ItemStack removeIntangibleProjectile(ItemStack projectile) {
+		if (!this.isIntangibleProjectile(projectile)) return projectile;
+
+		return projectile.withTag(INTANGIBLE_PROJECTILE, null);
 	}
 
 	private Vec rotateAroundAxis(Vec vector, Vec axis, float angle) {
