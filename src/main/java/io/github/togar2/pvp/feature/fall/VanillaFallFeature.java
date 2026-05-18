@@ -229,15 +229,21 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 			return;
 		}
 
-		if (entity.getVelocity().y() > -0.5 * ServerFlag.SERVER_TICKS_PER_SECOND && fallDistance > 1.0) {
-			fallDistance = 1.0;
-			entity.setTag(FALL_DISTANCE, fallDistance);
-		}
+        if (entity.isFlyingWithElytra()
+                && entity.getVelocity().y() > -0.5 * ServerFlag.SERVER_TICKS_PER_SECOND
+                && fallDistance > 1.0) {
+            fallDistance = 1.0;
+            entity.setTag(FALL_DISTANCE, fallDistance);
+        }
 
-		if (!onGround) {
-			if (dy < 0) entity.setTag(FALL_DISTANCE, fallDistance - dy);
-			return;
-		}
+        if (dy < 0.0) {
+            fallDistance -= dy;
+            entity.setTag(FALL_DISTANCE, fallDistance);
+        }
+
+        if (!onGround) {
+            return;
+        }
 
 		Point landingPos = this.getLandingPos(entity, newPos);
 		Block block = entity.getInstance().getBlock(landingPos);
