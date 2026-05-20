@@ -32,11 +32,14 @@ import net.minestom.server.entity.damage.DamageType;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.entity.EntityAttackEvent;
+import net.minestom.server.event.player.PlayerPacketEvent;
 import net.minestom.server.event.trait.EntityInstanceEvent;
+import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
 import net.minestom.server.network.packet.server.play.EntityAnimationPacket;
 import net.minestom.server.network.packet.server.play.ParticlePacket;
 import net.minestom.server.particle.Particle;
 import net.minestom.server.sound.SoundEvent;
+import net.minestom.server.tag.Tag;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
@@ -56,6 +59,7 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 	);
 
 	private static final double ATTACK_RANGE_MARGIN = 3.0;
+	private static final Tag<Boolean> SPRINT_ATTACK_RESET = Tag.Boolean("sprintAttackReset");
 
 	private final FeatureConfiguration configuration;
 
@@ -90,6 +94,7 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 
 	@Override
 	public void init(EventNode<EntityInstanceEvent> node) {
+		node.addListener(PlayerPacketEvent.class, this::handleSprintAction);
 		node.addListener(EntityAttackEvent.class, event -> {
 			if (event.getEntity() instanceof Player player && player.getGameMode() != GameMode.SPECTATOR && !player.isDead()) {
 				Entity target = event.getTarget();
@@ -99,6 +104,28 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 					this.performAttack(player, target);
 			}
 		});
+	}
+
+	private void handleSprintAction(PlayerPacketEvent event) {
+		if (!(event.getPacket() instanceof ClientEntityActionPacket packet)) {
+			return;
+		}
+
+		if (packet.action() == ClientEntityActionPacket.Action.STOP_SPRINTING) {
+			event.getPlayer().removeTag(SPRINT_ATTACK_RESET);
+			return;
+		}
+
+		if (packet.action() != ClientEntityActionPacket.Action.START_SPRINTING) {
+			return;
+		}
+
+		if (!Boolean.TRUE.equals(event.getPlayer().getTag(SPRINT_ATTACK_RESET))) {
+			return;
+		}
+
+		event.setCancelled(true);
+		event.getPlayer().setSprinting(false);
 	}
 
 	private double distanceSquaredToBox(Point point, BoundingBox boundingBox, Point position) {
@@ -180,7 +207,12 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 		Collection<LivingEntity> affectedEntities = List.of(living);
 
 		// Knockback and sweeping
-        this.knockbackFeature.applyAttackKnockback(attacker, living, attack.knockback());
+		var appliedKnockback = this.knockbackFeature.applyAttackKnockback(attacker, living, attack.knockback());
+
+		if (appliedKnockback && attack.sprint() && attacker instanceof Player player) {
+			player.setTag(SPRINT_ATTACK_RESET, true);
+		}
+
 		if (attack.sweeping()) {
 			affectedEntities = this.sweepingFeature.applySweeping(
 					attacker, living, attack.baseDamage(), attack.cooldownProgress());
@@ -298,7 +330,7 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 
 		// Calculate attacks
 		boolean strongAttack = cooldownProgress > 0.9;
-		boolean sprintAttack = attacker.isSprinting() && strongAttack;
+		boolean sprintAttack = attacker.isSprinting() && strongAttack && !this.isSprintAttackReset(attacker);
 		double knockback = this.enchantmentFeature.getKnockback(attacker);
 		int fireAspect = this.enchantmentFeature.getFireAspect(attacker);
 
@@ -344,5 +376,13 @@ public class VanillaAttackFeature implements AttackFeature, RegistrableFeature {
 			finalAttackEvent.hasAttackSounds(),
 			finalAttackEvent.playSoundsOnFail()
 		);
+	}
+
+	private boolean isSprintAttackReset(LivingEntity attacker) {
+		if (!(attacker instanceof Player player)) {
+			return false;
+		}
+
+		return Boolean.TRUE.equals(player.getTag(SPRINT_ATTACK_RESET));
 	}
 }
