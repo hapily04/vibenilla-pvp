@@ -243,8 +243,9 @@ public class VanillaSpearFeature implements SpearFeature, RegistrableFeature {
 					null, totalDamage
 			));
 
+			this.knockbackFeature.applyAttackKnockback(attacker, target, PIERCING_KNOCKBACK_BONUS);
 			this.knockbackFeature.applyAttackKnockback(attacker, target,
-					this.enchantmentFeature.getKnockback(attacker, weapon) + PIERCING_KNOCKBACK_BONUS);
+					this.enchantmentFeature.getKnockback(attacker, weapon));
 
 			if (damaged) {
 				this.enchantmentFeature.onUserDamaged(target, attacker);
@@ -363,8 +364,9 @@ public class VanillaSpearFeature implements SpearFeature, RegistrableFeature {
 		boolean affected = dealsKnockback || dealtDamage;
 
 		if (dealsKnockback) {
+			this.knockbackFeature.applyAttackKnockback(attacker, target, STAB_KNOCKBACK_BONUS);
 			this.knockbackFeature.applyAttackKnockback(attacker, target,
-					this.enchantmentFeature.getKnockback(attacker, weapon) + STAB_KNOCKBACK_BONUS);
+					this.enchantmentFeature.getKnockback(attacker, weapon));
 		}
 
 		if (dealsDismount && target.getVehicle() != null) {
