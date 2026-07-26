@@ -5,14 +5,19 @@ import io.github.togar2.pvp.feature.FeatureType;
 import io.github.togar2.pvp.feature.config.DefinedFeature;
 import io.github.togar2.pvp.feature.config.FeatureConfiguration;
 import io.github.togar2.pvp.player.CombatPlayer;
+import io.github.togar2.pvp.utils.FluidUtil;
 import net.minestom.server.ServerFlag;
 import net.minestom.server.collision.Aerodynamics;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.LivingEntity;
 import net.minestom.server.entity.Player;
+import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
+import net.minestom.server.instance.block.BlockTags;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Objects;
 
 /**
  * Extension of {@link VanillaKnockbackFeature} which tries to make the playing field more even for players with high latency.
@@ -103,15 +108,66 @@ public class FairKnockbackFeature extends VanillaKnockbackFeature {
 		if (player.getGravityTickCount() > 30) return false; // Very uncertain, default to false
 
 		// These are all cases in which isOnGroundAfterTicks() will not be accurate
-		Block block = player.getInstance().getBlock(player.getPosition());
-		if (player.isFlyingWithElytra()
-				|| block.compare(Block.WATER)
-				|| block.compare(Block.LAVA)
-				|| block.compare(Block.COBWEB)
-				|| block.compare(Block.SCAFFOLDING))
-			return false;
+		if (player.isFlyingWithElytra() || this.hasUnpredictableMovement(player)) return false;
 
 		return combatPlayer.isOnGroundAfterTicks(latencyTicks);
+	}
+
+	protected boolean hasUnpredictableMovement(Player player) {
+		var instance = player.getInstance();
+
+		if (instance == null) return true;
+
+		var position = player.getPosition();
+		var boundingBox = player.getBoundingBox();
+		var minimumX = (int) Math.floor(position.x() + boundingBox.minX() + 0.001);
+		var minimumY = (int) Math.floor(position.y() + boundingBox.minY() + 0.001);
+		var minimumZ = (int) Math.floor(position.z() + boundingBox.minZ() + 0.001);
+		var maximumX = (int) Math.ceil(position.x() + boundingBox.maxX() - 0.001) - 1;
+		var maximumY = (int) Math.ceil(position.y() + boundingBox.maxY() - 0.001) - 1;
+		var maximumZ = (int) Math.ceil(position.z() + boundingBox.maxZ() - 0.001) - 1;
+
+		for (var blockX = minimumX; blockX <= maximumX; blockX++) {
+			for (var blockY = minimumY; blockY <= maximumY; blockY++) {
+				for (var blockZ = minimumZ; blockZ <= maximumZ; blockZ++) {
+					if (this.isUnpredictableBlock(instance, blockX, blockY, blockZ)) return true;
+				}
+			}
+		}
+
+		var below = position.sub(0.0, 0.5000001, 0.0);
+
+		return this.isUnpredictableBlock(instance, below.blockX(), below.blockY(), below.blockZ());
+	}
+
+	protected boolean isUnpredictableBlock(Instance instance, int blockX, int blockY, int blockZ) {
+		var block = instance.getBlock(blockX, blockY, blockZ);
+
+		if (FluidUtil.isWater(block) || FluidUtil.isLava(block)
+				|| block.compare(Block.COBWEB)
+				|| block.compare(Block.POWDER_SNOW)
+				|| block.compare(Block.SWEET_BERRY_BUSH)
+				|| block.compare(Block.HONEY_BLOCK)
+				|| block.compare(Block.SLIME_BLOCK))
+			return true;
+
+		return this.isClimbable(instance, blockX, blockY, blockZ, block);
+	}
+
+	protected boolean isClimbable(Instance instance, int blockX, int blockY, int blockZ, Block block) {
+		var climbable = Block.staticRegistry().getTag(BlockTags.CLIMBABLE);
+
+		if (climbable != null && climbable.contains(block)) return true;
+
+		var trapdoors = Block.staticRegistry().getTag(BlockTags.TRAPDOORS);
+
+		if (trapdoors == null || !trapdoors.contains(block)) return false;
+		if (!"true".equals(block.getProperty("open"))) return false;
+
+		var below = instance.getBlock(blockX, blockY - 1, blockZ);
+
+		return below.compare(Block.LADDER)
+				&& Objects.equals(below.getProperty("facing"), block.getProperty("facing"));
 	}
 
 	/**

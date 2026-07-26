@@ -11,6 +11,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FluidUtil {
+	public static boolean isWater(Block block) {
+		return block.compare(Block.WATER)
+				|| block.compare(Block.BUBBLE_COLUMN)
+				|| block.compare(Block.KELP)
+				|| block.compare(Block.KELP_PLANT)
+				|| block.compare(Block.SEAGRASS)
+				|| block.compare(Block.TALL_SEAGRASS)
+				|| "true".equals(block.getProperty("waterlogged"));
+	}
+
+	public static boolean isLava(Block block) {
+		return block.compare(Block.LAVA);
+	}
+
 	public static int getLevel(Block block) {
 		String levelStr = block.getProperty("level");
 		if (levelStr == null) return 8;
