@@ -5,6 +5,7 @@ import io.github.togar2.pvp.feature.FeatureType;
 import io.github.togar2.pvp.feature.config.DefinedFeature;
 import io.github.togar2.pvp.feature.config.FeatureConfiguration;
 import io.github.togar2.pvp.player.CombatPlayer;
+import io.github.togar2.pvp.utils.BlockUtil;
 import io.github.togar2.pvp.utils.FluidUtil;
 import net.minestom.server.ServerFlag;
 import net.minestom.server.collision.Aerodynamics;
@@ -14,10 +15,7 @@ import net.minestom.server.entity.LivingEntity;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
-import net.minestom.server.instance.block.BlockTags;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.Objects;
 
 /**
  * Extension of {@link VanillaKnockbackFeature} which tries to make the playing field more even for players with high latency.
@@ -151,23 +149,7 @@ public class FairKnockbackFeature extends VanillaKnockbackFeature {
 				|| block.compare(Block.SLIME_BLOCK))
 			return true;
 
-		return this.isClimbable(instance, blockX, blockY, blockZ, block);
-	}
-
-	protected boolean isClimbable(Instance instance, int blockX, int blockY, int blockZ, Block block) {
-		var climbable = Block.staticRegistry().getTag(BlockTags.CLIMBABLE);
-
-		if (climbable != null && climbable.contains(block)) return true;
-
-		var trapdoors = Block.staticRegistry().getTag(BlockTags.TRAPDOORS);
-
-		if (trapdoors == null || !trapdoors.contains(block)) return false;
-		if (!"true".equals(block.getProperty("open"))) return false;
-
-		var below = instance.getBlock(blockX, blockY - 1, blockZ);
-
-		return below.compare(Block.LADDER)
-				&& Objects.equals(below.getProperty("facing"), block.getProperty("facing"));
+		return BlockUtil.isClimbable(instance, blockX, blockY, blockZ, block);
 	}
 
 	/**

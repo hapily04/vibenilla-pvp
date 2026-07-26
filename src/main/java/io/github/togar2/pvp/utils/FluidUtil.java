@@ -1,5 +1,6 @@
 package io.github.togar2.pvp.utils;
 
+import net.minestom.server.collision.BoundingBox;
 import net.minestom.server.coordinate.CoordConversion;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Entity;
@@ -43,6 +44,50 @@ public class FluidUtil {
 			case 5 -> 0.75;
 			default -> 1;
 		};
+	}
+
+	public static double getOwnHeight(Block block) {
+		return getLevel(block) / 9.0;
+	}
+
+	public record FluidHeights(double water, double lava) {}
+
+	public static FluidHeights getFluidHeights(Block.Getter blockGetter, Pos position, BoundingBox boundingBox) {
+		var minimumY = position.y() + boundingBox.minY() + 0.001;
+		var startX = (int) Math.floor(position.x() + boundingBox.minX() + 0.001);
+		var startY = (int) Math.floor(minimumY);
+		var startZ = (int) Math.floor(position.z() + boundingBox.minZ() + 0.001);
+		var endX = (int) Math.ceil(position.x() + boundingBox.maxX() - 0.001) - 1;
+		var endY = (int) Math.ceil(position.y() + boundingBox.maxY() - 0.001) - 1;
+		var endZ = (int) Math.ceil(position.z() + boundingBox.maxZ() - 0.001) - 1;
+		var entityY = position.y() + boundingBox.minY();
+		var waterHeight = 0.0;
+		var lavaHeight = 0.0;
+
+		for (var blockX = startX; blockX <= endX; blockX++) {
+			for (var blockY = startY; blockY <= endY; blockY++) {
+				for (var blockZ = startZ; blockZ <= endZ; blockZ++) {
+					var block = blockGetter.getBlock(blockX, blockY, blockZ);
+					var lava = isLava(block);
+
+					if (!lava && !isWater(block)) continue;
+
+					var above = blockGetter.getBlock(blockX, blockY + 1, blockZ);
+					var sameAbove = lava ? isLava(above) : isWater(above);
+					var fluidTop = blockY + (sameAbove ? 1.0 : getOwnHeight(block));
+
+					if (fluidTop < minimumY) continue;
+
+					if (lava) {
+						lavaHeight = Math.max(fluidTop - entityY, lavaHeight);
+					} else {
+						waterHeight = Math.max(fluidTop - entityY, waterHeight);
+					}
+				}
+			}
+		}
+
+		return new FluidHeights(waterHeight, lavaHeight);
 	}
 
 	public static boolean isTouchingWater(Entity entity, Block block, int blockY) {
