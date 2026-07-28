@@ -9,7 +9,7 @@ import io.github.togar2.pvp.utils.ViewUtil;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.ServerFlag;
 import net.minestom.server.collision.Aerodynamics;
-import net.minestom.server.collision.PhysicsResult;
+import io.github.togar2.pvp.collision.PhysicsResult;
 import net.minestom.server.collision.PhysicsUtils;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
@@ -193,7 +193,7 @@ public class CombatPlayerImpl extends Player implements CombatPlayer {
 		var newPhysicsResult = new PhysicsResult(newPosition, newVelocity, physicsResult.isOnGround(),
 				physicsResult.collisionX(), physicsResult.collisionY(), physicsResult.collisionZ(),
 				physicsResult.originalDelta(), physicsResult.collisionPoints(), physicsResult.collisionShapes(),
-				physicsResult.collisionShapePositions(), physicsResult.hasCollision(), physicsResult.res(), stillCached);
+				physicsResult.collisionShapePositions(), physicsResult.hasCollision(), physicsResult.sweepResult(), stillCached);
 
 		return new MovementResult(newPhysicsResult, this.collectStuckSpeedMultiplier(blockGetter, newPosition));
 	}

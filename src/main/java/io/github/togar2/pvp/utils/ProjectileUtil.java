@@ -1,7 +1,7 @@
 package io.github.togar2.pvp.utils;
 
+import io.github.togar2.pvp.collision.PhysicsResult;
 import net.minestom.server.collision.BoundingBox;
-import net.minestom.server.collision.PhysicsResult;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.instance.WorldBorder;
@@ -26,6 +26,6 @@ public class ProjectileUtil {
 		Pos positionWithinBorder = CollisionUtil.applyWorldBorder(worldBorder, entityPosition, newPosition);
 		// Originally there was a call to update velocity here, but since projectiles handle it themselves it is not needed
 		return new PhysicsResult(positionWithinBorder, newVelocity, physicsResult.isOnGround(), physicsResult.collisionX(), physicsResult.collisionY(), physicsResult.collisionZ(),
-				physicsResult.originalDelta(), physicsResult.collisionPoints(), physicsResult.collisionShapes(), physicsResult.collisionShapePositions(), physicsResult.hasCollision(), physicsResult.res());
+				physicsResult.originalDelta(), physicsResult.collisionPoints(), physicsResult.collisionShapes(), physicsResult.collisionShapePositions(), physicsResult.hasCollision(), physicsResult.sweepResult());
 	}
 }

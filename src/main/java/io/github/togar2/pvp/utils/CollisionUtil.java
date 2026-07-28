@@ -1,9 +1,10 @@
 package io.github.togar2.pvp.utils;
 
+import io.github.togar2.pvp.collision.BlockCollision;
+import io.github.togar2.pvp.collision.EntityCollision;
+import io.github.togar2.pvp.collision.PhysicsResult;
 import net.minestom.server.collision.BoundingBox;
-import net.minestom.server.collision.CollisionUtils;
 import net.minestom.server.collision.EntityCollisionResult;
-import net.minestom.server.collision.PhysicsResult;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
@@ -16,16 +17,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.function.Function;
 
-/**
- * The single point in this library which depends on {@link CollisionUtils}.
- * <p>
- * {@link CollisionUtils} is annotated {@code @ApiStatus.Internal} and its signatures change
- * between Minestom releases. Minestom exposes no supported replacement: {@code SweepResult}
- * declares no accessors, {@code ShapeImpl.ShapeData} is package private, and
- * {@code BlockCollision}, {@code EntityCollision} and {@code RayUtils} are package private, so
- * block collision cannot be reimplemented against public API. Routing every call through this
- * class keeps an upstream break to a single file.
- */
 public final class CollisionUtil {
 	private CollisionUtil() {}
 
@@ -33,25 +24,27 @@ public final class CollisionUtil {
 	                                          Pos position, Vec velocity,
 	                                          @Nullable PhysicsResult previousPhysicsResult,
 	                                          boolean singleCollision) {
-		return CollisionUtils.handlePhysics(blockGetter, boundingBox, position, velocity,
+		return BlockCollision.handlePhysics(boundingBox, velocity, position, blockGetter,
 				previousPhysicsResult, singleCollision);
 	}
 
 	public static PhysicsResult blocklessCollision(Pos position, Vec velocity) {
-		return CollisionUtils.blocklessCollision(position, velocity);
+		return BlockCollision.blocklessCollision(position, velocity);
 	}
 
 	public static List<EntityCollisionResult> checkEntityCollisions(Instance instance, BoundingBox boundingBox,
 	                                                                Point position, Vec velocity, double extendRadius,
 	                                                                Function<Entity, Boolean> entityFilter,
 	                                                                @Nullable PhysicsResult physicsResult) {
-		return CollisionUtils.checkEntityCollisions(instance, boundingBox, position, velocity,
+		return EntityCollision.checkCollision(instance.getEntityTracker(), boundingBox, position, velocity,
 				extendRadius, entityFilter, physicsResult);
 	}
 
 	public static boolean hasLineOfSight(Instance instance, Point start, Point end) {
-		var result = CollisionUtils.handlePhysics(instance, null, new BoundingBox(0.0, 0.0, 0.0),
-				start.asPos(), end.sub(start).asVec(), null, false);
+		var startPosition = start.asPos();
+		var blockGetter = new ChunkBlockGetter(instance, instance.getChunkAt(startPosition), Block.STONE);
+		var result = BlockCollision.handlePhysics(new BoundingBox(0.0, 0.0, 0.0), end.sub(start).asVec(),
+				startPosition, blockGetter, null, false);
 
 		return result.newPosition().samePoint(end, 1.0E-5);
 	}
