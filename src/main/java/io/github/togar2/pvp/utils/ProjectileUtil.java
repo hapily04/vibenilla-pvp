@@ -1,7 +1,6 @@
 package io.github.togar2.pvp.utils;
 
 import net.minestom.server.collision.BoundingBox;
-import net.minestom.server.collision.CollisionUtils;
 import net.minestom.server.collision.PhysicsResult;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
@@ -18,13 +17,13 @@ public class ProjectileUtil {
 	                                                      @Nullable PhysicsResult previousPhysicsResult,
 	                                                      boolean singleCollision) {
 		final PhysicsResult physicsResult = entityHasPhysics ?
-				CollisionUtils.handlePhysics(blockGetter, entityBoundingBox, entityPosition, entityVelocityPerTick, previousPhysicsResult, singleCollision) :
-				CollisionUtils.blocklessCollision(entityPosition, entityVelocityPerTick);
+				CollisionUtil.handlePhysics(blockGetter, entityBoundingBox, entityPosition, entityVelocityPerTick, previousPhysicsResult, singleCollision) :
+				CollisionUtil.blocklessCollision(entityPosition, entityVelocityPerTick);
 
 		Pos newPosition = physicsResult.newPosition();
 		Vec newVelocity = physicsResult.newVelocity();
 
-		Pos positionWithinBorder = CollisionUtils.applyWorldBorder(worldBorder, entityPosition, newPosition);
+		Pos positionWithinBorder = CollisionUtil.applyWorldBorder(worldBorder, entityPosition, newPosition);
 		// Originally there was a call to update velocity here, but since projectiles handle it themselves it is not needed
 		return new PhysicsResult(positionWithinBorder, newVelocity, physicsResult.isOnGround(), physicsResult.collisionX(), physicsResult.collisionY(), physicsResult.collisionZ(),
 				physicsResult.originalDelta(), physicsResult.collisionPoints(), physicsResult.collisionShapes(), physicsResult.collisionShapePositions(), physicsResult.hasCollision(), physicsResult.res());

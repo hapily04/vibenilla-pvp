@@ -2,13 +2,13 @@ package io.github.togar2.pvp.player;
 
 import io.github.togar2.pvp.utils.BlockUtil;
 import io.github.togar2.pvp.utils.ChunkBlockGetter;
+import io.github.togar2.pvp.utils.CollisionUtil;
 import io.github.togar2.pvp.utils.FluidUtil;
 import io.github.togar2.pvp.utils.FluidUtil.FluidHeights;
 import io.github.togar2.pvp.utils.ViewUtil;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.ServerFlag;
 import net.minestom.server.collision.Aerodynamics;
-import net.minestom.server.collision.CollisionUtils;
 import net.minestom.server.collision.PhysicsResult;
 import net.minestom.server.collision.PhysicsUtils;
 import net.minestom.server.coordinate.Pos;
@@ -168,10 +168,10 @@ public class CombatPlayerImpl extends Player implements CombatPlayer {
 		var delta = stuck ? velocity.mul(stuckSpeedMultiplier) : velocity;
 
 		var physicsResult = this.hasPhysics
-				? CollisionUtils.handlePhysics(blockGetter, this.boundingBox, position, delta, previousPhysicsResult, false)
-				: CollisionUtils.blocklessCollision(position, delta);
+				? CollisionUtil.handlePhysics(blockGetter, this.boundingBox, position, delta, previousPhysicsResult, false)
+				: CollisionUtil.blocklessCollision(position, delta);
 
-		var newPosition = CollisionUtils.applyWorldBorder(this.instance.getWorldBorder(),
+		var newPosition = CollisionUtil.applyWorldBorder(this.instance.getWorldBorder(),
 				position, physicsResult.newPosition());
 		var movedVelocity = stuck ? Vec.ZERO : physicsResult.newVelocity();
 

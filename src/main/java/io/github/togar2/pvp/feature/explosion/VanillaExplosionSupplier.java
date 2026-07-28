@@ -4,10 +4,10 @@ import io.github.togar2.pvp.entity.explosion.CrystalEntity;
 import io.github.togar2.pvp.events.ExplosionEvent;
 import io.github.togar2.pvp.feature.enchantment.EnchantmentFeature;
 import io.github.togar2.pvp.player.CombatPlayer;
+import io.github.togar2.pvp.utils.CollisionUtil;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 import net.minestom.server.ServerFlag;
 import net.minestom.server.collision.BoundingBox;
-import net.minestom.server.collision.CollisionUtils;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Entity;
@@ -390,9 +390,6 @@ public final class VanillaExplosionSupplier implements ExplosionSupplier {
 	}
 
 	public static boolean noBlocking(Instance instance, Point start, Point end) {
-		var result = CollisionUtils.handlePhysics(instance, null, new BoundingBox(0.0, 0.0, 0.0),
-				start.asPos(), end.sub(start).asVec(), null, false);
-
-		return result.newPosition().samePoint(end, 1.0E-5);
+		return CollisionUtil.hasLineOfSight(instance, start, end);
 	}
 }

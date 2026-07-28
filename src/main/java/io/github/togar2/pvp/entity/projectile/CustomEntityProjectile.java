@@ -1,6 +1,7 @@
 package io.github.togar2.pvp.entity.projectile;
 
 import io.github.togar2.pvp.utils.ChunkBlockGetter;
+import io.github.togar2.pvp.utils.CollisionUtil;
 import io.github.togar2.pvp.utils.FluidUtil;
 import io.github.togar2.pvp.utils.ProjectileUtil;
 import net.minestom.server.ServerFlag;
@@ -233,7 +234,7 @@ public class CustomEntityProjectile extends Entity {
 				// We won't check collisions with self for first ticks of projectile's life, because it spawns in the
 				// shooter and will immediately be triggered by him.
 				boolean noCollideShooter = this.getAliveTicks() < 6;
-				Collection<EntityCollisionResult> entityResult = CollisionUtils.checkEntityCollisions(this.instance, this.boundingBox.expand(0.1, 0.3, 0.1),
+				Collection<EntityCollisionResult> entityResult = CollisionUtil.checkEntityCollisions(this.instance, this.boundingBox.expand(0.1, 0.3, 0.1),
                         this.position.add(0, -0.3, 0), diff, 3, e -> {
 							if ((noCollideShooter || !this.leftOwner) && e == this.shooter) return false;
 							return e != this && this.canHit(e);
