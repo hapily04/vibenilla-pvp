@@ -11,7 +11,7 @@ group = "rocks.minestom"
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 
-val minestomVersion = "2026.07.12-26.2"
+val minestomVersion = "2026.07.22-26.2"
 
 mavenPublishing {
     val mcVersion = minestomVersion.split("-")[1]
