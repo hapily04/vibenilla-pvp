@@ -1,5 +1,6 @@
 package io.github.togar2.pvp.utils;
 
+import net.minestom.server.MinecraftServer;
 import net.minestom.server.collision.BoundingBox;
 import net.minestom.server.coordinate.CoordConversion;
 import net.minestom.server.coordinate.Pos;
@@ -164,12 +165,18 @@ public class FluidUtil {
 		return isTouchingWater((Entity) player);
 	}
 
+	public static boolean hasOpenSky(Instance instance) {
+		var dimensionType = MinecraftServer.getDimensionTypeRegistry().get(instance.getDimensionType());
+
+		return dimensionType != null && dimensionType.hasSkylight() && !dimensionType.hasCeiling();
+	}
+
 	public static boolean isInRain(Entity entity) {
 		var instance = entity.getInstance();
 
 		if (instance == null) return false;
 		if (!instance.getWeather().isRaining()) return false;
-		if (!instance.getCachedDimensionType().hasSkylight() || instance.getCachedDimensionType().hasCeiling()) return false;
+		if (!hasOpenSky(instance)) return false;
 
 		var position = entity.getPosition();
 

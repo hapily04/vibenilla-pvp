@@ -654,7 +654,7 @@ public final class VanillaEnvironmentDamageFeature implements EnvironmentDamageF
 
 	private boolean isInRain(Instance instance, LivingEntity entity) {
 		if (!instance.getWeather().isRaining()) return false;
-		if (!instance.getCachedDimensionType().hasSkylight() || instance.getCachedDimensionType().hasCeiling()) return false;
+		if (!FluidUtil.hasOpenSky(instance)) return false;
 
 		var position = entity.getPosition();
 		var boundingBox = entity.getBoundingBox();

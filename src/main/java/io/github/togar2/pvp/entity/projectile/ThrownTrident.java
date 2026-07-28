@@ -192,7 +192,7 @@ public class ThrownTrident extends AbstractArrow {
 
 		if (instance == null) return false;
 		if (instance.getWeather().thunderLevel() <= 0.0F) return false;
-		if (!instance.getCachedDimensionType().hasSkylight() || instance.getCachedDimensionType().hasCeiling()) return false;
+		if (!FluidUtil.hasOpenSky(instance)) return false;
 
 		return FluidUtil.isRainingAt(instance, point.blockX(), point.blockY(), point.blockZ());
 	}
@@ -204,7 +204,7 @@ public class ThrownTrident extends AbstractArrow {
 
 		if (instance == null) return false;
 		if (instance.getWeather().thunderLevel() <= 0.0F) return false;
-		if (!instance.getCachedDimensionType().hasSkylight() || instance.getCachedDimensionType().hasCeiling()) return false;
+		if (!FluidUtil.hasOpenSky(instance)) return false;
 
 		return FluidUtil.isInRain(entity);
 	}
