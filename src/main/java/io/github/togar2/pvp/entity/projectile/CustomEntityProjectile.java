@@ -1,5 +1,6 @@
 package io.github.togar2.pvp.entity.projectile;
 
+import io.github.togar2.pvp.utils.ChunkBlockGetter;
 import io.github.togar2.pvp.utils.FluidUtil;
 import io.github.togar2.pvp.utils.ProjectileUtil;
 import net.minestom.server.ServerFlag;
@@ -16,8 +17,6 @@ import net.minestom.server.event.entity.projectile.ProjectileCollideWithEntityEv
 import net.minestom.server.event.entity.projectile.ProjectileUncollideEvent;
 import net.minestom.server.instance.Chunk;
 import net.minestom.server.instance.block.Block;
-import net.minestom.server.utils.chunk.ChunkCache;
-import net.minestom.server.utils.chunk.ChunkUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -223,7 +222,7 @@ public class CustomEntityProjectile extends Entity {
 				return;
 			}
 
-            ChunkCache blockGetter = new ChunkCache(this.instance, this.currentChunk, Block.AIR);
+            ChunkBlockGetter blockGetter = new ChunkBlockGetter(this.instance, this.currentChunk, Block.AIR);
 			PhysicsResult physicsResult = ProjectileUtil.simulateMovement(this.position, diff, POINT_BOX,
                     this.instance.getWorldBorder(), blockGetter, this.hasPhysics, this.previousPhysicsResult, true);
 			this.previousPhysicsResult = physicsResult;
@@ -260,8 +259,8 @@ public class CustomEntityProjectile extends Entity {
 				}
 			}
 
-			Chunk finalChunk = ChunkUtils.retrieve(this.instance, this.currentChunk, physicsResult.newPosition());
-			if (!ChunkUtils.isLoaded(finalChunk)) return;
+			Chunk finalChunk = this.instance.getChunkAt(physicsResult.newPosition());
+			if (finalChunk == null || !finalChunk.isLoaded()) return;
 
 			if (physicsResult.hasCollision() && !this.isStuck()) {
 				double signumX = physicsResult.collisionX() ? Math.signum(this.velocity.x()) : 0;

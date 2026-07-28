@@ -1,6 +1,7 @@
 package io.github.togar2.pvp.player;
 
 import io.github.togar2.pvp.utils.BlockUtil;
+import io.github.togar2.pvp.utils.ChunkBlockGetter;
 import io.github.togar2.pvp.utils.FluidUtil;
 import io.github.togar2.pvp.utils.FluidUtil.FluidHeights;
 import io.github.togar2.pvp.utils.ViewUtil;
@@ -23,8 +24,6 @@ import net.minestom.server.network.player.PlayerConnection;
 import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.potion.TimedPotion;
 import net.minestom.server.sound.SoundEvent;
-import net.minestom.server.utils.chunk.ChunkCache;
-import net.minestom.server.utils.chunk.ChunkUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -83,7 +82,7 @@ public class CombatPlayerImpl extends Player implements CombatPlayer {
 		var prevPhysicsResult = this.previousPhysicsResult;
 		var stuckSpeedMultiplier = this.stuckSpeedMultiplier;
 		for (var tick = 0; tick < ticks; tick++) {
-			var blockGetter = new ChunkCache(this.instance, this.currentChunk, Block.STONE);
+			var blockGetter = new ChunkBlockGetter(this.instance, this.currentChunk, Block.STONE);
 			var movementResult = this.simulateMovement(position, velocity, stuckSpeedMultiplier,
 					aerodynamics, this.onGround, blockGetter, prevPhysicsResult);
 			var physicsResult = movementResult.physicsResult();
@@ -120,15 +119,15 @@ public class CombatPlayerImpl extends Player implements CombatPlayer {
 		if (this.velocity.y() < 0 && this.hasEffect(PotionEffect.SLOW_FALLING))
 			aerodynamics = aerodynamics.withGravity(0.01);
 
-		var blockGetter = new ChunkCache(this.instance, this.currentChunk, Block.STONE);
+		var blockGetter = new ChunkBlockGetter(this.instance, this.currentChunk, Block.STONE);
 		var movementResult = this.simulateMovement(this.position, this.velocity.div(tps), this.stuckSpeedMultiplier,
 				aerodynamics, this.onGround, blockGetter, this.previousPhysicsResult);
 		var physicsResult = movementResult.physicsResult();
 		this.previousPhysicsResult = physicsResult;
 		this.stuckSpeedMultiplier = movementResult.stuckSpeedMultiplier();
 
-		var finalChunk = ChunkUtils.retrieve(this.instance, this.currentChunk, physicsResult.newPosition());
-		if (!ChunkUtils.isLoaded(finalChunk)) return;
+		var finalChunk = this.instance.getChunkAt(physicsResult.newPosition());
+		if (finalChunk == null || !finalChunk.isLoaded()) return;
 
 		this.horizontalCollision = physicsResult.collisionX() || physicsResult.collisionZ();
 		var oldHorizontalSpeed = this.velocity.div(tps).withY(0.0).length();
