@@ -28,7 +28,6 @@ import net.minestom.server.event.trait.EntityInstanceEvent;
 import net.minestom.server.item.Material;
 import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.tag.Tag;
-import net.minestom.server.utils.MathUtils;
 
 /**
  * Vanilla implementation of {@link FishingRodFeature}
@@ -113,7 +112,7 @@ public class VanillaFishingRodFeature implements FishingRodFeature, RegistrableF
 				if (this.version.modern()) {
 					velocity = new Vec(
 							-xDir,
-							MathUtils.clamp(-(
+							Math.clamp(-(
 									(float) Math.sin(Math.toRadians(-playerPitch)) /
 											(float) -Math.cos(Math.toRadians(-playerPitch))
 							), -5.0F, 5.0F),

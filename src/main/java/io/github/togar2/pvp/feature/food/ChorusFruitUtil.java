@@ -8,7 +8,6 @@ import net.minestom.server.entity.Entity;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.sound.SoundEvent;
-import net.minestom.server.utils.MathUtils;
 import net.minestom.server.world.DimensionType;
 
 import java.util.concurrent.ThreadLocalRandom;
@@ -65,7 +64,7 @@ public class ChorusFruitUtil {
 		// Max 16 tries
 		for (int i = 0; i < 16; i++) {
 			double x = prevX + (random.nextDouble() - 0.5) * radius;
-			double y = MathUtils.clamp(prevY + (random.nextInt(16) - 8),
+			double y = Math.clamp(prevY + (random.nextInt(16) - 8),
 					dimensionType.minY(), dimensionType.minY()
 							+ dimensionType.logicalHeight() - 1);
 			double z = prevZ + (random.nextDouble() - 0.5) * radius;

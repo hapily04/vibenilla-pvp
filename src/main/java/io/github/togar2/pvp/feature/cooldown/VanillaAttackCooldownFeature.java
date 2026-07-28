@@ -13,7 +13,6 @@ import net.minestom.server.event.player.PlayerChangeHeldSlotEvent;
 import net.minestom.server.event.player.PlayerHandAnimationEvent;
 import net.minestom.server.event.trait.EntityInstanceEvent;
 import net.minestom.server.tag.Tag;
-import net.minestom.server.utils.MathUtils;
 
 /**
  * Vanilla implementation of {@link AttackCooldownFeature}
@@ -64,7 +63,7 @@ public class VanillaAttackCooldownFeature implements AttackCooldownFeature, Regi
 		if (lastAttacked == null) return 1.0;
 
 		long timeSinceLastAttacked = player.getAliveTicks() - lastAttacked;
-		return MathUtils.clamp(
+		return Math.clamp(
 				(timeSinceLastAttacked + 0.5) / this.getAttackCooldownProgressPerTick(player),
 				0, 1
 		);

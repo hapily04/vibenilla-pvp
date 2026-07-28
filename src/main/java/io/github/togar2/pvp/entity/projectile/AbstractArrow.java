@@ -21,7 +21,6 @@ import net.minestom.server.item.ItemStack;
 import net.minestom.server.network.packet.server.play.ChangeGameStatePacket;
 import net.minestom.server.network.packet.server.play.CollectItemPacket;
 import net.minestom.server.sound.SoundEvent;
-import net.minestom.server.utils.MathUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -157,7 +156,7 @@ public abstract class AbstractArrow extends CustomEntityProjectile {
 		ThreadLocalRandom random = ThreadLocalRandom.current();
 
 		double movementSpeed = getVelocity().length() / ServerFlag.SERVER_TICKS_PER_SECOND;
-		int damage = (int) Math.ceil(MathUtils.clamp(
+		int damage = (int) Math.ceil(Math.clamp(
 				movementSpeed * baseDamage, 0.0, 2.147483647E9D));
 
 		if (getPiercingLevel() > 0) {

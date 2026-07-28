@@ -14,7 +14,6 @@ import net.minestom.server.item.enchant.EffectComponent;
 import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.potion.TimedPotion;
 import net.minestom.server.registry.RegistryKey;
-import net.minestom.server.utils.MathUtils;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -126,12 +125,12 @@ public class VanillaArmorFeature implements ArmorFeature {
 
 	protected float getDamageLeft(float damage, float armor, float armorToughness) {
 		float f = 2.0f + armorToughness / 4.0f;
-		float g = MathUtils.clamp(armor - damage / f, armor * 0.2f, 20.0f);
+		float g = Math.clamp(armor - damage / f, armor * 0.2f, 20.0f);
 		return damage * (1.0F - g / 25.0F);
 	}
 
 	protected float getDamageAfterProtectionEnchantment(float damageDealt, float protection) {
-		float f = MathUtils.clamp(protection, 0.0f, 20.0f);
+		float f = Math.clamp(protection, 0.0f, 20.0f);
 		return damageDealt * (1.0f - f / 25.0f);
 	}
 }
