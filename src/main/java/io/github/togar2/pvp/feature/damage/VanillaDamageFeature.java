@@ -208,7 +208,7 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 		if (amountBeforeProcessing != 0 && entity instanceof Player player)
             this.exhaustionFeature.addDamageExhaustion(player, damageType);
 
-		if (register) entity.setTag(LAST_DAMAGE_AMOUNT, amountBeforeProcessing);
+		entity.setTag(LAST_DAMAGE_AMOUNT, amountBeforeProcessing);
 
 		var velocityBeforeKnockback = entity.getVelocity();
 		var appliedKnockback = false;
