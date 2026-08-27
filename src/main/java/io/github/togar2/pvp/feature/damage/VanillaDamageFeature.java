@@ -320,12 +320,6 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 		// lastDamage field is set when event is not canceled but should also when canceled
 		if (register) EntityUtil.setLastDamage(entity, damage);
 
-		// The Minestom damage method should return false if there was no hurt animation,
-		// because otherwise the attack feature will deal extra knockback
-		if (!event.isCancelled() && !hurtSoundAndAnimation) {
-			event.setCancelled(true);
-			damageManually(entity, amount);
-		}
 	}
 
 	private boolean isNoKnockbackDamage(Damage damage) {
@@ -359,22 +353,4 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 		};
 	}
 
-	private static void damageManually(LivingEntity entity, float damage) {
-		// Additional hearts support
-		if (entity instanceof Player player) {
-			final float additionalHearts = player.getAdditionalHearts();
-			if (additionalHearts > 0) {
-				if (damage > additionalHearts) {
-					damage -= additionalHearts;
-					player.setAdditionalHearts(0);
-				} else {
-					player.setAdditionalHearts(additionalHearts - damage);
-					damage = 0;
-				}
-			}
-		}
-
-		// Set the final entity health
-		entity.setHealth(entity.getHealth() - damage);
-	}
 }
