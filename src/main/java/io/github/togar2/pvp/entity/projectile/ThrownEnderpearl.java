@@ -4,6 +4,7 @@ import io.github.togar2.pvp.feature.fall.FallFeature;
 import io.github.togar2.pvp.utils.ViewUtil;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.LivingEntity;
@@ -52,13 +53,13 @@ public class ThrownEnderpearl extends CustomEntityProjectile implements ItemHold
 		}
 
 		if (shooter instanceof Player player) {
-			if (player.isOnline() && player.getInstance() == this.getInstance()
+			if (player.isOnline() && !player.isDead() && player.getInstance() == this.getInstance()
 					&& player.getPlayerMeta().getBedInWhichSleepingPosition() == null) {
 				if (player.getVehicle() != null) {
 					player.getVehicle().removePassenger(player);
 				}
 
-				player.teleport(position);
+				player.teleport(position, Vec.ZERO);
                 this.fallFeature.resetFallDistance(player);
                 this.fallFeature.clearCurrentImpulseContext(player);
 
@@ -96,6 +97,16 @@ public class ThrownEnderpearl extends CustomEntityProjectile implements ItemHold
 	public boolean onStuck() {
         this.teleportOwner();
 		return true;
+	}
+
+	@Override
+	protected boolean shouldUpdateVelocityBeforeMovement() {
+		return true;
+	}
+
+	@Override
+	protected double getWaterInertia() {
+		return 0.8;
 	}
 
 	@Override
