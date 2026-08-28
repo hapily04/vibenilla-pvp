@@ -145,15 +145,16 @@ public class FluidUtil {
 
 		Instance instance = entity.getInstance();
 		assert instance != null;
+		var blockGetter = new ChunkBlockGetter(instance, instance.getChunkAt(position), Block.AIR);
 
 		for (PairXZ pair : points) {
-			Block block = instance.getBlock(pair.x(), blockY, pair.z());
+			var block = blockGetter.getBlock(pair.x(), blockY, pair.z());
 			if (isTouchingWater(entity, position, block, blockY)) return true;
-			block = instance.getBlock(pair.x(), blockY + 1, pair.z());
+			block = blockGetter.getBlock(pair.x(), blockY + 1, pair.z());
 			if (isTouchingWater(entity, position, block, blockY + 1)) return true;
 
 			if (y - blockY >= 2 - entity.getBoundingBox().height()) {
-				block = instance.getBlock(pair.x(), blockY + 2, pair.z());
+				block = blockGetter.getBlock(pair.x(), blockY + 2, pair.z());
 				if (isTouchingWater(entity, position, block, blockY + 2)) return true;
 			}
 		}
