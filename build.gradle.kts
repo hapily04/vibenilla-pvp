@@ -16,7 +16,7 @@ java {
     withJavadocJar()
 }
 
-val minestomVersion = "2026.08.07-26.2-ai"
+val minestomVersion = "2026.07.22-26.2"
 val mcVersion = minestomVersion.split("-")[1]
 val date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"))
 version = "$date-$mcVersion"
@@ -66,7 +66,6 @@ publishing {
 }
 
 repositories {
-    mavenLocal()
     mavenCentral()
 }
 
