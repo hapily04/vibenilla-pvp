@@ -248,7 +248,7 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 		Point landingPos = this.getLandingPos(entity, newPos);
 		Block block = entity.getInstance().getBlock(landingPos);
 		var adjustedFallDistance = this.adjustFallDistance(block, fallDistance);
-		var damageModifier = this.getDamageModifier(block);
+		var damageModifier = this.getDamageModifier(entity, block);
 		var damageType = this.getDamageType(block);
 		var effectiveFallDistance = this.getEffectiveFallDistance(entity, adjustedFallDistance, newPos);
 
@@ -549,13 +549,21 @@ public class VanillaFallFeature implements FallFeature, RegistrableFeature {
 		return fallDistance;
 	}
 
-	private double getDamageModifier(Block block) {
+	private double getDamageModifier(LivingEntity entity, Block block) {
 		if (this.isPointedDripstoneStalagmiteTip(block)) return 2.0;
 		if (block.compare(Block.POWDER_SNOW)) return 0.0;
-		if (block.compare(Block.SLIME_BLOCK)) return 0.0;
+		if (block.compare(Block.SLIME_BLOCK) && !this.isSuppressingBounce(entity)) return 0.0;
 		if (block.compare(Block.HAY_BLOCK) || block.compare(Block.HONEY_BLOCK)) return 0.2;
 
 		return 1.0;
+	}
+
+	private boolean isSuppressingBounce(LivingEntity entity) {
+		if (entity instanceof Player player) {
+			return player.isSneaking() || player.inputs().shift();
+		}
+
+		return entity.isSneaking();
 	}
 
 	private RegistryKey<DamageType> getDamageType(Block block) {
