@@ -46,6 +46,16 @@ public class ThrownPotion extends CustomEntityProjectile implements ItemHoldingP
 		return true;
 	}
 
+	@Override
+	protected boolean shouldUpdateVelocityBeforeMovement() {
+		return true;
+	}
+
+	@Override
+	protected double getWaterInertia() {
+		return 0.8;
+	}
+
 	public void splash(@Nullable Entity entity) {
 		var item = this.getItem();
 

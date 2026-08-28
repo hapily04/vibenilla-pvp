@@ -217,6 +217,10 @@ public class CustomEntityProjectile extends Entity {
 		if (this.vehicle != null) return;
 
 		if (!this.isStuck()) {
+			if (this.shouldUpdateVelocityBeforeMovement()) {
+				this.updateVelocityBeforeMovement();
+			}
+
 			Vec diff = this.velocity.div(ServerFlag.SERVER_TICKS_PER_SECOND);
 			this.checkLeftOwner(diff);
 
@@ -289,16 +293,6 @@ public class CustomEntityProjectile extends Entity {
 				}
 			}
 
-			if (FluidUtil.isTouchingWater(this)) {
-				this.velocity = this.velocity.mul(this.getWaterInertia());
-			}
-
-			Aerodynamics aerodynamics = this.getAerodynamics();
-            this.velocity = this.velocity.mul(
-					aerodynamics.horizontalAirResistance(),
-					aerodynamics.verticalAirResistance(),
-					aerodynamics.horizontalAirResistance()
-			).sub(0, this.hasNoGravity() ? 0 : this.getAerodynamics().gravity() * ServerFlag.SERVER_TICKS_PER_SECOND, 0);
             this.onGround = physicsResult.isOnGround();
 
 			float yaw = this.position.yaw();
@@ -319,7 +313,34 @@ public class CustomEntityProjectile extends Entity {
 			this.prevPitch = pitch;
 
             this.refreshPosition(newPosition.withView(yaw, pitch), this.noClip, this.isStuck());
+
+			if (!this.shouldUpdateVelocityBeforeMovement()) {
+				this.updateVelocityAfterMovement();
+			}
 		}
+	}
+
+	private void updateVelocityBeforeMovement() {
+		var aerodynamics = this.getAerodynamics();
+		var touchingWater = FluidUtil.isTouchingWater(this);
+		var horizontalInertia = touchingWater ? this.getWaterInertia() : aerodynamics.horizontalAirResistance();
+		var verticalInertia = touchingWater ? this.getWaterInertia() : aerodynamics.verticalAirResistance();
+		var gravity = this.hasNoGravity() ? 0.0 : aerodynamics.gravity() * ServerFlag.SERVER_TICKS_PER_SECOND;
+
+		this.velocity = this.velocity.sub(0.0, gravity, 0.0).mul(horizontalInertia, verticalInertia, horizontalInertia);
+	}
+
+	private void updateVelocityAfterMovement() {
+		if (FluidUtil.isTouchingWater(this)) {
+			this.velocity = this.velocity.mul(this.getWaterInertia());
+		}
+
+		var aerodynamics = this.getAerodynamics();
+		this.velocity = this.velocity.mul(
+				aerodynamics.horizontalAirResistance(),
+				aerodynamics.verticalAirResistance(),
+				aerodynamics.horizontalAirResistance()
+		).sub(0.0, this.hasNoGravity() ? 0.0 : aerodynamics.gravity() * ServerFlag.SERVER_TICKS_PER_SECOND, 0.0);
 	}
 
 	private void checkLeftOwner(Vec movement) {
@@ -373,6 +394,10 @@ public class CustomEntityProjectile extends Entity {
 
 	protected int getUpdateInterval() {
 		return 20;
+	}
+
+	protected boolean shouldUpdateVelocityBeforeMovement() {
+		return false;
 	}
 
 	protected double getWaterInertia() {

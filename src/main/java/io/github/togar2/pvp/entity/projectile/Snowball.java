@@ -34,6 +34,16 @@ public class Snowball extends CustomEntityProjectile implements ItemHoldingProje
 	}
 
 	@Override
+	protected boolean shouldUpdateVelocityBeforeMovement() {
+		return true;
+	}
+
+	@Override
+	protected double getWaterInertia() {
+		return 0.8;
+	}
+
+	@Override
 	public void setItem(@NotNull ItemStack item) {
 		((SnowballMeta) this.getEntityMeta()).setItem(item);
 	}

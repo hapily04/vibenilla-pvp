@@ -33,6 +33,16 @@ public class ThrownEgg extends CustomEntityProjectile implements ItemHoldingProj
 	}
 
 	@Override
+	protected boolean shouldUpdateVelocityBeforeMovement() {
+		return true;
+	}
+
+	@Override
+	protected double getWaterInertia() {
+		return 0.8;
+	}
+
+	@Override
 	public void setItem(@NotNull ItemStack item) {
 		((ThrownEggMeta) this.getEntityMeta()).setItem(item);
 	}
