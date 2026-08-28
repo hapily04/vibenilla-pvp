@@ -189,7 +189,8 @@ public class CustomEntityProjectile extends Entity {
 	private boolean shouldUnstuck() {
 		Point collidedPoint = this.position.add(this.collisionDirection.mul(0.003)); // Move slightly inside the collided block
 		Point collidedBlockVec = collidedPoint.asBlockVec();
-		Block block = this.instance.getBlock(collidedPoint);
+		var blockGetter = new ChunkBlockGetter(this.instance, this.currentChunk, Block.STONE);
+		var block = blockGetter.getBlock(collidedPoint);
 
 		return !block.registry().collisionShape().intersectBox(collidedPoint.sub(collidedBlockVec).sub(0, 0.6, 0), UNSTUCK_BOX);
 	}
