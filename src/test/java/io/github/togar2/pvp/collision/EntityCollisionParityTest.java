@@ -3,6 +3,7 @@ package io.github.togar2.pvp.collision;
 import net.minestom.server.collision.BoundingBox;
 import net.minestom.server.collision.CollisionUtils;
 import net.minestom.server.collision.EntityCollisionResult;
+import net.minestom.server.coordinate.BlockVec;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
@@ -83,8 +84,7 @@ public final class EntityCollisionParityTest {
 
 	private net.minestom.server.collision.PhysicsResult minestomResult(Pos position, Vec velocity, double sweepLimit) {
 		return new net.minestom.server.collision.PhysicsResult(position, velocity, false, false, false, false,
-				velocity, new Point[3], new net.minestom.server.collision.Shape[3], new Point[3], false,
-				new net.minestom.server.collision.SweepResult(sweepLimit, 0, 0, 0, null, 0, 0, 0, 0, 0, 0));
+				velocity, new Vec[3], new net.minestom.server.collision.Shape[3], new BlockVec[3], false, sweepLimit);
 	}
 
 	private PhysicsResult pvpResult(Pos position, Vec velocity, double sweepLimit) {

@@ -165,7 +165,6 @@ public final class BlockCollisionParityTest {
 				&& expected.collisionX() == actual.collisionX()
 				&& expected.collisionY() == actual.collisionY()
 				&& expected.collisionZ() == actual.collisionZ()
-				&& expected.hasCollision() == actual.hasCollision()
-				&& expected.cached() == actual.cached();
+				&& expected.hasCollision() == actual.hasCollision();
 	}
 }
