@@ -32,7 +32,7 @@ public final class VanillaDamageFeatureTest {
         var node = this.addDamageFeature();
 
         try {
-            var instance = env.createFlatInstance();
+            var instance = this.createFlatInstance(env);
             var target = this.createEntity(instance, new Pos(0.0, 40.0, 0.0));
             var attacker = this.createEntity(instance, new Pos(0.0, 40.0, 1.0));
 
@@ -50,9 +50,8 @@ public final class VanillaDamageFeatureTest {
         var node = this.addDamageFeature();
 
         try {
-            var instance = env.createFlatInstance();
-            var target = env.createPlayer(instance, new Pos(0.0, 40.0, 0.0));
-            target.setHealth(20.0F);
+            var instance = this.createFlatInstance(env);
+            var target = this.createEntity(instance, new Pos(0.0, 40.0, 0.0));
             var attacker = this.createEntity(instance, new Pos(0.0, 40.0, 1.0));
 
             assertTrue(target.damage(this.createDamage(attacker, 10.0F)));
@@ -73,8 +72,8 @@ public final class VanillaDamageFeatureTest {
         var node = this.addDamageFeature();
 
         try {
-            var instance = env.createFlatInstance();
-            var target = env.createPlayer(instance, new Pos(0.0, 40.0, 0.0));
+            var instance = this.createFlatInstance(env);
+            var target = this.createEntity(instance, new Pos(0.0, 40.0, 0.0));
             var attacker = this.createEntity(instance, new Pos(0.0, 40.0, 1.0));
 
             assertTrue(target.damage(this.createDamage(attacker, 10.0F)));
@@ -111,6 +110,18 @@ public final class VanillaDamageFeatureTest {
         var node = CombatFeatures.modernVanilla().createNode();
         MinecraftServer.getGlobalEventHandler().addChild(node);
         return node;
+    }
+
+    private Instance createFlatInstance(Env env) {
+        var instance = env.createFlatInstance();
+
+        for (var chunkX = -1; chunkX <= 1; chunkX++) {
+            for (var chunkZ = -1; chunkZ <= 1; chunkZ++) {
+                instance.loadChunk(chunkX, chunkZ).join();
+            }
+        }
+
+        return instance;
     }
 
     private LivingEntity createEntity(Instance instance, Pos position) {
