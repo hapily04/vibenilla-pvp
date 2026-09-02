@@ -159,7 +159,7 @@ public final class WindCharge extends CustomEntityProjectile {
 			this.fallFeature.setIgnoreFallDamageFromCurrentImpulse(player);
 			player.sendPacket(new ExplosionPacket(center, 1.2f, 0, knockbackVelocity, Particle.GUST_EMITTER_LARGE,
 				SoundEvent.ENTITY_WIND_CHARGE_WIND_BURST, WeightedList.of()));
-			if (player instanceof CombatPlayer combatPlayer) combatPlayer.setVelocityNoUpdate(_ -> knockbackVelocity.mul(ticksPerSecond));
+			if (player instanceof CombatPlayer combatPlayer) combatPlayer.setVelocityNoUpdate(vel -> vel.add(knockbackVelocity.mul(ticksPerSecond)));
 		} else {
 			entity.setVelocity(entity.getVelocity().add(knockbackVelocity.mul(ticksPerSecond)));
 		}
