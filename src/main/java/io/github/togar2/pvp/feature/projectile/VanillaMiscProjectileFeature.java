@@ -29,8 +29,8 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public class VanillaMiscProjectileFeature implements MiscProjectileFeature, RegistrableFeature {
 	public static final DefinedFeature<VanillaMiscProjectileFeature> DEFINED = new DefinedFeature<>(
-			FeatureType.MISC_PROJECTILE, VanillaMiscProjectileFeature::new,
-			FeatureType.ITEM_COOLDOWN, FeatureType.FALL
+		FeatureType.MISC_PROJECTILE, VanillaMiscProjectileFeature::new,
+		FeatureType.ITEM_COOLDOWN, FeatureType.FALL
 	);
 
 	private final FeatureConfiguration configuration;
@@ -58,24 +58,25 @@ public class VanillaMiscProjectileFeature implements MiscProjectileFeature, Regi
 		});
 
 		node.addListener(PlayerUseItemEvent.class, event -> {
-			if (event.getItemStack().material() == Material.FIREWORK_ROCKET
-					&& event.getPlayer().isFlyingWithElytra()) {
+			Material material = event.getItemStack().material();
+			if (material == Material.FIREWORK_ROCKET
+				&& event.getPlayer().isFlyingWithElytra()) {
 				this.useFireworkRocket(event);
 				return;
 			}
 
-			if (event.getItemStack().material() != Material.SNOWBALL
-					&& event.getItemStack().material() != Material.EGG
-					&& event.getItemStack().material() != Material.ENDER_PEARL
-					&& event.getItemStack().material() != Material.WIND_CHARGE)
+			if (material != Material.SNOWBALL
+				&& !isEgg(material)
+				&& material != Material.ENDER_PEARL
+				&& material != Material.WIND_CHARGE)
 				return;
 
 			Player player = event.getPlayer();
 			ItemStack stack = event.getItemStack();
 
-			boolean snowball = stack.material() == Material.SNOWBALL;
-			boolean enderpearl = stack.material() == Material.ENDER_PEARL;
-			boolean windCharge = stack.material() == Material.WIND_CHARGE;
+			boolean snowball = material == Material.SNOWBALL;
+			boolean enderpearl = material == Material.ENDER_PEARL;
+			boolean windCharge = material == Material.WIND_CHARGE;
 
 			SoundEvent soundEvent;
 			CustomEntityProjectile projectile;
@@ -99,9 +100,9 @@ public class VanillaMiscProjectileFeature implements MiscProjectileFeature, Regi
 
 			ThreadLocalRandom random = ThreadLocalRandom.current();
 			ViewUtil.viewersAndSelf(player).playSound(Sound.sound(
-					soundEvent,
-					snowball || enderpearl || windCharge ? Sound.Source.NEUTRAL : Sound.Source.PLAYER,
-					0.5f, 0.4f / (random.nextFloat() * 0.4f + 0.8f)
+				soundEvent,
+				snowball || enderpearl || windCharge ? Sound.Source.NEUTRAL : Sound.Source.PLAYER,
+				0.5f, 0.4f / (random.nextFloat() * 0.4f + 0.8f)
 			), player);
 
 			if (enderpearl || windCharge) {
@@ -113,9 +114,9 @@ public class VanillaMiscProjectileFeature implements MiscProjectileFeature, Regi
 
 			Vec playerVel = player.getVelocity();
 			projectile.setVelocity(projectile.getVelocity().add(playerVel.x(),
-					player.isOnGround() ? 0.0D : playerVel.y(), playerVel.z()));
+				player.isOnGround() ? 0.0D : playerVel.y(), playerVel.z()));
 			projectile.setInstance(Objects.requireNonNull(player.getInstance()), position.withView(projectile.getPosition()))
-					.thenRun(() -> projectile.setVelocity(projectile.getVelocity()));
+				.thenRun(() -> projectile.setVelocity(projectile.getVelocity()));
 
 			if (player.getGameMode() != GameMode.CREATIVE) {
 				player.setItemInHand(event.getHand(), stack.withAmount(stack.amount() - 1));
@@ -148,5 +149,9 @@ public class VanillaMiscProjectileFeature implements MiscProjectileFeature, Regi
 		if (player.getGameMode() != GameMode.CREATIVE) {
 			player.setItemInHand(event.getHand(), stack.withAmount(stack.amount() - 1));
 		}
+	}
+
+	private boolean isEgg(Material material) {
+		return material == Material.EGG || material == Material.BROWN_EGG || material == Material.BLUE_EGG;
 	}
 }
