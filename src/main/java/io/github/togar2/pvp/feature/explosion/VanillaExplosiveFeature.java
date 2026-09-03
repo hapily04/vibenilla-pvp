@@ -50,42 +50,42 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public class VanillaExplosiveFeature implements ExplosiveFeature, RegistrableFeature {
 	private static final Set<String> WOOD_TYPES = Set.of(
-		"oak", "spruce", "birch", "jungle", "acacia", "cherry",
-		"dark_oak", "pale_oak", "mangrove", "bamboo"
+			"oak", "spruce", "birch", "jungle", "acacia", "cherry",
+			"dark_oak", "pale_oak", "mangrove", "bamboo"
 	);
 	private static final Set<String> LOG_WOOD_TYPES = Set.of(
-		"oak", "spruce", "birch", "jungle", "acacia", "cherry",
-		"dark_oak", "pale_oak", "mangrove"
+			"oak", "spruce", "birch", "jungle", "acacia", "cherry",
+			"dark_oak", "pale_oak", "mangrove"
 	);
 	private static final Set<String> COLORS = Set.of(
-		"white", "orange", "magenta", "light_blue", "yellow", "lime",
-		"pink", "gray", "light_gray", "cyan", "purple", "blue",
-		"brown", "green", "red", "black"
+			"white", "orange", "magenta", "light_blue", "yellow", "lime",
+			"pink", "gray", "light_gray", "cyan", "purple", "blue",
+			"brown", "green", "red", "black"
 	);
 	private static final Set<String> FLAMMABLE_BLOCKS = Set.of(
-		"mangrove_roots", "bookshelf", "tnt", "short_grass", "fern",
-		"dead_bush", "short_dry_grass", "tall_dry_grass", "sunflower",
-		"lilac", "rose_bush", "peony", "tall_grass", "large_fern",
-		"dandelion", "golden_dandelion", "poppy", "open_eyeblossom",
-		"closed_eyeblossom", "blue_orchid", "allium", "azure_bluet",
-		"red_tulip", "orange_tulip", "white_tulip", "pink_tulip",
-		"oxeye_daisy", "cornflower", "lily_of_the_valley", "torchflower",
-		"pitcher_plant", "wither_rose", "pink_petals", "wildflowers",
-		"leaf_litter", "cactus_flower", "vine", "coal_block", "hay_block",
-		"target", "pale_moss_block", "pale_moss_carpet", "pale_hanging_moss",
-		"dried_kelp_block", "bamboo", "bamboo_block", "stripped_bamboo_block",
-		"bamboo_mosaic", "bamboo_mosaic_slab", "bamboo_mosaic_stairs",
-		"scaffolding", "lectern", "composter", "sweet_berry_bush",
-		"beehive", "bee_nest", "azalea_leaves", "flowering_azalea_leaves",
-		"cave_vines", "cave_vines_plant", "spore_blossom", "azalea",
-		"flowering_azalea", "big_dripleaf", "big_dripleaf_stem",
-		"small_dripleaf", "hanging_roots", "glow_lichen", "firefly_bush",
-		"bush"
+			"mangrove_roots", "bookshelf", "tnt", "short_grass", "fern",
+			"dead_bush", "short_dry_grass", "tall_dry_grass", "sunflower",
+			"lilac", "rose_bush", "peony", "tall_grass", "large_fern",
+			"dandelion", "golden_dandelion", "poppy", "open_eyeblossom",
+			"closed_eyeblossom", "blue_orchid", "allium", "azure_bluet",
+			"red_tulip", "orange_tulip", "white_tulip", "pink_tulip",
+			"oxeye_daisy", "cornflower", "lily_of_the_valley", "torchflower",
+			"pitcher_plant", "wither_rose", "pink_petals", "wildflowers",
+			"leaf_litter", "cactus_flower", "vine", "coal_block", "hay_block",
+			"target", "pale_moss_block", "pale_moss_carpet", "pale_hanging_moss",
+			"dried_kelp_block", "bamboo", "bamboo_block", "stripped_bamboo_block",
+			"bamboo_mosaic", "bamboo_mosaic_slab", "bamboo_mosaic_stairs",
+			"scaffolding", "lectern", "composter", "sweet_berry_bush",
+			"beehive", "bee_nest", "azalea_leaves", "flowering_azalea_leaves",
+			"cave_vines", "cave_vines_plant", "spore_blossom", "azalea",
+			"flowering_azalea", "big_dripleaf", "big_dripleaf_stem",
+			"small_dripleaf", "hanging_roots", "glow_lichen", "firefly_bush",
+			"bush"
 	);
 
 	public static final DefinedFeature<VanillaExplosiveFeature> DEFINED = new DefinedFeature<>(
-		FeatureType.EXPLOSIVE, VanillaExplosiveFeature::new,
-		FeatureType.EXPLOSION, FeatureType.ITEM_DAMAGE
+			FeatureType.EXPLOSIVE, VanillaExplosiveFeature::new,
+			FeatureType.EXPLOSION, FeatureType.ITEM_DAMAGE
 	);
 
 	private final FeatureConfiguration configuration;
@@ -164,10 +164,10 @@ public class VanillaExplosiveFeature implements ExplosiveFeature, RegistrableFea
 
 				if (!anchorChargeEvent.isCancelled()) {
 					instance.setBlock(event.getBlockPosition(),
-						block.withProperty("charges", String.valueOf(charges + 1)));
+							block.withProperty("charges", String.valueOf(charges + 1)));
 					ViewUtil.packetGroup(player).playSound(Sound.sound(
-						SoundEvent.BLOCK_RESPAWN_ANCHOR_CHARGE, Source.BLOCK,
-						1.0f, 1.0f
+							SoundEvent.BLOCK_RESPAWN_ANCHOR_CHARGE, Source.BLOCK,
+							1.0f, 1.0f
 					), event.getBlockPosition().add(0.5, 0.5, 0.5));
 
 					if (player.getGameMode() != GameMode.CREATIVE)
@@ -184,19 +184,19 @@ public class VanillaExplosiveFeature implements ExplosiveFeature, RegistrableFea
 			var respawnAnchorEntry = dimension.entries().get(EnvironmentAttribute.RESPAWN_ANCHOR_WORKS);
 
 			boolean worksInDimension = respawnAnchorEntry != null
-				? (Boolean) respawnAnchorEntry.argument()
-				: EnvironmentAttribute.RESPAWN_ANCHOR_WORKS.defaultValue();
+					? (Boolean) respawnAnchorEntry.argument()
+					: EnvironmentAttribute.RESPAWN_ANCHOR_WORKS.defaultValue();
 
 			Biome biome = MinecraftServer.getBiomeRegistry().get(instance.getChunkAt(event.getBlockPosition())
-				.getBiome(event.getBlockPosition()));
+					.getBiome(event.getBlockPosition()));
 
 			boolean respawnAnchorWorks;
 			if (biome.attributes().entries().containsKey(EnvironmentAttribute.RESPAWN_ANCHOR_WORKS)) {
 				//noinspection unchecked
 				respawnAnchorWorks = ((Modifier<Boolean, Boolean>) biome.attributes().entries()
-					.get(EnvironmentAttribute.RESPAWN_ANCHOR_WORKS).modifier())
-					.modify(worksInDimension, (Boolean) biome.attributes().entries()
-						.get(EnvironmentAttribute.RESPAWN_ANCHOR_WORKS).argument());
+						.get(EnvironmentAttribute.RESPAWN_ANCHOR_WORKS).modifier())
+						.modify(worksInDimension, (Boolean) biome.attributes().entries()
+								.get(EnvironmentAttribute.RESPAWN_ANCHOR_WORKS).argument());
 
 			} else {
 				respawnAnchorWorks = worksInDimension;
@@ -209,14 +209,14 @@ public class VanillaExplosiveFeature implements ExplosiveFeature, RegistrableFea
 				EventDispatcher.callCancellable(anchorExplodeEvent, () -> {
 					instance.setBlock(event.getBlockPosition(), Block.AIR);
 					instance.explode(
-						(float) (event.getBlockPosition().x() + 0.5),
-						(float) (event.getBlockPosition().y() + 0.5),
-						(float) (event.getBlockPosition().z() + 0.5),
-						5.0f,
-						CompoundBinaryTag.builder()
-							.putBoolean("fire", true)
-							.putBoolean("anchor", true)
-							.build()
+							(float) (event.getBlockPosition().x() + 0.5),
+							(float) (event.getBlockPosition().y() + 0.5),
+							(float) (event.getBlockPosition().z() + 0.5),
+							5.0f,
+							CompoundBinaryTag.builder()
+									.putBoolean("fire", true)
+									.putBoolean("anchor", true)
+									.build()
 					);
 					if (event.getHand() == PlayerHand.MAIN) {
 						player.swingMainHand();
@@ -267,14 +267,14 @@ public class VanillaExplosiveFeature implements ExplosiveFeature, RegistrableFea
 				}
 
 				instance.explode(
-					(float) (finalHeadPosition.x() + 0.5),
-					(float) (finalHeadPosition.y() + 0.5),
-					(float) (finalHeadPosition.z() + 0.5),
-					5.0F,
-					CompoundBinaryTag.builder()
-						.putBoolean("fire", true)
-						.putBoolean("anchor", true)
-						.build()
+						(float) (finalHeadPosition.x() + 0.5),
+						(float) (finalHeadPosition.y() + 0.5),
+						(float) (finalHeadPosition.z() + 0.5),
+						5.0F,
+						CompoundBinaryTag.builder()
+								.putBoolean("fire", true)
+								.putBoolean("anchor", true)
+								.build()
 				);
 			});
 
@@ -369,20 +369,20 @@ public class VanillaExplosiveFeature implements ExplosiveFeature, RegistrableFea
 		if (belowBlock.isSolid() || this.isFlammable(belowBlock)) return fire;
 
 		return fire
-			.withProperty("north", String.valueOf(this.isFlammable(instance.getBlock(position.add(0, 0, -1)))))
-			.withProperty("east", String.valueOf(this.isFlammable(instance.getBlock(position.add(1, 0, 0)))))
-			.withProperty("south", String.valueOf(this.isFlammable(instance.getBlock(position.add(0, 0, 1)))))
-			.withProperty("west", String.valueOf(this.isFlammable(instance.getBlock(position.add(-1, 0, 0)))))
-			.withProperty("up", String.valueOf(this.isFlammable(instance.getBlock(position.add(0, 1, 0)))));
+				.withProperty("north", String.valueOf(this.isFlammable(instance.getBlock(position.add(0, 0, -1)))))
+				.withProperty("east", String.valueOf(this.isFlammable(instance.getBlock(position.add(1, 0, 0)))))
+				.withProperty("south", String.valueOf(this.isFlammable(instance.getBlock(position.add(0, 0, 1)))))
+				.withProperty("west", String.valueOf(this.isFlammable(instance.getBlock(position.add(-1, 0, 0)))))
+				.withProperty("up", String.valueOf(this.isFlammable(instance.getBlock(position.add(0, 1, 0)))));
 	}
 
 	private boolean hasFlammableNeighbor(Instance instance, Point position) {
 		return this.isFlammable(instance.getBlock(position.add(0, -1, 0)))
-			|| this.isFlammable(instance.getBlock(position.add(0, 1, 0)))
-			|| this.isFlammable(instance.getBlock(position.add(0, 0, -1)))
-			|| this.isFlammable(instance.getBlock(position.add(0, 0, 1)))
-			|| this.isFlammable(instance.getBlock(position.add(-1, 0, 0)))
-			|| this.isFlammable(instance.getBlock(position.add(1, 0, 0)));
+				|| this.isFlammable(instance.getBlock(position.add(0, 1, 0)))
+				|| this.isFlammable(instance.getBlock(position.add(0, 0, -1)))
+				|| this.isFlammable(instance.getBlock(position.add(0, 0, 1)))
+				|| this.isFlammable(instance.getBlock(position.add(-1, 0, 0)))
+				|| this.isFlammable(instance.getBlock(position.add(1, 0, 0)));
 	}
 
 	private boolean isSoulFireBase(Block block) {
@@ -396,11 +396,11 @@ public class VanillaExplosiveFeature implements ExplosiveFeature, RegistrableFea
 		for (var woodType : WOOD_TYPES) {
 
 			if (blockKey.equals(woodType + "_planks")
-				|| blockKey.equals(woodType + "_slab")
-				|| blockKey.equals(woodType + "_fence_gate")
-				|| blockKey.equals(woodType + "_fence")
-				|| blockKey.equals(woodType + "_stairs")
-				|| blockKey.equals(woodType + "_shelf")) {
+					|| blockKey.equals(woodType + "_slab")
+					|| blockKey.equals(woodType + "_fence_gate")
+					|| blockKey.equals(woodType + "_fence")
+					|| blockKey.equals(woodType + "_stairs")
+					|| blockKey.equals(woodType + "_shelf")) {
 				return true;
 			}
 		}
@@ -408,10 +408,10 @@ public class VanillaExplosiveFeature implements ExplosiveFeature, RegistrableFea
 		for (var woodType : LOG_WOOD_TYPES) {
 
 			if (blockKey.equals(woodType + "_log")
-				|| blockKey.equals("stripped_" + woodType + "_log")
-				|| blockKey.equals(woodType + "_wood")
-				|| blockKey.equals("stripped_" + woodType + "_wood")
-				|| blockKey.equals(woodType + "_leaves")) {
+					|| blockKey.equals("stripped_" + woodType + "_log")
+					|| blockKey.equals(woodType + "_wood")
+					|| blockKey.equals("stripped_" + woodType + "_wood")
+					|| blockKey.equals(woodType + "_leaves")) {
 				return true;
 			}
 		}
@@ -431,7 +431,7 @@ public class VanillaExplosiveFeature implements ExplosiveFeature, RegistrableFea
 
 		if (stack.material() == Material.FLINT_AND_STEEL) {
 			this.itemDamageFeature.damageEquipment(player, hand == PlayerHand.MAIN
-				? EquipmentSlot.MAIN_HAND : EquipmentSlot.OFF_HAND, 1);
+					? EquipmentSlot.MAIN_HAND : EquipmentSlot.OFF_HAND, 1);
 		} else {
 			player.setItemInHand(hand, stack.consume(1));
 		}
@@ -440,22 +440,22 @@ public class VanillaExplosiveFeature implements ExplosiveFeature, RegistrableFea
 	private void playIgnitionSound(Player player, Material material, Point position, Instance instance) {
 		var random = ThreadLocalRandom.current();
 		var soundEvent = material == Material.FLINT_AND_STEEL
-			? SoundEvent.ITEM_FLINTANDSTEEL_USE : SoundEvent.ITEM_FIRECHARGE_USE;
+				? SoundEvent.ITEM_FLINTANDSTEEL_USE : SoundEvent.ITEM_FIRECHARGE_USE;
 		var pitch = material == Material.FLINT_AND_STEEL
-			? random.nextFloat() * 0.4F + 0.8F : (random.nextFloat() - random.nextFloat()) * 0.2F + 1.0F;
+				? random.nextFloat() * 0.4F + 0.8F : (random.nextFloat() - random.nextFloat()) * 0.2F + 1.0F;
 
 		Chunk chunk = instance.getChunkAt(position);
 		Audience audience = chunk == null ? player : chunk.getViewersAsAudience();
 		if (material == Material.FLINT_AND_STEEL) audience = audience.filterAudience(a -> a != player);
 		audience.playSound(Sound.sound(
-			soundEvent, Source.BLOCK,
-			1.0F, pitch
+				soundEvent, Source.BLOCK,
+				1.0F, pitch
 		), position.x(), position.y(), position.z());
 	}
 
 	private boolean shouldSuppressBedUse(Player player) {
 		return (player.isSneaking() || player.inputs().shift())
-			&& (!player.getItemInMainHand().isAir() || !player.getItemInOffHand().isAir());
+				&& (!player.getItemInMainHand().isAir() || !player.getItemInOffHand().isAir());
 	}
 
 	private @Nullable BedRule resolveBedRule(Instance instance, Point position) {
@@ -469,9 +469,9 @@ public class VanillaExplosiveFeature implements ExplosiveFeature, RegistrableFea
 		if (biome.attributes().entries().containsKey(EnvironmentAttribute.BED_RULE)) {
 			//noinspection unchecked
 			return ((Modifier<BedRule, BedRule>) biome.attributes().entries()
-				.get(EnvironmentAttribute.BED_RULE).modifier())
-				.modify(dimensionBedRule, (BedRule) biome.attributes().entries()
-					.get(EnvironmentAttribute.BED_RULE).argument());
+					.get(EnvironmentAttribute.BED_RULE).modifier())
+					.modify(dimensionBedRule, (BedRule) biome.attributes().entries()
+							.get(EnvironmentAttribute.BED_RULE).argument());
 		}
 
 		return dimensionBedRule;
@@ -512,6 +512,6 @@ public class VanillaExplosiveFeature implements ExplosiveFeature, RegistrableFea
 
 	private boolean shouldSuppressAnchorUse(Player player) {
 		return (player.isSneaking() || player.inputs().shift())
-			&& (!player.getItemInMainHand().isAir() || !player.getItemInOffHand().isAir());
+				&& (!player.getItemInMainHand().isAir() || !player.getItemInOffHand().isAir());
 	}
 }
