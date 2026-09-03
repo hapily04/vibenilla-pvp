@@ -57,8 +57,8 @@ public final class WindCharge extends CustomEntityProjectile {
 		this.setShooter(entity);
 		this.setVelocity(direction.mul(ServerFlag.SERVER_TICKS_PER_SECOND));
 		this.setView(
-			(float) Math.toDegrees(Math.atan2(direction.x(), direction.z())),
-			(float) Math.toDegrees(Math.atan2(direction.y(), Math.sqrt(direction.x() * direction.x() + direction.z() * direction.z())))
+				(float) Math.toDegrees(Math.atan2(direction.x(), direction.z())),
+				(float) Math.toDegrees(Math.atan2(direction.y(), Math.sqrt(direction.x() * direction.x() + direction.z() * direction.z())))
 		);
 
 		return true;
@@ -92,8 +92,8 @@ public final class WindCharge extends CustomEntityProjectile {
 	@Override
 	protected boolean canHit(Entity entity) {
 		return !(entity instanceof WindCharge)
-			&& entity.getEntityType() != EntityType.END_CRYSTAL
-			&& super.canHit(entity);
+				&& entity.getEntityType() != EntityType.END_CRYSTAL
+				&& super.canHit(entity);
 	}
 
 	private void explode(Point center) {
@@ -134,9 +134,9 @@ public final class WindCharge extends CustomEntityProjectile {
 
 		var originY = entity.getPosition().y() + entity.getEyeHeight();
 		var direction = new Vec(
-			entity.getPosition().x() - center.x(),
-			originY - center.y(),
-			entity.getPosition().z() - center.z()
+				entity.getPosition().x() - center.x(),
+				originY - center.y(),
+				entity.getPosition().z() - center.z()
 		);
 		var directionLength = direction.length();
 
