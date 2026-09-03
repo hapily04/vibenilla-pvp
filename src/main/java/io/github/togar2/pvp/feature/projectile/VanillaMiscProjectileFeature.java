@@ -60,15 +60,15 @@ public class VanillaMiscProjectileFeature implements MiscProjectileFeature, Regi
 		node.addListener(PlayerUseItemEvent.class, event -> {
 			Material material = event.getItemStack().material();
 			if (material == Material.FIREWORK_ROCKET
-				&& event.getPlayer().isFlyingWithElytra()) {
+					&& event.getPlayer().isFlyingWithElytra()) {
 				this.useFireworkRocket(event);
 				return;
 			}
 
 			if (material != Material.SNOWBALL
-				&& !isEgg(material)
-				&& material != Material.ENDER_PEARL
-				&& material != Material.WIND_CHARGE)
+					&& !isEgg(material)
+					&& material != Material.ENDER_PEARL
+					&& material != Material.WIND_CHARGE)
 				return;
 
 			Player player = event.getPlayer();
@@ -100,9 +100,9 @@ public class VanillaMiscProjectileFeature implements MiscProjectileFeature, Regi
 
 			ThreadLocalRandom random = ThreadLocalRandom.current();
 			ViewUtil.viewersAndSelf(player).playSound(Sound.sound(
-				soundEvent,
-				snowball || enderpearl || windCharge ? Sound.Source.NEUTRAL : Sound.Source.PLAYER,
-				0.5f, 0.4f / (random.nextFloat() * 0.4f + 0.8f)
+					soundEvent,
+					snowball || enderpearl || windCharge ? Sound.Source.NEUTRAL : Sound.Source.PLAYER,
+					0.5f, 0.4f / (random.nextFloat() * 0.4f + 0.8f)
 			), player);
 
 			if (enderpearl || windCharge) {
@@ -114,9 +114,9 @@ public class VanillaMiscProjectileFeature implements MiscProjectileFeature, Regi
 
 			Vec playerVel = player.getVelocity();
 			projectile.setVelocity(projectile.getVelocity().add(playerVel.x(),
-				player.isOnGround() ? 0.0D : playerVel.y(), playerVel.z()));
+					player.isOnGround() ? 0.0D : playerVel.y(), playerVel.z()));
 			projectile.setInstance(Objects.requireNonNull(player.getInstance()), position.withView(projectile.getPosition()))
-				.thenRun(() -> projectile.setVelocity(projectile.getVelocity()));
+					.thenRun(() -> projectile.setVelocity(projectile.getVelocity()));
 
 			if (player.getGameMode() != GameMode.CREATIVE) {
 				player.setItemInHand(event.getHand(), stack.withAmount(stack.amount() - 1));
