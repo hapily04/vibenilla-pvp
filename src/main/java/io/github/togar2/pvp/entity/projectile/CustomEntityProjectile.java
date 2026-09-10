@@ -263,7 +263,7 @@ public class CustomEntityProjectile extends Entity {
                     this.setNoGravity(true);
                     this.setVelocity(Vec.ZERO);
                     this.collisionDirection = collisionDirection;
-                    this.refreshPosition(this.position.withCoord(physicsResult.newPosition()), this.noClip, true);
+                    this.refreshPosition(this.position.withCoord(physicsResult.newPosition()), this.noClip, false);
 
                     if (this.onStuck(event)) {
                         this.scheduler().scheduleNextProcess(this::remove);

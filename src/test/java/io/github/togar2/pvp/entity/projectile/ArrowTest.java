@@ -9,11 +9,13 @@ import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.LivingEntity;
 import net.minestom.server.instance.block.Block;
+import net.minestom.server.network.packet.server.play.EntityPositionAndRotationPacket;
 import net.minestom.server.network.packet.server.play.EntityTeleportPacket;
 import net.minestom.testing.Env;
 import net.minestom.testing.EnvTest;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @EnvTest
@@ -99,5 +101,40 @@ public final class ArrowTest {
                 .orElseThrow(() -> new AssertionError("no teleport for the stuck arrow"));
         assertTrue(Math.abs(pose.position().z() - arrow.getPosition().z()) < 1.0E-6, "position " + pose.position());
         assertTrue(Math.abs(Math.abs(pose.position().yaw()) - 180.0F) < 2.0F, "yaw " + pose.position().yaw());
+    }
+
+    @Test
+    public void farBlockHitSendsNoRelativeMoveAfterTheTeleport(Env environment) {
+        CombatEnchantments.registerAll();
+        var featureSet = CombatFeatures.empty()
+                .add(CombatFeatures.VANILLA_ENCHANTMENT)
+                .add(CombatFeatures.VANILLA_EFFECT)
+                .build();
+
+        var instance = environment.createFlatInstance();
+        var connection = environment.createConnection();
+        var viewer = connection.connect(instance, new Pos(8.0, 41.0, 2.0));
+
+        for (var y = 40; y <= 44; y++) {
+            for (var x = 6; x <= 10; x++) {
+                instance.setBlock(x, y, 20, Block.STONE);
+            }
+        }
+
+        var arrow = new Arrow(null, featureSet.get(FeatureType.EFFECT), featureSet.get(FeatureType.ENCHANTMENT));
+        arrow.setInstance(instance, new Pos(8.5, 42.0, 3.5)).join();
+        arrow.addViewer(viewer);
+        arrow.shootFromRotation(0.0F, 0.0F, 0.0F, 3.0, 0.0);
+
+        var teleports = connection.trackIncoming(EntityTeleportPacket.class);
+        var moves = connection.trackIncoming(EntityPositionAndRotationPacket.class);
+
+        for (var tick = 0; tick < 20 && !arrow.isStuck(); tick++) {
+            environment.tick();
+        }
+
+        assertTrue(arrow.isStuck());
+        assertTrue(teleports.collect().stream().anyMatch(packet -> packet.entityId() == arrow.getEntityId()));
+        assertFalse(moves.collect().stream().anyMatch(packet -> packet.entityId() == arrow.getEntityId()));
     }
 }
