@@ -273,22 +273,18 @@ public class CustomEntityProjectile extends Entity {
 
             this.onGround = physicsResult.isOnGround();
 
-            var yaw = this.position.yaw();
-            var pitch = this.position.pitch();
+            var yawSign = this.noClip ? -1.0 : 1.0;
+            var yaw = (float) Math.toDegrees(Math.atan2(yawSign * diff.x(), yawSign * diff.z()));
+            var pitch = (float) Math.toDegrees(
+                    Math.atan2(diff.y(), Math.sqrt(diff.x() * diff.x() + diff.z() * diff.z())));
 
-            if (!this.noClip) {
-                yaw = (float) Math.toDegrees(Math.atan2(diff.x(), diff.z()));
-                pitch = (float) Math.toDegrees(
-                        Math.atan2(diff.y(), Math.sqrt(diff.x() * diff.x() + diff.z() * diff.z())));
-
-                yaw = Pos.fixYaw(lerpRotation(this.prevYaw, yaw));
-                pitch = lerpRotation(this.prevPitch, pitch);
-            }
+            yaw = Pos.fixYaw(lerpRotation(this.prevYaw, yaw));
+            pitch = lerpRotation(this.prevPitch, pitch);
 
             this.prevYaw = yaw;
             this.prevPitch = pitch;
 
-            this.refreshPosition(newPosition.withView(yaw, pitch), this.noClip, this.isStuck());
+            this.refreshPosition(newPosition.withView(yaw, pitch), false, this.isStuck());
 
             if (this.isStuck()) {
                 this.sendPacketToViewers(new EntityTeleportPacket(this.getEntityId(), this.position,

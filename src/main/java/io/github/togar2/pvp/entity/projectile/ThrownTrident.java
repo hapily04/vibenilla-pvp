@@ -72,7 +72,7 @@ public class ThrownTrident extends AbstractArrow {
                 this.collisionDirection = null;
                 ((AbstractArrowMeta) this.getEntityMeta()).setInGround(false);
                 var vector = ownerEyePosition.asVec().sub(this.position);
-                this.refreshPosition(this.position.add(0, vector.y() * 0.015 * loyalty, 0));
+                this.refreshPosition(this.position.add(0, vector.y() * 0.015 * loyalty, 0), true, false);
                 this.setVelocity(this.velocity.mul(0.95).add(vector.normalize().mul(0.05 * loyalty)
                         .mul(ServerFlag.SERVER_TICKS_PER_SECOND)));
 
@@ -82,6 +82,7 @@ public class ThrownTrident extends AbstractArrow {
                             10.0F, 1.0F
                     ), this.position.x(), this.position.y(), this.position.z());
                     this.hasStartedReturning = true;
+                    this.synchronizeNextTick();
                 }
             }
         }
