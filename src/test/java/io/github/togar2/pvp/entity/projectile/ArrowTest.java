@@ -42,4 +42,25 @@ public final class ArrowTest {
         assertTrue(first.getHealth() < 20.0F, "first target health " + first.getHealth());
         assertTrue(second.getHealth() < 20.0F, "second target health " + second.getHealth());
     }
+
+    @Test
+    public void arrowKeepsItsHeadingAcrossTheYawWrap(Env environment) {
+        CombatEnchantments.registerAll();
+        var featureSet = CombatFeatures.empty()
+                .add(CombatFeatures.VANILLA_ENCHANTMENT)
+                .add(CombatFeatures.VANILLA_EFFECT)
+                .build();
+
+        var instance = environment.createFlatInstance();
+        var arrow = new Arrow(null, featureSet.get(FeatureType.EFFECT), featureSet.get(FeatureType.ENCHANTMENT));
+        arrow.setInstance(instance, new Pos(8.0, 60.0, 8.0)).join();
+        arrow.shootFromRotation(0.0F, 180.0F, 0.0F, 3.0, 0.0);
+        arrow.setVelocity(arrow.getVelocity().add(0.3 * ServerFlag.SERVER_TICKS_PER_SECOND, 0.0, 0.0));
+
+        for (var tick = 0; tick < 6; tick++) {
+            environment.tick();
+            var yaw = arrow.getPosition().yaw();
+            assertTrue(Math.abs(Math.abs(yaw) - 180.0F) < 10.0F, "tick " + tick + " yaw " + yaw);
+        }
+    }
 }

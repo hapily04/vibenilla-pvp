@@ -280,8 +280,8 @@ public class CustomEntityProjectile extends Entity {
                 pitch = (float) Math.toDegrees(
                         Math.atan2(diff.y(), Math.sqrt(diff.x() * diff.x() + diff.z() * diff.z())));
 
-                yaw = lerp(this.prevYaw, yaw);
-                pitch = lerp(this.prevPitch, pitch);
+                yaw = lerpRotation(this.prevYaw, yaw);
+                pitch = lerpRotation(this.prevPitch, pitch);
             }
 
             this.prevYaw = yaw;
@@ -347,8 +347,16 @@ public class CustomEntityProjectile extends Entity {
                 || minZ > ownerPosition.z() + ownerBox.maxZ();
     }
 
-    private static float lerp(float first, float second) {
-        return first + (second - first) * 0.2F;
+    private static float lerpRotation(float previousRotation, float rotation) {
+        while (rotation - previousRotation < -180.0F) {
+            previousRotation -= 360.0F;
+        }
+
+        while (rotation - previousRotation >= 180.0F) {
+            previousRotation += 360.0F;
+        }
+
+        return previousRotation + (rotation - previousRotation) * 0.2F;
     }
 
     @Override
