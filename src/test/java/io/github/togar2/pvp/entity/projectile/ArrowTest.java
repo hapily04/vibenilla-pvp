@@ -8,6 +8,8 @@ import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.LivingEntity;
+import net.minestom.server.instance.block.Block;
+import net.minestom.server.network.packet.server.play.EntityTeleportPacket;
 import net.minestom.testing.Env;
 import net.minestom.testing.EnvTest;
 import org.junit.jupiter.api.Test;
@@ -62,5 +64,40 @@ public final class ArrowTest {
             var yaw = arrow.getPosition().yaw();
             assertTrue(Math.abs(Math.abs(yaw) - 180.0F) < 10.0F, "tick " + tick + " yaw " + yaw);
         }
+    }
+
+    @Test
+    public void stuckArrowPoseIsSentEvenWhenASyncIsDue(Env environment) {
+        CombatEnchantments.registerAll();
+        var featureSet = CombatFeatures.empty()
+                .add(CombatFeatures.VANILLA_ENCHANTMENT)
+                .add(CombatFeatures.VANILLA_EFFECT)
+                .build();
+
+        var instance = environment.createFlatInstance();
+        var connection = environment.createConnection();
+        connection.connect(instance, new Pos(8.0, 41.0, 12.0));
+
+        for (var y = 40; y <= 44; y++) {
+            for (var x = 6; x <= 10; x++) {
+                instance.setBlock(x, y, 0, Block.STONE);
+            }
+        }
+
+        var arrow = new Arrow(null, featureSet.get(FeatureType.EFFECT), featureSet.get(FeatureType.ENCHANTMENT));
+        arrow.setInstance(instance, new Pos(8.5, 41.7, 3.5)).join();
+        arrow.shootFromRotation(0.0F, 180.0F, 0.0F, 3.0, 0.0);
+        var teleports = connection.trackIncoming(EntityTeleportPacket.class);
+        arrow.synchronizeNextTick();
+
+        environment.tick();
+
+        assertTrue(arrow.isStuck());
+        var pose = teleports.collect().stream()
+                .filter(packet -> packet.entityId() == arrow.getEntityId())
+                .reduce((firstPacket, secondPacket) -> secondPacket)
+                .orElseThrow(() -> new AssertionError("no teleport for the stuck arrow"));
+        assertTrue(Math.abs(pose.position().z() - arrow.getPosition().z()) < 1.0E-6, "position " + pose.position());
+        assertTrue(Math.abs(Math.abs(pose.position().yaw()) - 180.0F) < 2.0F, "yaw " + pose.position().yaw());
     }
 }

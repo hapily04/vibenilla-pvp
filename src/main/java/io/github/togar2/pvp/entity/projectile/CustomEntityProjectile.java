@@ -21,6 +21,7 @@ import net.minestom.server.event.entity.projectile.ProjectileCollideWithEntityEv
 import net.minestom.server.event.entity.projectile.ProjectileUncollideEvent;
 import net.minestom.server.instance.Chunk;
 import net.minestom.server.instance.block.Block;
+import net.minestom.server.network.packet.server.play.EntityTeleportPacket;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -280,7 +281,7 @@ public class CustomEntityProjectile extends Entity {
                 pitch = (float) Math.toDegrees(
                         Math.atan2(diff.y(), Math.sqrt(diff.x() * diff.x() + diff.z() * diff.z())));
 
-                yaw = lerpRotation(this.prevYaw, yaw);
+                yaw = Pos.fixYaw(lerpRotation(this.prevYaw, yaw));
                 pitch = lerpRotation(this.prevPitch, pitch);
             }
 
@@ -288,6 +289,11 @@ public class CustomEntityProjectile extends Entity {
             this.prevPitch = pitch;
 
             this.refreshPosition(newPosition.withView(yaw, pitch), this.noClip, this.isStuck());
+
+            if (this.isStuck()) {
+                this.sendPacketToViewers(new EntityTeleportPacket(this.getEntityId(), this.position,
+                        Vec.ZERO, RelativeFlags.DELTA_COORD, this.isOnGround()));
+            }
 
             if (!this.shouldUpdateVelocityBeforeMovement()) {
                 this.updateVelocityAfterMovement();
