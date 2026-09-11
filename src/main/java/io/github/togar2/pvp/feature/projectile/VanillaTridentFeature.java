@@ -1,7 +1,6 @@
 package io.github.togar2.pvp.feature.projectile;
 
 import io.github.togar2.pvp.entity.projectile.ThrownTrident;
-import io.github.togar2.pvp.enchantment.EntityGroup;
 import io.github.togar2.pvp.feature.FeatureType;
 import io.github.togar2.pvp.feature.RegistrableFeature;
 import io.github.togar2.pvp.feature.config.DefinedFeature;
@@ -12,6 +11,7 @@ import io.github.togar2.pvp.feature.food.ExhaustionFeature;
 import io.github.togar2.pvp.feature.item.ItemDamageFeature;
 import io.github.togar2.pvp.player.CombatPlayer;
 import io.github.togar2.pvp.utils.FluidUtil;
+import io.github.togar2.pvp.feature.state.PlayerStateFeature;
 import io.github.togar2.pvp.utils.ViewUtil;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.ServerFlag;
@@ -40,206 +40,211 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Vanilla implementation of {@link TridentFeature}
  */
 public class VanillaTridentFeature implements TridentFeature, RegistrableFeature {
-	public static final DefinedFeature<VanillaTridentFeature> DEFINED = new DefinedFeature<>(
-			FeatureType.TRIDENT, VanillaTridentFeature::new,
-			FeatureType.ITEM_DAMAGE, FeatureType.ENCHANTMENT, FeatureType.ATTACK_COOLDOWN, FeatureType.EXHAUSTION
-	);
+    public static final DefinedFeature<VanillaTridentFeature> DEFINED = new DefinedFeature<>(
+            FeatureType.TRIDENT, VanillaTridentFeature::new,
+            FeatureType.ITEM_DAMAGE, FeatureType.ENCHANTMENT, FeatureType.ATTACK_COOLDOWN, FeatureType.EXHAUSTION,
+            FeatureType.PLAYER_STATE
+    );
 
-	private final FeatureConfiguration configuration;
+    private final FeatureConfiguration configuration;
 
-	private ItemDamageFeature itemDamageFeature;
-	private EnchantmentFeature enchantmentFeature;
-	private AttackCooldownFeature attackCooldownFeature;
-	private ExhaustionFeature exhaustionFeature;
+    private PlayerStateFeature playerStateFeature;
 
-	public static final Tag<Long> RIPTIDE_START = Tag.Long("riptideStart");
-	public static final Tag<Boolean> RIPTIDE_OFF_HAND = Tag.Boolean("riptideOffHand");
-	public static final Tag<ItemStack> RIPTIDE_ITEM = Tag.Transient("riptideItem");
-	private static final float RIPTIDE_SPIN_ATTACK_DAMAGE = 8.0F;
+    private ItemDamageFeature itemDamageFeature;
+    private EnchantmentFeature enchantmentFeature;
+    private AttackCooldownFeature attackCooldownFeature;
+    private ExhaustionFeature exhaustionFeature;
 
-	public VanillaTridentFeature(FeatureConfiguration configuration) {
-		this.configuration = configuration;
-	}
+    public static final Tag<Long> RIPTIDE_START = Tag.Long("riptideStart");
+    public static final Tag<Boolean> RIPTIDE_OFF_HAND = Tag.Boolean("riptideOffHand");
+    public static final Tag<ItemStack> RIPTIDE_ITEM = Tag.Transient("riptideItem");
+    private static final float RIPTIDE_SPIN_ATTACK_DAMAGE = 8.0F;
 
-	@Override
-	public void initDependencies() {
-		this.itemDamageFeature = this.configuration.get(FeatureType.ITEM_DAMAGE);
-		this.enchantmentFeature = this.configuration.get(FeatureType.ENCHANTMENT);
-		this.attackCooldownFeature = this.configuration.get(FeatureType.ATTACK_COOLDOWN);
-		this.exhaustionFeature = this.configuration.get(FeatureType.EXHAUSTION);
-	}
+    public VanillaTridentFeature(FeatureConfiguration configuration) {
+        this.configuration = configuration;
+    }
 
-	@Override
-	public void init(EventNode<EntityInstanceEvent> node) {
-		node.addListener(PlayerUseItemEvent.class, event -> {
-			var player = event.getPlayer();
-			var stack = event.getItemStack();
-			if (stack.material() != Material.TRIDENT) return;
+    @Override
+    public void initDependencies() {
+        this.playerStateFeature = this.configuration.get(FeatureType.PLAYER_STATE);
+        this.itemDamageFeature = this.configuration.get(FeatureType.ITEM_DAMAGE);
+        this.enchantmentFeature = this.configuration.get(FeatureType.ENCHANTMENT);
+        this.attackCooldownFeature = this.configuration.get(FeatureType.ATTACK_COOLDOWN);
+        this.exhaustionFeature = this.configuration.get(FeatureType.EXHAUSTION);
+    }
 
-			var riptideStrength = this.getRiptideStrength(stack);
+    @Override
+    public void init(EventNode<EntityInstanceEvent> node) {
+        node.addListener(PlayerUseItemEvent.class, event -> {
+            var player = event.getPlayer();
+            var stack = event.getItemStack();
+            if (stack.material() != Material.TRIDENT) return;
 
-			if (this.nextDamageWillBreak(stack)
-					|| (riptideStrength > 0.0F && !this.isInWaterOrRain(player))) {
-				event.setCancelled(true);
-			}
-		});
+            var riptideStrength = this.getRiptideStrength(stack);
 
-		node.addListener(PlayerCancelItemUseEvent.class, event -> {
-			Player player = event.getPlayer();
-			ItemStack stack = event.getItemStack();
-			if (stack.material() != Material.TRIDENT) return;
+            if (this.nextDamageWillBreak(stack)
+                    || (riptideStrength > 0.0F && !this.isInWaterOrRain(player))) {
+                event.setCancelled(true);
+            }
+        });
 
-			long ticks = player.getCurrentItemUseTime();
-			if (ticks < 10) return;
-			if (this.nextDamageWillBreak(stack)) return;
+        node.addListener(PlayerCancelItemUseEvent.class, event -> {
+            var player = event.getPlayer();
+            var stack = event.getItemStack();
+            if (stack.material() != Material.TRIDENT) return;
 
-			var riptideStrength = this.getRiptideStrength(stack);
-			var soundEvent = this.getTridentSound(stack);
-			if (riptideStrength > 0.0F && !this.isInWaterOrRain(player)) return;
-			if (riptideStrength > 0.0F && player.getVehicle() != null) return;
+            var ticks = player.getCurrentItemUseTime();
+            if (ticks < 10) return;
+            if (this.nextDamageWillBreak(stack)) return;
 
-			this.itemDamageFeature.damageEquipment(player, event.getHand() == PlayerHand.MAIN ?
-					EquipmentSlot.MAIN_HAND : EquipmentSlot.OFF_HAND, 1);
+            var riptideStrength = this.getRiptideStrength(stack);
+            var soundEvent = this.getTridentSound(stack);
+            if (riptideStrength > 0.0F && !this.isInWaterOrRain(player)) return;
+            if (riptideStrength > 0.0F && player.getVehicle() != null) return;
 
-			if (riptideStrength > 0.0F) {
-				player.setTag(RIPTIDE_OFF_HAND, event.getHand() == PlayerHand.OFF);
-				player.setTag(RIPTIDE_ITEM, stack);
-				this.applyRiptide(player, riptideStrength, soundEvent);
-				event.setRiptideSpinAttack(true);
-			} else {
-				ThrownTrident trident = new ThrownTrident(player, stack, this.enchantmentFeature);
+            this.itemDamageFeature.damageEquipment(player, event.getHand() == PlayerHand.MAIN ?
+                    EquipmentSlot.MAIN_HAND : EquipmentSlot.OFF_HAND, 1);
 
-				Pos position = player.getPosition().add(0, player.getEyeHeight() - 0.1, 0);
-				trident.shootFromRotation(position.pitch(), position.yaw(), 0, 2.5, 1.0);
-				trident.setInstance(Objects.requireNonNull(player.getInstance()), position.withView(trident.getPosition()));
+            if (riptideStrength > 0.0F) {
+                player.setTag(RIPTIDE_OFF_HAND, event.getHand() == PlayerHand.OFF);
+                player.setTag(RIPTIDE_ITEM, stack);
+                this.applyRiptide(player, riptideStrength, soundEvent);
+                event.setRiptideSpinAttack(true);
+            } else {
+                var thrownStack = player.getItemInHand(event.getHand());
+                var trident = new ThrownTrident(player, thrownStack, this.enchantmentFeature);
 
-				Vec playerVel = player.getVelocity();
-				trident.setVelocity(trident.getVelocity().add(playerVel.x(),
-						player.isOnGround() ? 0.0 : playerVel.y(), playerVel.z()));
+                var position = player.getPosition().add(0, player.getEyeHeight() - 0.1, 0);
+                trident.shootFromRotation(position.pitch(), position.yaw(), 0, 2.5, 1.0);
+                trident.setInstance(Objects.requireNonNull(player.getInstance()), position.withView(trident.getPosition()));
 
-				ViewUtil.viewersAndSelf(player).playSound(Sound.sound(
-						soundEvent, Sound.Source.PLAYER,
-						1.0f, 1.0f
-				), trident);
-				if (player.getGameMode() != GameMode.CREATIVE) player.setItemInHand(event.getHand(), stack.consume(1));
-			}
-		});
+                var playerVel = this.playerStateFeature.getKnownMovement(player);
+                trident.setVelocity(trident.getVelocity().add(playerVel.x(),
+                        player.isOnGround() ? 0.0 : playerVel.y(), playerVel.z()));
 
-		node.addListener(PlayerTickEvent.class, event -> {
-			if (event.getPlayer().getPlayerMeta().isInRiptideSpinAttack()) {
-				Player player = event.getPlayer();
-				long ticks = player.getAliveTicks() - player.getTag(RIPTIDE_START);
-				AtomicBoolean stopRiptide = new AtomicBoolean(ticks >= 20);
+                ViewUtil.viewersAndSelf(player).playSound(Sound.sound(
+                        soundEvent, Sound.Source.PLAYER,
+                        1.0F, 1.0F
+                ), trident);
+                if (player.getGameMode() != GameMode.CREATIVE) player.setItemInHand(event.getHand(), thrownStack.consume(1));
+            }
+        });
 
-				assert player.getInstance() != null;
-				player.getInstance().getEntityTracker().nearbyEntities(player.getPosition(), 5,
-						EntityTracker.Target.ENTITIES, entity -> {
-							if (entity != player && !stopRiptide.get() && entity instanceof LivingEntity
-									&& entity.getBoundingBox().intersectEntity(entity.getPosition(), player)) {
-								stopRiptide.set(true);
+        node.addListener(PlayerTickEvent.class, event -> {
+            if (event.getPlayer().getPlayerMeta().isInRiptideSpinAttack()) {
+                var player = event.getPlayer();
+                var ticks = player.getAliveTicks() - player.getTag(RIPTIDE_START);
+                var stopRiptide = new AtomicBoolean(ticks >= 20);
 
-								this.applyRiptideHit(player, (LivingEntity) entity);
-								if (player instanceof CombatPlayer combatPlayer)
-									combatPlayer.setVelocityNoUpdate(velocity -> velocity.mul(-0.2));
-							}
-						});
+                assert player.getInstance() != null;
+                player.getInstance().getEntityTracker().nearbyEntities(player.getPosition(), 5,
+                        EntityTracker.Target.ENTITIES, entity -> {
+                            if (entity != player && !stopRiptide.get() && entity instanceof LivingEntity
+                                    && entity.getBoundingBox().intersectEntity(entity.getPosition(), player)) {
+                                stopRiptide.set(true);
 
-				if (player instanceof CombatPlayer combatPlayer && combatPlayer.hasHorizontalCollision()) {
-					stopRiptide.set(true);
-				}
+                                this.applyRiptideHit(player, (LivingEntity) entity);
+                                if (player instanceof CombatPlayer combatPlayer)
+                                    combatPlayer.setVelocityNoUpdate(velocity -> velocity.mul(-0.2));
+                            }
+                        });
 
-				if (stopRiptide.get())
-					event.getPlayer().refreshActiveHand(false, false, false);
-			}
-		});
-	}
+                if (player instanceof CombatPlayer combatPlayer && combatPlayer.hasHorizontalCollision()) {
+                    stopRiptide.set(true);
+                }
 
-	private void applyRiptideHit(Player player, LivingEntity target) {
-		var offHand = Boolean.TRUE.equals(player.getTag(RIPTIDE_OFF_HAND));
-		var hand = offHand ? PlayerHand.OFF : PlayerHand.MAIN;
-		var slot = offHand ? EquipmentSlot.OFF_HAND : EquipmentSlot.MAIN_HAND;
-		var stack = player.getTag(RIPTIDE_ITEM);
-		if (stack == null) {
-			stack = player.getItemInHand(hand);
-		}
+                if (stopRiptide.get())
+                    event.getPlayer().refreshActiveHand(false, false, false);
+            }
+        });
+    }
 
-		var cooldownProgress = this.attackCooldownFeature.getAttackCooldownProgress(player);
-		this.attackCooldownFeature.resetCooldownProgress(player);
+    private void applyRiptideHit(Player player, LivingEntity target) {
+        var offHand = Boolean.TRUE.equals(player.getTag(RIPTIDE_OFF_HAND));
+        var hand = offHand ? PlayerHand.OFF : PlayerHand.MAIN;
+        var slot = offHand ? EquipmentSlot.OFF_HAND : EquipmentSlot.MAIN_HAND;
+        var stack = player.getTag(RIPTIDE_ITEM);
+        if (stack == null) {
+            stack = player.getItemInHand(hand);
+        }
 
-		var baseDamage = RIPTIDE_SPIN_ATTACK_DAMAGE * (0.2F + (float) (cooldownProgress * cooldownProgress) * 0.8F);
-		var magicalDamage = this.enchantmentFeature.getAttackDamage(stack, EntityGroup.ofEntity(target)) * (float) cooldownProgress;
-		var damage = baseDamage + magicalDamage;
-		var damaged = target.damage(new Damage(DamageType.PLAYER_ATTACK, player, player, null, damage));
-		if (!damaged) return;
+        var cooldownProgress = this.attackCooldownFeature.getAttackCooldownProgress(player);
+        this.attackCooldownFeature.resetCooldownProgress(player);
 
-		this.enchantmentFeature.onUserDamaged(target, player);
-		this.enchantmentFeature.onTargetDamaged(player, target, stack);
-		var weapon = stack.get(DataComponents.WEAPON);
-		if (weapon != null) {
-			this.itemDamageFeature.damageEquipment(player, slot, weapon.itemDamagePerAttack());
-		}
+        var baseDamage = RIPTIDE_SPIN_ATTACK_DAMAGE * (0.2F + (float) (cooldownProgress * cooldownProgress) * 0.8F);
+        var magicalDamage = this.enchantmentFeature.getAttackDamage(stack, target) * (float) cooldownProgress;
+        var damage = baseDamage + magicalDamage;
+        var damaged = target.damage(new Damage(DamageType.PLAYER_ATTACK, player, player, null, damage));
+        if (!damaged) return;
 
-		this.exhaustionFeature.addAttackExhaustion(player);
-	}
+        this.enchantmentFeature.onUserDamaged(target, player);
+        this.enchantmentFeature.onTargetDamaged(player, target, stack);
+        var weapon = stack.get(DataComponents.WEAPON);
+        if (weapon != null) {
+            this.itemDamageFeature.damageEquipment(player, slot, weapon.itemDamagePerAttack());
+        }
 
-	@Override
-	public void applyRiptide(Player player, int level) {
-		var strength = (float) (3.0 * ((1.0 + level) / 4.0));
-		var soundEvent = level >= 3 ? SoundEvent.ITEM_TRIDENT_RIPTIDE_3 :
-				(level == 2 ? SoundEvent.ITEM_TRIDENT_RIPTIDE_2 : SoundEvent.ITEM_TRIDENT_RIPTIDE_1);
-		this.applyRiptide(player, strength, soundEvent);
-	}
+        this.exhaustionFeature.addAttackExhaustion(player);
+    }
 
-	private void applyRiptide(Player player, float strength, SoundEvent soundEvent) {
-		float yaw = player.getPosition().yaw();
-		float pitch = player.getPosition().pitch();
-		double h = -Math.sin(Math.toRadians(yaw)) * Math.cos(Math.toRadians(pitch));
-		double k = -Math.sin(Math.toRadians(pitch));
-		double l = Math.cos(Math.toRadians(yaw)) * Math.cos(Math.toRadians(pitch));
-		double length = Math.sqrt(h * h + k * k + l * l);
+    @Override
+    public void applyRiptide(Player player, int level) {
+        var strength = (float) (3.0 * ((1.0 + level) / 4.0));
+        var soundEvent = level >= 3 ? SoundEvent.ITEM_TRIDENT_RIPTIDE_3 :
+                (level == 2 ? SoundEvent.ITEM_TRIDENT_RIPTIDE_2 : SoundEvent.ITEM_TRIDENT_RIPTIDE_1);
+        this.applyRiptide(player, strength, soundEvent);
+    }
 
-		player.setTag(RIPTIDE_START, player.getAliveTicks());
-		player.setVelocity(player.getVelocity().add(new Vec(
-				h * (strength / length),
-				k * (strength / length),
-				l * (strength / length)
-		).mul(ServerFlag.SERVER_TICKS_PER_SECOND)));
+    private void applyRiptide(Player player, float strength, SoundEvent soundEvent) {
+        var yaw = player.getPosition().yaw();
+        var pitch = player.getPosition().pitch();
+        var directionX = -Math.sin(Math.toRadians(yaw)) * Math.cos(Math.toRadians(pitch));
+        var directionY = -Math.sin(Math.toRadians(pitch));
+        var directionZ = Math.cos(Math.toRadians(yaw)) * Math.cos(Math.toRadians(pitch));
+        var length = Math.sqrt(directionX * directionX + directionY * directionY + directionZ * directionZ);
 
-		if (player.isOnGround()) {
-			player.refreshPosition(player.getPosition().add(0.0, 1.1999999, 0.0));
-		}
+        player.setTag(RIPTIDE_START, player.getAliveTicks());
+        player.setVelocity(player.getVelocity().add(new Vec(
+                directionX * (strength / length),
+                directionY * (strength / length),
+                directionZ * (strength / length)
+        ).mul(ServerFlag.SERVER_TICKS_PER_SECOND)));
 
-		ViewUtil.viewersAndSelf(player).playSound(Sound.sound(
-				soundEvent, Sound.Source.PLAYER,
-				1.0f, 1.0f
-		), player);
+        if (player.isOnGround()) {
+            player.refreshPosition(player.getPosition().add(0.0, 1.1999999, 0.0));
+        }
 
-		player.refreshActiveHand(false, false, true);
-	}
+        ViewUtil.viewersAndSelf(player).playSound(Sound.sound(
+                soundEvent, Sound.Source.PLAYER,
+                1.0F, 1.0F
+        ), player);
 
-	private float getRiptideStrength(ItemStack stack) {
-		return Math.max(0.0F, this.enchantmentFeature.modifyValue(
-				stack, EffectComponent.TRIDENT_SPIN_ATTACK_STRENGTH, 0.0F
-		));
-	}
+        player.refreshActiveHand(false, false, true);
+    }
 
-	private SoundEvent getTridentSound(ItemStack stack) {
-		return this.enchantmentFeature.pickHighestLevel(
-				stack, EffectComponent.TRIDENT_SOUND, SoundEvent.ITEM_TRIDENT_THROW
-		);
-	}
+    private float getRiptideStrength(ItemStack stack) {
+        return Math.max(0.0F, this.enchantmentFeature.modifyValue(
+                stack, EffectComponent.TRIDENT_SPIN_ATTACK_STRENGTH, 0.0F
+        ));
+    }
 
-	private boolean isInWaterOrRain(Player player) {
-		return FluidUtil.isTouchingWater(player) || FluidUtil.isInRain(player);
-	}
+    private SoundEvent getTridentSound(ItemStack stack) {
+        return this.enchantmentFeature.pickHighestLevel(
+                stack, EffectComponent.TRIDENT_SOUND, SoundEvent.ITEM_TRIDENT_THROW
+        );
+    }
 
-	private boolean nextDamageWillBreak(ItemStack stack) {
-		if (stack.has(DataComponents.UNBREAKABLE)) return false;
+    private boolean isInWaterOrRain(Player player) {
+        return FluidUtil.isTouchingWater(player) || FluidUtil.isInRain(player);
+    }
 
-		var maxDamage = stack.get(DataComponents.MAX_DAMAGE, 0);
+    private boolean nextDamageWillBreak(ItemStack stack) {
+        if (stack.has(DataComponents.UNBREAKABLE)) return false;
 
-		if (maxDamage <= 0) return false;
+        var maxDamage = stack.get(DataComponents.MAX_DAMAGE, 0);
 
-		return stack.get(DataComponents.DAMAGE, 0) + 1 >= maxDamage;
-	}
+        if (maxDamage <= 0) return false;
+
+        return stack.get(DataComponents.DAMAGE, 0) + 1 >= maxDamage;
+    }
 }

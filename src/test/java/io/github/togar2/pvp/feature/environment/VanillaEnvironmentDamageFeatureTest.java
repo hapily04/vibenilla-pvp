@@ -10,12 +10,18 @@ import net.minestom.server.instance.block.Block;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
 import net.minestom.server.potion.PotionEffect;
+import net.minestom.server.entity.EntityType;
+import net.minestom.server.entity.LivingEntity;
+import net.minestom.server.event.EventFilter;
+import net.minestom.server.event.entity.EntityDamageEvent;
+import net.minestom.server.entity.GameMode;
 import net.minestom.testing.Env;
 import net.minestom.testing.EnvTest;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @EnvTest
@@ -55,6 +61,94 @@ public final class VanillaEnvironmentDamageFeatureTest {
             env.tick();
 
             assertFalse(player.hasEffect(PotionEffect.WATER_BREATHING));
+        } finally {
+            MinecraftServer.getGlobalEventHandler().removeChild(node);
+        }
+    }
+
+    @Test
+    public void burningDealsDamageEverySecondFromIgnition(Env env) {
+        var node = this.addEnvironmentFeature();
+
+        try {
+            var instance = env.createFlatInstance();
+            var entity = new LivingEntity(EntityType.ZOMBIE);
+            entity.setInstance(instance, new Pos(8.0, 41.0, 8.0)).join();
+            var damages = env.trackEvent(EntityDamageEvent.class, EventFilter.ENTITY, entity);
+
+            entity.setHealth(20.0F);
+            entity.setFireTicks(80);
+            for (var tick = 0; tick < 80; tick++) env.tick();
+
+            damages.assertCount(4);
+        } finally {
+            MinecraftServer.getGlobalEventHandler().removeChild(node);
+        }
+    }
+
+    @Test
+    public void fireBesideTheFeetIgnitesThePlayer(Env env) {
+        var node = this.addEnvironmentFeature();
+
+        try {
+            var instance = env.createFlatInstance();
+            instance.setBlock(9, 40, 8, Block.FIRE);
+            var player = env.createPlayer(instance, new Pos(8.8, 40.0, 8.5));
+            player.setGameMode(GameMode.SURVIVAL);
+
+            env.tick();
+
+            assertTrue(player.isOnFire());
+            assertTrue(player.getHealth() < 20.0F);
+        } finally {
+            MinecraftServer.getGlobalEventHandler().removeChild(node);
+        }
+    }
+
+    @Test
+    public void lavaBesideTheFeetBurnsThePlayer(Env env) {
+        var node = this.addEnvironmentFeature();
+
+        try {
+            var instance = env.createFlatInstance();
+            instance.setBlock(9, 40, 8, Block.LAVA);
+            var player = env.createPlayer(instance, new Pos(8.8, 40.0, 8.5));
+            player.setGameMode(GameMode.SURVIVAL);
+
+            env.tick();
+
+            assertTrue(player.isOnFire());
+            assertTrue(player.getHealth() <= 16.0F);
+        } finally {
+            MinecraftServer.getGlobalEventHandler().removeChild(node);
+        }
+    }
+
+    @Test
+    public void suffocationRequiresAFullSuffocatingBlock(Env env) {
+        var node = this.addEnvironmentFeature();
+
+        try {
+            var instance = env.createFlatInstance();
+            var entity = new LivingEntity(EntityType.ZOMBIE);
+            entity.setInstance(instance, new Pos(8.0, 41.0, 8.0)).join();
+            entity.setHealth(20.0F);
+
+            instance.setBlock(8, 42, 8, Block.GLASS);
+            env.tick();
+            assertEquals(20.0F, entity.getHealth());
+
+            instance.setBlock(8, 42, 8, Block.OAK_LEAVES);
+            env.tick();
+            assertEquals(20.0F, entity.getHealth());
+
+            instance.setBlock(8, 42, 8, Block.OAK_SLAB);
+            env.tick();
+            assertEquals(20.0F, entity.getHealth());
+
+            instance.setBlock(8, 42, 8, Block.STONE);
+            env.tick();
+            assertEquals(19.0F, entity.getHealth());
         } finally {
             MinecraftServer.getGlobalEventHandler().removeChild(node);
         }

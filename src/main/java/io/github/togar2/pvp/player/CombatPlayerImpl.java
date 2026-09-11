@@ -1,5 +1,6 @@
 package io.github.togar2.pvp.player;
 
+import io.github.togar2.pvp.feature.state.VanillaPlayerStateFeature;
 import io.github.togar2.pvp.utils.BlockUtil;
 import io.github.togar2.pvp.utils.ChunkBlockGetter;
 import io.github.togar2.pvp.utils.CollisionUtil;
@@ -30,265 +31,269 @@ import org.jetbrains.annotations.Nullable;
 import java.util.function.Function;
 
 public class CombatPlayerImpl extends Player implements CombatPlayer {
-	private boolean velocityUpdate = false;
-	private boolean horizontalCollision = false;
-	private PhysicsResult previousPhysicsResult = null;
-	private Vec stuckSpeedMultiplier = Vec.ZERO;
+    private boolean velocityUpdate = false;
+    private boolean horizontalCollision = false;
+    private PhysicsResult previousPhysicsResult = null;
+    private Vec stuckSpeedMultiplier = Vec.ZERO;
 
-	public CombatPlayerImpl(@NotNull PlayerConnection playerConnection, GameProfile profile) {
-		super(playerConnection, profile);
-	}
+    public CombatPlayerImpl(@NotNull PlayerConnection playerConnection, GameProfile profile) {
+        super(playerConnection, profile);
+    }
 
-	@Override
-	public void setVelocity(@NotNull Vec velocity) {
-		EntityVelocityEvent entityVelocityEvent = new EntityVelocityEvent(this, velocity);
-		EventDispatcher.callCancellable(entityVelocityEvent, () -> {
-			this.velocity = entityVelocityEvent.getVelocity();
+    @Override
+    public void setVelocity(@NotNull Vec velocity) {
+        var entityVelocityEvent = new EntityVelocityEvent(this, velocity);
+        EventDispatcher.callCancellable(entityVelocityEvent, () -> {
+            this.velocity = entityVelocityEvent.getVelocity();
             this.velocityUpdate = true;
-		});
-	}
+        });
+    }
 
-	@Override
-	public void setVelocityNoUpdate(Function<Vec, Vec> function) {
+    @Override
+    public void setVelocityNoUpdate(Function<Vec, Vec> function) {
         this.velocity = function.apply(this.velocity);
-	}
+    }
 
-	@Override
-	public void sendImmediateVelocityUpdate() {
-		if (this.velocityUpdate) {
+    @Override
+    public void sendImmediateVelocityUpdate() {
+        if (this.velocityUpdate) {
             this.velocityUpdate = false;
             this.sendPacketToViewersAndSelf(this.getVelocityPacket());
-		}
-	}
+        }
+    }
 
-	@Override
-	public boolean hasHorizontalCollision() {
-		return this.horizontalCollision;
-	}
+    @Override
+    public boolean hasHorizontalCollision() {
+        return this.horizontalCollision;
+    }
 
-	public boolean isOnGroundAfterTicks(int ticks) {
-		if (this.vehicle != null) return false;
+    public boolean isOnGroundAfterTicks(int ticks) {
+        if (this.vehicle != null) return false;
 
-		final double tps = ServerFlag.SERVER_TICKS_PER_SECOND;
-		Vec velocity = this.velocity.div(tps);
-		Pos position = this.position;
+        var ticksPerSecond = ServerFlag.SERVER_TICKS_PER_SECOND;
+        var velocity = this.velocity.div(ticksPerSecond);
+        var position = this.position;
 
-		// Slow falling effect
-		Aerodynamics aerodynamics = this.getAerodynamics();
-		if (velocity.y() < 0 && this.hasEffect(PotionEffect.SLOW_FALLING))
-			aerodynamics = aerodynamics.withGravity(0.01);
+        var knownMovement = this.getTag(VanillaPlayerStateFeature.KNOWN_MOVEMENT);
+        if (knownMovement != null && knownMovement.lengthSquared() > velocity.lengthSquared()) velocity = knownMovement;
 
-		// Do movementTick() calculations for the given amount of ticks
-		var prevPhysicsResult = this.previousPhysicsResult;
-		var stuckSpeedMultiplier = this.stuckSpeedMultiplier;
-		for (var tick = 0; tick < ticks; tick++) {
-			var blockGetter = new ChunkBlockGetter(this.instance, this.currentChunk, Block.STONE);
-			var movementResult = this.simulateMovement(position, velocity, stuckSpeedMultiplier,
-					aerodynamics, this.onGround, blockGetter, prevPhysicsResult);
-			var physicsResult = movementResult.physicsResult();
-			prevPhysicsResult = physicsResult;
-			stuckSpeedMultiplier = movementResult.stuckSpeedMultiplier();
+        var aerodynamics = this.getAerodynamics();
+        if (velocity.y() < 0 && this.hasEffect(PotionEffect.SLOW_FALLING))
+            aerodynamics = aerodynamics.withGravity(0.01);
 
-			if (physicsResult.isOnGround()) return true;
+        var prevPhysicsResult = this.previousPhysicsResult;
+        var stuckSpeedMultiplier = this.stuckSpeedMultiplier;
+        for (var tick = 0; tick < ticks; tick++) {
+            var blockGetter = new ChunkBlockGetter(this.instance, this.currentChunk, Block.STONE);
+            var movementResult = this.simulateMovement(position, velocity, stuckSpeedMultiplier,
+                    aerodynamics, this.onGround, blockGetter, prevPhysicsResult);
+            var physicsResult = movementResult.physicsResult();
+            prevPhysicsResult = physicsResult;
+            stuckSpeedMultiplier = movementResult.stuckSpeedMultiplier();
 
-			velocity = physicsResult.newVelocity();
-			position = physicsResult.newPosition();
+            if (physicsResult.isOnGround()) return true;
 
-			// Levitation effect
-			TimedPotion levitation = this.getEffect(PotionEffect.LEVITATION);
-			if (levitation != null) {
-				velocity = velocity.withY(
-						((0.05 * (double) (levitation.potion().amplifier() + 1) - (velocity.y())) * 0.2)
-				);
-			}
-		}
+            velocity = physicsResult.newVelocity();
+            position = physicsResult.newPosition();
 
-		return false;
-	}
+            var levitation = this.getEffect(PotionEffect.LEVITATION);
+            if (levitation != null) {
+                velocity = velocity.withY(
+                        ((0.05 * (double) (levitation.potion().amplifier() + 1) - (velocity.y())) * 0.2)
+                );
+            }
+        }
 
-	@Override
-	protected void movementTick() {
-		this.gravityTickCount = this.onGround ? 0 : this.gravityTickCount + 1;
-		this.horizontalCollision = false;
-		if (this.vehicle != null) return;
+        return false;
+    }
 
-		final double tps = ServerFlag.SERVER_TICKS_PER_SECOND;
+    @Override
+    protected void movementTick() {
+        this.gravityTickCount = this.onGround ? 0 : this.gravityTickCount + 1;
+        this.horizontalCollision = false;
+        if (this.vehicle != null) return;
 
-		// Slow falling effect
-		Aerodynamics aerodynamics = this.getAerodynamics();
-		if (this.velocity.y() < 0 && this.hasEffect(PotionEffect.SLOW_FALLING))
-			aerodynamics = aerodynamics.withGravity(0.01);
+        var ticksPerSecond = ServerFlag.SERVER_TICKS_PER_SECOND;
 
-		var blockGetter = new ChunkBlockGetter(this.instance, this.currentChunk, Block.STONE);
-		var movementResult = this.simulateMovement(this.position, this.velocity.div(tps), this.stuckSpeedMultiplier,
-				aerodynamics, this.onGround, blockGetter, this.previousPhysicsResult);
-		var physicsResult = movementResult.physicsResult();
-		this.previousPhysicsResult = physicsResult;
-		this.stuckSpeedMultiplier = movementResult.stuckSpeedMultiplier();
+        var aerodynamics = this.getAerodynamics();
+        if (this.velocity.y() < 0 && this.hasEffect(PotionEffect.SLOW_FALLING))
+            aerodynamics = aerodynamics.withGravity(0.01);
 
-		var finalChunk = this.instance.getChunkAt(physicsResult.newPosition());
-		if (finalChunk == null || !finalChunk.isLoaded()) return;
+        var blockGetter = new ChunkBlockGetter(this.instance, this.currentChunk, Block.STONE);
+        var movementResult = this.simulateMovement(this.position, this.velocity.div(ticksPerSecond), this.stuckSpeedMultiplier,
+                aerodynamics, this.onGround, blockGetter, this.previousPhysicsResult);
+        var physicsResult = movementResult.physicsResult();
+        this.previousPhysicsResult = physicsResult;
+        this.stuckSpeedMultiplier = movementResult.stuckSpeedMultiplier();
 
-		this.horizontalCollision = physicsResult.collisionX() || physicsResult.collisionZ();
-		var oldHorizontalSpeed = this.velocity.div(tps).withY(0.0).length();
-		var newHorizontalSpeed = physicsResult.newVelocity().withY(0.0).length();
-        this.velocity = physicsResult.newVelocity().mul(tps);
-		//onGround = physicsResult.isOnGround();
+        var finalChunk = this.instance.getChunkAt(physicsResult.newPosition());
+        if (finalChunk == null || !finalChunk.isLoaded()) return;
 
-		this.handleFallFlyingCollision(physicsResult, oldHorizontalSpeed, newHorizontalSpeed);
+        this.horizontalCollision = physicsResult.collisionX() || physicsResult.collisionZ();
+        var oldHorizontalSpeed = this.velocity.div(ticksPerSecond).withY(0.0).length();
+        var newHorizontalSpeed = physicsResult.newVelocity().withY(0.0).length();
+        this.velocity = physicsResult.newVelocity().mul(ticksPerSecond);
 
-		// Levitation effect
-		TimedPotion levitation = this.getEffect(PotionEffect.LEVITATION);
-		if (levitation != null) {
+        this.handleFallFlyingCollision(physicsResult, oldHorizontalSpeed, newHorizontalSpeed);
+
+        var levitation = this.getEffect(PotionEffect.LEVITATION);
+        if (levitation != null) {
             this.velocity = this.velocity.withY(
-					((0.05 * (double)
-							(levitation.potion().amplifier() + 1)
-							- (this.velocity.y() / tps)) * 0.2) * tps
-			);
-		}
+                    ((0.05 * (double)
+                            (levitation.potion().amplifier() + 1)
+                            - (this.velocity.y() / ticksPerSecond)) * 0.2) * ticksPerSecond
+            );
+        }
 
-		//TODO
-		//if (!PlayerUtils.isSocketClient(this)) {
-		//	refreshPosition(physicsResult.newPosition(), true, true);
-		//}
         this.sendImmediateVelocityUpdate();
-	}
+    }
 
-	private record MovementResult(PhysicsResult physicsResult, Vec stuckSpeedMultiplier) {}
+    private record MovementResult(PhysicsResult physicsResult, Vec stuckSpeedMultiplier) {}
 
-	private MovementResult simulateMovement(Pos position, Vec velocity, Vec stuckSpeedMultiplier,
-	                                        Aerodynamics aerodynamics, boolean onGround,
-	                                        Block.Getter blockGetter, @Nullable PhysicsResult previousPhysicsResult) {
-		var fluidHeights = this.isFlying()
-				? new FluidHeights(0.0, 0.0) : FluidUtil.getFluidHeights(blockGetter, position, this.boundingBox);
-		var gravity = this.hasNoGravity() ? 0.0 : aerodynamics.gravity();
-		var isFalling = velocity.y() <= 0.0;
+    private MovementResult simulateMovement(Pos position, Vec velocity, Vec stuckSpeedMultiplier,
+                                            Aerodynamics aerodynamics, boolean onGround,
+                                            Block.Getter blockGetter, @Nullable PhysicsResult previousPhysicsResult) {
+        var fluidHeights = this.isFlying()
+                ? new FluidHeights(0.0, 0.0) : FluidUtil.getFluidHeights(blockGetter, position, this.boundingBox);
+        var gravity = this.hasNoGravity() ? 0.0 : aerodynamics.gravity();
+        var isFalling = velocity.y() <= 0.0;
 
-		var stuck = stuckSpeedMultiplier.lengthSquared() > 1.0E-7;
-		var delta = stuck ? velocity.mul(stuckSpeedMultiplier) : velocity;
+        var stuck = stuckSpeedMultiplier.lengthSquared() > 1.0E-7;
+        var delta = stuck ? velocity.mul(stuckSpeedMultiplier) : velocity;
 
-		var physicsResult = this.hasPhysics
-				? CollisionUtil.handlePhysics(blockGetter, this.boundingBox, position, delta, previousPhysicsResult, false)
-				: CollisionUtil.blocklessCollision(position, delta);
+        var gliding = this.isFlyingWithElytra() && fluidHeights.water() <= 0.0 && fluidHeights.lava() <= 0.0
+                && !BlockUtil.isClimbable(blockGetter, position);
+        if (gliding) delta = this.updateFallFlyingMovement(delta, gravity);
 
-		var newPosition = CollisionUtil.applyWorldBorder(this.instance.getWorldBorder(),
-				position, physicsResult.newPosition());
-		var movedVelocity = stuck ? Vec.ZERO : physicsResult.newVelocity();
+        var physicsResult = this.hasPhysics
+                ? CollisionUtil.handlePhysics(blockGetter, this.boundingBox, position, delta, previousPhysicsResult, false)
+                : CollisionUtil.blocklessCollision(position, delta);
 
-		Vec newVelocity;
+        var newPosition = CollisionUtil.applyWorldBorder(this.instance.getWorldBorder(),
+                position, physicsResult.newPosition());
+        var movedVelocity = stuck ? Vec.ZERO : physicsResult.newVelocity();
 
-		if (fluidHeights.water() > 0.0) {
-			var collidedHorizontally = physicsResult.collisionX() || physicsResult.collisionZ();
-			var climbable = collidedHorizontally && BlockUtil.isClimbable(blockGetter, newPosition);
-			newVelocity = this.travelInWater(movedVelocity, gravity, isFalling, onGround, climbable);
-		} else if (fluidHeights.lava() > 0.0) {
-			newVelocity = this.travelInLava(movedVelocity, gravity, isFalling, fluidHeights.lava());
-		} else {
-			newVelocity = PhysicsUtils.updateVelocity(newPosition, movedVelocity, blockGetter, aerodynamics,
-					!newPosition.samePoint(position), this.isFlying(), onGround, this.hasNoGravity());
-		}
+        Vec newVelocity;
 
-		var stillCached = physicsResult.cached() && newVelocity.samePoint(physicsResult.newVelocity())
-				&& newPosition.samePoint(physicsResult.newPosition());
-		var newPhysicsResult = new PhysicsResult(newPosition, newVelocity, physicsResult.isOnGround(),
-				physicsResult.collisionX(), physicsResult.collisionY(), physicsResult.collisionZ(),
-				physicsResult.originalDelta(), physicsResult.collisionPoints(), physicsResult.collisionShapes(),
-				physicsResult.collisionShapePositions(), physicsResult.hasCollision(), physicsResult.sweepResult(), stillCached);
+        if (fluidHeights.water() > 0.0) {
+            var collidedHorizontally = physicsResult.collisionX() || physicsResult.collisionZ();
+            var climbable = collidedHorizontally && BlockUtil.isClimbable(blockGetter, newPosition);
+            newVelocity = this.travelInWater(movedVelocity, gravity, isFalling, onGround, climbable);
+        } else if (fluidHeights.lava() > 0.0) {
+            newVelocity = this.travelInLava(movedVelocity, gravity, isFalling, fluidHeights.lava());
+        } else if (gliding) {
+            newVelocity = movedVelocity;
+        } else {
+            newVelocity = PhysicsUtils.updateVelocity(newPosition, movedVelocity, blockGetter, aerodynamics,
+                    !newPosition.samePoint(position), this.isFlying(), onGround, this.hasNoGravity());
+        }
 
-		return new MovementResult(newPhysicsResult, this.collectStuckSpeedMultiplier(blockGetter, newPosition));
-	}
+        if (physicsResult == previousPhysicsResult && newVelocity.samePoint(physicsResult.newVelocity())
+                && newPosition.samePoint(physicsResult.newPosition())) {
+            return new MovementResult(physicsResult, this.collectStuckSpeedMultiplier(blockGetter, newPosition));
+        }
 
-	private Vec travelInWater(Vec movement, double gravity, boolean isFalling, boolean onGround, boolean climbable) {
-		var slowDown = this.isSprinting() ? 0.9F : 0.8F;
-		var waterWalker = (float) this.getAttributeValue(Attribute.WATER_MOVEMENT_EFFICIENCY);
+        var newPhysicsResult = new PhysicsResult(newPosition, newVelocity, physicsResult.isOnGround(),
+                physicsResult.collisionX(), physicsResult.collisionY(), physicsResult.collisionZ(),
+                physicsResult.originalDelta(), physicsResult.collisionPoints(), physicsResult.collisionShapes(),
+                physicsResult.collisionShapePositions(), physicsResult.hasCollision(), physicsResult.collisionFraction());
 
-		if (!onGround) waterWalker *= 0.5F;
+        return new MovementResult(newPhysicsResult, this.collectStuckSpeedMultiplier(blockGetter, newPosition));
+    }
 
-		if (waterWalker > 0.0F) slowDown += (0.54600006F - slowDown) * waterWalker;
+    private Vec updateFallFlyingMovement(Vec movement, double gravity) {
+        var look = this.position.direction();
+        var lean = Math.toRadians(this.position.pitch());
+        var lookHorizontal = Math.sqrt(look.x() * look.x() + look.z() * look.z());
+        var moveHorizontal = Math.sqrt(movement.x() * movement.x() + movement.z() * movement.z());
+        var lift = Math.cos(lean) * Math.cos(lean);
 
-		if (this.hasEffect(PotionEffect.DOLPHINS_GRACE)) slowDown = 0.96F;
+        movement = movement.add(0.0, gravity * (-1.0 + lift * 0.75), 0.0);
+        if (movement.y() < 0.0 && lookHorizontal > 0.0) {
+            var convert = movement.y() * -0.1 * lift;
+            movement = movement.add(look.x() * convert / lookHorizontal, convert, look.z() * convert / lookHorizontal);
+        }
 
-		if (climbable) movement = movement.withY(0.2);
+        if (lean < 0.0 && lookHorizontal > 0.0) {
+            var convert = moveHorizontal * -Math.sin(lean) * 0.04;
+            movement = movement.add(-look.x() * convert / lookHorizontal, convert * 3.2, -look.z() * convert / lookHorizontal);
+        }
 
-		return this.applyFluidFallingAdjustment(movement.mul(slowDown, 0.8F, slowDown), gravity, isFalling);
-	}
+        if (lookHorizontal > 0.0) {
+            movement = movement.add(
+                    (look.x() / lookHorizontal * moveHorizontal - movement.x()) * 0.1, 0.0,
+                    (look.z() / lookHorizontal * moveHorizontal - movement.z()) * 0.1
+            );
+        }
 
-	private Vec travelInLava(Vec movement, double gravity, boolean isFalling, double lavaHeight) {
-		var jumpThreshold = this.getEyeHeight() < 0.4 ? 0.0 : 0.4;
+        return movement.mul(0.99F, 0.98F, 0.99F);
+    }
 
-		if (lavaHeight <= jumpThreshold) {
-			movement = this.applyFluidFallingAdjustment(movement.mul(0.5, 0.8F, 0.5), gravity, isFalling);
-		} else {
-			movement = movement.mul(0.5);
-		}
+    private Vec travelInWater(Vec movement, double gravity, boolean isFalling, boolean onGround, boolean climbable) {
+        var slowDown = this.isSprinting() ? 0.9F : 0.8F;
+        var waterWalker = (float) this.getAttributeValue(Attribute.WATER_MOVEMENT_EFFICIENCY);
 
-		if (gravity != 0.0) movement = movement.sub(0.0, gravity / 4.0, 0.0);
+        if (!onGround) waterWalker *= 0.5F;
 
-		return movement;
-	}
+        if (waterWalker > 0.0F) slowDown += (0.54600006F - slowDown) * waterWalker;
 
-	private Vec applyFluidFallingAdjustment(Vec movement, double gravity, boolean isFalling) {
-		if (gravity == 0.0 || this.isSprinting()) return movement;
+        if (this.hasEffect(PotionEffect.DOLPHINS_GRACE)) slowDown = 0.96F;
 
-		double verticalMovement;
+        if (climbable) movement = movement.withY(0.2);
 
-		if (isFalling && Math.abs(movement.y() - 0.005) >= 0.003
-				&& Math.abs(movement.y() - gravity / 16.0) < 0.003) {
-			verticalMovement = -0.003;
-		} else {
-			verticalMovement = movement.y() - gravity / 16.0;
-		}
+        return this.applyFluidFallingAdjustment(movement.mul(slowDown, 0.8F, slowDown), gravity, isFalling);
+    }
 
-		return movement.withY(verticalMovement);
-	}
+    private Vec travelInLava(Vec movement, double gravity, boolean isFalling, double lavaHeight) {
+        var jumpThreshold = this.getEyeHeight() < 0.4 ? 0.0 : 0.4;
 
-	private Vec collectStuckSpeedMultiplier(Block.Getter blockGetter, Pos position) {
-		if (this.isFlying()) return Vec.ZERO;
+        if (lavaHeight <= jumpThreshold) {
+            movement = this.applyFluidFallingAdjustment(movement.mul(0.5, 0.8F, 0.5), gravity, isFalling);
+        } else {
+            movement = movement.mul(0.5);
+        }
 
-		var startX = (int) Math.floor(position.x() + this.boundingBox.minX() + 1.0E-5);
-		var startY = (int) Math.floor(position.y() + this.boundingBox.minY() + 1.0E-5);
-		var startZ = (int) Math.floor(position.z() + this.boundingBox.minZ() + 1.0E-5);
-		var endX = (int) Math.ceil(position.x() + this.boundingBox.maxX() - 1.0E-5) - 1;
-		var endY = (int) Math.ceil(position.y() + this.boundingBox.maxY() - 1.0E-5) - 1;
-		var endZ = (int) Math.ceil(position.z() + this.boundingBox.maxZ() - 1.0E-5) - 1;
-		var multiplier = Vec.ZERO;
+        if (gravity != 0.0) movement = movement.sub(0.0, gravity / 4.0, 0.0);
 
-		for (var blockX = startX; blockX <= endX; blockX++) {
-			for (var blockY = startY; blockY <= endY; blockY++) {
-				for (var blockZ = startZ; blockZ <= endZ; blockZ++) {
-					var block = blockGetter.getBlock(blockX, blockY, blockZ);
+        return movement;
+    }
 
-					if (block.compare(Block.COBWEB)) {
-						multiplier = this.hasEffect(PotionEffect.WEAVING)
-								? new Vec(0.5, 0.25, 0.5) : new Vec(0.25, 0.05F, 0.25);
-					} else if (block.compare(Block.POWDER_SNOW)) {
-						if (blockGetter.getBlock(position).compare(Block.POWDER_SNOW))
-							multiplier = new Vec(0.9F, 1.5, 0.9F);
-					} else if (block.compare(Block.SWEET_BERRY_BUSH)) {
-						multiplier = new Vec(0.8F, 0.75, 0.8F);
-					}
-				}
-			}
-		}
+    private Vec applyFluidFallingAdjustment(Vec movement, double gravity, boolean isFalling) {
+        if (gravity == 0.0 || this.isSprinting()) return movement;
 
-		return multiplier;
-	}
+        double verticalMovement;
 
-	private void handleFallFlyingCollision(PhysicsResult physicsResult, double oldHorizontalSpeed, double newHorizontalSpeed) {
-		if (!this.isFlyingWithElytra()) return;
-		if (!physicsResult.collisionX() && !physicsResult.collisionZ()) return;
+        if (isFalling && Math.abs(movement.y() - 0.005) >= 0.003
+                && Math.abs(movement.y() - gravity / 16.0) < 0.003) {
+            verticalMovement = -0.003;
+        } else {
+            verticalMovement = movement.y() - gravity / 16.0;
+        }
 
-		var speedDifference = oldHorizontalSpeed - newHorizontalSpeed;
-		var damage = (float) (speedDifference * 10.0 - 3.0);
-		if (!(damage > 0.0F)) return;
+        return movement.withY(verticalMovement);
+    }
 
-		ViewUtil.viewersAndSelf(this).playSound(Sound.sound(
-				damage > 4.0F ? SoundEvent.ENTITY_PLAYER_BIG_FALL : SoundEvent.ENTITY_PLAYER_SMALL_FALL,
-				Sound.Source.PLAYER,
-				1.0F,
-				1.0F
-		), this);
+    private Vec collectStuckSpeedMultiplier(Block.Getter blockGetter, Pos position) {
+        if (this.isFlying()) return Vec.ZERO;
 
-		this.damage(DamageType.FLY_INTO_WALL, damage);
-	}
+        return BlockUtil.getStuckSpeedMultiplier(blockGetter, position, this.boundingBox, this.hasEffect(PotionEffect.WEAVING));
+    }
+
+    private void handleFallFlyingCollision(PhysicsResult physicsResult, double oldHorizontalSpeed, double newHorizontalSpeed) {
+        if (!this.isFlyingWithElytra()) return;
+        if (!physicsResult.collisionX() && !physicsResult.collisionZ()) return;
+
+        var speedDifference = oldHorizontalSpeed - newHorizontalSpeed;
+        var damage = (float) (speedDifference * 10.0 - 3.0);
+        if (!(damage > 0.0F)) return;
+
+        ViewUtil.viewersAndSelf(this).playSound(Sound.sound(
+                damage > 4.0F ? SoundEvent.ENTITY_PLAYER_BIG_FALL : SoundEvent.ENTITY_PLAYER_SMALL_FALL,
+                Sound.Source.PLAYER,
+                1.0F,
+                1.0F
+        ), this);
+
+        this.damage(DamageType.FLY_INTO_WALL, damage);
+    }
 }

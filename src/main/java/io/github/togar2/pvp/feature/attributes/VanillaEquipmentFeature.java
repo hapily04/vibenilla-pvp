@@ -1,12 +1,10 @@
 package io.github.togar2.pvp.feature.attributes;
 
-import io.github.togar2.pvp.enums.ArmorMaterial;
-import io.github.togar2.pvp.enums.Tool;
+import io.github.togar2.pvp.enchantment.EnchantmentAttributes;
 import io.github.togar2.pvp.feature.FeatureType;
 import io.github.togar2.pvp.feature.RegistrableFeature;
 import io.github.togar2.pvp.feature.config.DefinedFeature;
 import io.github.togar2.pvp.feature.config.FeatureConfiguration;
-import io.github.togar2.pvp.utils.CombatVersion;
 import io.github.togar2.pvp.utils.ViewUtil;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.component.DataComponents;
@@ -32,168 +30,152 @@ import java.util.List;
  * Vanilla implementation of {@link EquipmentFeature}
  */
 public class VanillaEquipmentFeature implements EquipmentFeature, RegistrableFeature {
-	public static final DefinedFeature<VanillaEquipmentFeature> DEFINED = new DefinedFeature<>(
-			FeatureType.EQUIPMENT, VanillaEquipmentFeature::new,
-			FeatureType.VERSION
-	);
+    public static final DefinedFeature<VanillaEquipmentFeature> DEFINED = new DefinedFeature<>(
+            FeatureType.EQUIPMENT, VanillaEquipmentFeature::new
+    );
 
-	private final FeatureConfiguration configuration;
+    public VanillaEquipmentFeature(FeatureConfiguration configuration) {
+    }
 
-	//TODO this probably shouldn't work this way
-	// We probably want to store all the tools & armor separately per DataFeature
-	private CombatVersion version;
+    @Override
+    public void init(EventNode<EntityInstanceEvent> node) {
+        node.addListener(InventoryPreClickEvent.class, this::onInventoryPreClick);
+        node.addListener(EntityEquipEvent.class, this::onEquip);
+        node.addListener(PlayerChangeHeldSlotEvent.class, event -> {
+            var entity = event.getPlayer();
+            var oldItem = entity.getEquipment(EquipmentSlot.MAIN_HAND);
+            var newItem = event.getPlayer().getInventory().getItemStack(event.getNewSlot());
+            EnchantmentAttributes.updateEquipmentAttributes(entity, oldItem, newItem, EquipmentSlot.MAIN_HAND);
+        });
+    }
 
-	public VanillaEquipmentFeature(FeatureConfiguration configuration) {
-		this.configuration = configuration;
-	}
+    private void onInventoryPreClick(InventoryPreClickEvent event) {
+        var player = event.getPlayer();
 
-	@Override
-	public void initDependencies() {
-		this.version = this.configuration.get(FeatureType.VERSION);
-	}
+        if (event.getInventory() != player.getInventory()) return;
 
-	@Override
-	public void init(EventNode<EntityInstanceEvent> node) {
-		node.addListener(InventoryPreClickEvent.class, this::onInventoryPreClick);
-		node.addListener(EntityEquipEvent.class, this::onEquip);
-		node.addListener(PlayerChangeHeldSlotEvent.class, event -> {
-			LivingEntity entity = event.getPlayer();
-			ItemStack newItem = event.getPlayer().getInventory().getItemStack(event.getNewSlot());
-			Tool.updateEquipmentAttributes(entity, entity.getEquipment(EquipmentSlot.MAIN_HAND), newItem, EquipmentSlot.MAIN_HAND, this.version);
-		});
-	}
+        if (this.shouldCancelInvalidArmorPlacement(player, event.getClick())) {
+            event.setCancelled(true);
+            return;
+        }
 
-	private void onInventoryPreClick(InventoryPreClickEvent event) {
-		var player = event.getPlayer();
+        if (player.getGameMode() == GameMode.CREATIVE) return;
 
-		if (event.getInventory() != player.getInventory()) return;
+        if (this.shouldCancelArmorRemoval(player, event.getClick())) {
+            event.setCancelled(true);
+        }
+    }
 
-		if (this.shouldCancelInvalidArmorPlacement(player, event.getClick())) {
-			event.setCancelled(true);
-			return;
-		}
+    private boolean shouldCancelInvalidArmorPlacement(Player player, Click click) {
+        if (click instanceof Click.Left || click instanceof Click.Right) {
+            return this.shouldCancelInvalidArmorSlotPlacement(
+                    click.slot(), player.getInventory().getCursorItem()
+            );
+        }
 
-		if (player.getGameMode() == GameMode.CREATIVE) return;
+        if (click instanceof Click.HotbarSwap hotbarSwap) {
+            var incomingItem = player.getInventory().getItemStack(hotbarSwap.hotbarSlot());
+            return this.shouldCancelInvalidArmorSlotPlacement(hotbarSwap.slot(), incomingItem);
+        }
 
-		if (this.shouldCancelArmorRemoval(player, event.getClick())) {
-			event.setCancelled(true);
-		}
-	}
+        if (click instanceof Click.OffhandSwap offhandSwap) {
+            var incomingItem = player.getInventory().getItemStack(PlayerInventoryUtils.OFFHAND_SLOT);
+            return this.shouldCancelInvalidArmorSlotPlacement(offhandSwap.slot(), incomingItem);
+        }
 
-	private boolean shouldCancelInvalidArmorPlacement(Player player, Click click) {
-		if (click instanceof Click.Left || click instanceof Click.Right) {
-			return this.shouldCancelInvalidArmorSlotPlacement(
-					click.slot(), player.getInventory().getCursorItem()
-			);
-		}
+        if (click instanceof Click.Drag drag) {
+            return this.shouldCancelInvalidArmorSlotDrag(player, drag.slots());
+        }
 
-		if (click instanceof Click.HotbarSwap hotbarSwap) {
-			var incomingItem = player.getInventory().getItemStack(hotbarSwap.hotbarSlot());
-			return this.shouldCancelInvalidArmorSlotPlacement(hotbarSwap.slot(), incomingItem);
-		}
+        return false;
+    }
 
-		if (click instanceof Click.OffhandSwap offhandSwap) {
-			var incomingItem = player.getInventory().getItemStack(PlayerInventoryUtils.OFFHAND_SLOT);
-			return this.shouldCancelInvalidArmorSlotPlacement(offhandSwap.slot(), incomingItem);
-		}
+    private boolean shouldCancelInvalidArmorSlotPlacement(int slot, ItemStack incomingItem) {
+        var armorSlot = this.getArmorSlot(slot);
 
-		if (click instanceof Click.Drag drag) {
-			return this.shouldCancelInvalidArmorSlotDrag(player, drag.slots());
-		}
+        if (armorSlot == null) {
+            return false;
+        }
 
-		return false;
-	}
+        return !incomingItem.isAir() && !this.canPlaceInArmorSlot(incomingItem, armorSlot);
+    }
 
-	private boolean shouldCancelInvalidArmorSlotPlacement(int slot, ItemStack incomingItem) {
-		var armorSlot = this.getArmorSlot(slot);
+    private boolean shouldCancelInvalidArmorSlotDrag(Player player, List<Integer> slots) {
+        var incomingItem = player.getInventory().getCursorItem();
 
-		if (armorSlot == null) {
-			return false;
-		}
+        if (incomingItem.isAir()) {
+            return false;
+        }
 
-		return !incomingItem.isAir() && !this.canPlaceInArmorSlot(incomingItem, armorSlot);
-	}
+        for (var slot : slots) {
+            var armorSlot = this.getArmorSlot(slot);
 
-	private boolean shouldCancelInvalidArmorSlotDrag(Player player, List<Integer> slots) {
-		var incomingItem = player.getInventory().getCursorItem();
+            if (armorSlot == null) {
+                continue;
+            }
 
-		if (incomingItem.isAir()) {
-			return false;
-		}
+            if (!this.canPlaceInArmorSlot(incomingItem, armorSlot)) {
+                return true;
+            }
+        }
 
-		for (var slot : slots) {
-			var armorSlot = this.getArmorSlot(slot);
+        return false;
+    }
 
-			if (armorSlot == null) {
-				continue;
-			}
+    private boolean canPlaceInArmorSlot(ItemStack itemStack, EquipmentSlot slot) {
+        var equippable = itemStack.get(DataComponents.EQUIPPABLE);
 
-			if (!this.canPlaceInArmorSlot(incomingItem, armorSlot)) {
-				return true;
-			}
-		}
+        if (equippable == null) {
+            return false;
+        }
 
-		return false;
-	}
+        var allowedEntities = equippable.allowedEntities();
+        return equippable.slot() == slot
+                && (allowedEntities == null || allowedEntities.contains(EntityType.PLAYER));
+    }
 
-	private boolean canPlaceInArmorSlot(ItemStack itemStack, EquipmentSlot slot) {
-		var equippable = itemStack.get(DataComponents.EQUIPPABLE);
+    private boolean shouldCancelArmorRemoval(Player player, Click click) {
+        var armorSlot = this.getArmorSlot(click.slot());
 
-		if (equippable == null) {
-			return false;
-		}
+        if (armorSlot == null) {
+            return false;
+        }
 
-		var allowedEntities = equippable.allowedEntities();
-		return equippable.slot() == slot
-				&& (allowedEntities == null || allowedEntities.contains(EntityType.PLAYER));
-	}
+        var clickedItem = player.getInventory().getItemStack(click.slot());
+        return clickedItem.has(EffectComponent.PREVENT_ARMOR_CHANGE);
+    }
 
-	private boolean shouldCancelArmorRemoval(Player player, Click click) {
-		var armorSlot = this.getArmorSlot(click.slot());
+    private @Nullable EquipmentSlot getArmorSlot(int slot) {
+        return switch (slot) {
+            case PlayerInventoryUtils.HELMET_SLOT -> EquipmentSlot.HELMET;
+            case PlayerInventoryUtils.CHESTPLATE_SLOT -> EquipmentSlot.CHESTPLATE;
+            case PlayerInventoryUtils.LEGGINGS_SLOT -> EquipmentSlot.LEGGINGS;
+            case PlayerInventoryUtils.BOOTS_SLOT -> EquipmentSlot.BOOTS;
+            default -> null;
+        };
+    }
 
-		if (armorSlot == null) {
-			return false;
-		}
+    protected void onEquip(EntityEquipEvent event) {
+        if (!(event.getEntity() instanceof LivingEntity entity)) return;
 
-		var clickedItem = player.getInventory().getItemStack(click.slot());
-		return clickedItem.has(EffectComponent.PREVENT_ARMOR_CHANGE);
-	}
+        var slot = event.getSlot();
+        EnchantmentAttributes.updateEquipmentAttributes(entity, entity.getEquipment(slot), event.getEquippedItem(), slot);
 
-	private @Nullable EquipmentSlot getArmorSlot(int slot) {
-		return switch (slot) {
-			case PlayerInventoryUtils.HELMET_SLOT -> EquipmentSlot.HELMET;
-			case PlayerInventoryUtils.CHESTPLATE_SLOT -> EquipmentSlot.CHESTPLATE;
-			case PlayerInventoryUtils.LEGGINGS_SLOT -> EquipmentSlot.LEGGINGS;
-			case PlayerInventoryUtils.BOOTS_SLOT -> EquipmentSlot.BOOTS;
-			default -> null;
-		};
-	}
+        this.playEquipSound(entity, entity.getEquipment(slot), event.getEquippedItem(), slot);
+    }
 
-	protected void onEquip(EntityEquipEvent event) {
-		if (!(event.getEntity() instanceof LivingEntity entity)) return;
+    private void playEquipSound(LivingEntity entity, ItemStack oldStack, ItemStack newStack, EquipmentSlot slot) {
+        if (entity.isSilent()) return;
+        if (entity.getAliveTicks() <= 0) return;
+        if (newStack.without(DataComponents.DAMAGE).isSimilar(oldStack.without(DataComponents.DAMAGE))) return;
 
-		EquipmentSlot slot = event.getSlot();
-		if (slot.isArmor()) {
-			ArmorMaterial.updateEquipmentAttributes(entity, entity.getEquipment(slot), event.getEquippedItem(), slot, this.version);
-		} else if (slot.isHand()) {
-			Tool.updateEquipmentAttributes(entity, entity.getEquipment(slot), event.getEquippedItem(), slot, this.version);
-		}
+        var equippable = newStack.get(DataComponents.EQUIPPABLE);
+        if (equippable == null) return;
+        if (equippable.slot() != slot) return;
 
-		this.playEquipSound(entity, entity.getEquipment(slot), event.getEquippedItem(), slot);
-	}
-
-	private void playEquipSound(LivingEntity entity, ItemStack oldStack, ItemStack newStack, EquipmentSlot slot) {
-		if (entity.isSilent()) return;
-		if (entity.getAliveTicks() <= 0) return;
-		if (newStack.isSimilar(oldStack)) return;
-
-		var equippable = newStack.get(DataComponents.EQUIPPABLE);
-		if (equippable == null) return;
-		if (equippable.slot() != slot) return;
-
-		ViewUtil.viewersAndSelf(entity).playSound(Sound.sound(
-				equippable.equipSound(), Sound.Source.PLAYER,
-				1.0F, 1.0F
-		), entity);
-	}
+        ViewUtil.viewersAndSelf(entity).playSound(Sound.sound(
+                equippable.equipSound(), Sound.Source.PLAYER,
+                1.0F, 1.0F
+        ), entity);
+    }
 }
