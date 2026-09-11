@@ -8,6 +8,7 @@ import io.github.togar2.pvp.feature.config.FeatureConfiguration;
 import io.github.togar2.pvp.feature.cooldown.ItemCooldownFeature;
 import io.github.togar2.pvp.feature.fall.FallFeature;
 import io.github.togar2.pvp.feature.state.PlayerStateFeature;
+import io.github.togar2.pvp.utils.RegistryTags;
 import io.github.togar2.pvp.utils.ViewUtil;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.coordinate.Pos;
@@ -20,6 +21,7 @@ import net.minestom.server.event.player.PlayerUseItemEvent;
 import net.minestom.server.event.trait.EntityInstanceEvent;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
+import net.minestom.server.item.MaterialTags;
 import net.minestom.server.sound.SoundEvent;
 
 import java.util.Objects;
@@ -156,6 +158,6 @@ public class VanillaMiscProjectileFeature implements MiscProjectileFeature, Regi
     }
 
 	private boolean isEgg(Material material) {
-		return material == Material.EGG || material == Material.BROWN_EGG || material == Material.BLUE_EGG;
+		return RegistryTags.contains(RegistryTags.EGGS, material);
 	}
 }
